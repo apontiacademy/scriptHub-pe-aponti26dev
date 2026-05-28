@@ -70,8 +70,8 @@ Relatórios processados: relatorio_semana_01, relatorio_semana_02
 Alunos com ausências:
 Nome Completo          Estado      Empresa    Relatórios Ausentes
 ---------------------- ----------- ---------- -------------------
-ADRIEL GOMES SILVA     Pernambuco  Aponti PE  relatorio_semana_02
-MARIA SOUZA            São Paulo   Aponti SP  relatorio_semana_01
+ADRIEL FULANO DA SILVA     Pernambuco  Aponti PE  relatorio_semana_02
+MARIA FULANA            São Paulo   Aponti SP  relatorio_semana_01
 
 Total: 2 aluno(s) com pelo menos 1 ausência.
 Resultado salvo em: resultado_auditoria.csv
@@ -81,8 +81,8 @@ Resultado salvo em: resultado_auditoria.csv
 
 | nome_completo | estado | empresa | relatorios_ausentes | total_ausencias |
 |---|---|---|---|---|
-| ADRIEL GOMES SILVA | Pernambuco | Aponti PE | relatorio_semana_02 | 1 |
-| MARIA SOUZA | São Paulo | Aponti SP | relatorio_semana_01 | 1 |
+| ADRIEL FULANO DA SILVA  | Pernambuco | Aponti PE | relatorio_semana_02 | 1 |
+| MARIA FULANA | São Paulo | Aponti SP | relatorio_semana_01 | 1 |
 
 O CSV é salvo com encoding `UTF-8 BOM` para abrir corretamente no Excel.
 
