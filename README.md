@@ -42,7 +42,7 @@ Digite o número da planilha GERAL de alunos: 1
 
 | Nome | Sobrenome | Endereço de e-mail | Grupos |
 |---|---|---|---|
-| ADRIEL | GOMES SILVA | adriel@email.com | Pernambuco: Aponti PE - 00.501.070/0001-23 |
+| ADRIEL | FULANO SILVA | fulano@email.com | Pernambuco: Aponti PE - 00.501.070/0001-23 |
 
 O campo **Grupos** deve seguir o formato `Estado: Empresa - CNPJ`. Estado e empresa são extraídos automaticamente.
 
