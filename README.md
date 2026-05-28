@@ -1,5 +1,11 @@
 # Auditoria de Relatórios — Residentes Aponti
 
+## Autores
+
+- Leandro Carvalho [Linkedin](https://www.linkedin.com/in/leandro-c-s/)
+- Caio Tenório [Linkedin](https://www.linkedin.com/in/caiomatenorio/)
+
+
 Script para identificar quais residentes/alunos não responderam seus relatórios semanais.
 
 ## Requisitos
