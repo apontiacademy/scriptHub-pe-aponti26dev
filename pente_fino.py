@@ -115,7 +115,45 @@ def calcular_ausencias(
     return pd.DataFrame(linhas)
 
 
-def exibir_resultado(df: pd.DataFrame, nomes_relatorios: list[str]) -> None:
+def calcular_presencas(
+    df_alunos: pd.DataFrame, relatorios: dict[str, set[str]]
+) -> pd.DataFrame:
+    linhas = []
+    for _, aluno in df_alunos.iterrows():
+        presentes = [
+            nome_rel
+            for nome_rel, respondentes in relatorios.items()
+            if aluno["_nome_norm"] in respondentes
+        ]
+        linhas.append(
+            {
+                "nome_completo": aluno["nome_completo"],
+                "estado": aluno["estado"],
+                "empresa": aluno["empresa"],
+                "relatorios_feitos": ", ".join(sorted(presentes)),
+                "total_feitos": len(presentes),
+            }
+        )
+    return pd.DataFrame(linhas)
+
+
+def selecionar_modo() -> str:
+    print("\nEscolha o modo de visualização:")
+    print("  [1] Não feitos (mostra quem não fez relatórios)")
+    print("  [2] Feitos (mostra quem fez relatórios)")
+    while True:
+        try:
+            escolha = int(input("\nDigite o número do modo: "))
+            if escolha == 1:
+                return "nao_feitos"
+            elif escolha == 2:
+                return "feitos"
+            print("  Digite 1 ou 2.")
+        except ValueError:
+            print("  Entrada inválida. Digite apenas o número.")
+
+
+def exibir_resultado(df: pd.DataFrame, nomes_relatorios: list[str], modo: str = "nao_feitos") -> None:
     print(f"\nRelatórios processados: {', '.join(sorted(nomes_relatorios))}")
     print("-" * 80)
 
@@ -123,44 +161,63 @@ def exibir_resultado(df: pd.DataFrame, nomes_relatorios: list[str]) -> None:
         print("\nNenhum aluno encontrado.")
         return
 
+    if modo == "nao_feitos":
+        col_relatorios = "relatorios_ausentes"
+        col_total = "total_ausencias"
+        header_col = "Relatórios Ausentes"
+        mensagem_vazio = "—"
+        mensagem_final = "aluno(s) com pelo menos 1 ausência"
+    else:  # modo == "feitos"
+        col_relatorios = "relatorios_feitos"
+        col_total = "total_feitos"
+        header_col = "Relatórios Feitos"
+        mensagem_vazio = "Nenhum"
+        mensagem_final = "aluno(s) com pelo menos 1 relatório feito"
+
     col_nome = max(df["nome_completo"].str.len().max(), len("Nome Completo"))
     col_estado = max(df["estado"].str.len().max(), len("Estado"))
     col_empresa = max(df["empresa"].str.len().max(), len("Empresa"))
-    col_ausentes = max(
-        df["relatorios_ausentes"].str.len().max() if not df["relatorios_ausentes"].eq("").all() else 0,
-        len("Relatórios Ausentes"),
+    col_relatorios_max = max(
+        df[col_relatorios].str.len().max() if not df[col_relatorios].eq("").all() else 0,
+        len(header_col),
     )
 
     header = (
         f"{'Nome Completo':<{col_nome}}  "
         f"{'Estado':<{col_estado}}  "
         f"{'Empresa':<{col_empresa}}  "
-        f"{'Relatórios Ausentes':<{col_ausentes}}  "
-        f"Ausências"
+        f"{header_col:<{col_relatorios_max}}  "
+        f"Total"
     )
     print(f"\n{header}")
     print("-" * len(header))
 
     for _, row in df.iterrows():
-        ausentes = row["relatorios_ausentes"] if row["relatorios_ausentes"] else "—"
+        relatorios_text = row[col_relatorios] if row[col_relatorios] else mensagem_vazio
         print(
             f"{row['nome_completo']:<{col_nome}}  "
             f"{row['estado']:<{col_estado}}  "
             f"{row['empresa']:<{col_empresa}}  "
-            f"{ausentes:<{col_ausentes}}  "
-            f"{row['total_ausencias']}"
+            f"{relatorios_text:<{col_relatorios_max}}  "
+            f"{row[col_total]}"
         )
 
-    com_ausencia = (df["total_ausencias"] > 0).sum()
-    print(f"\nTotal: {len(df)} aluno(s) | {com_ausencia} com pelo menos 1 ausência.")
+    com_ocorrencia = (df[col_total] > 0).sum()
+    print(f"\nTotal: {len(df)} aluno(s) | {com_ocorrencia} {mensagem_final}.")
 
 
-def salvar_resultado(df: pd.DataFrame, destino: Path) -> None:
+def salvar_resultado(df: pd.DataFrame, destino: Path, modo: str = "nao_feitos") -> None:
     if df.empty:
-        print("Nenhuma ausência encontrada. Arquivo de resultado não gerado.")
+        print("Nenhum resultado encontrado. Arquivo de resultado não gerado.")
         return
-    df.to_csv(destino, index=False, encoding="utf-8-sig")
-    print(f"Resultado salvo em: {destino}")
+    
+    if modo == "nao_feitos":
+        arquivo = destino.parent / "resultado_auditoria.csv"
+    else:
+        arquivo = destino.parent / "resultado_relatorios_feitos.csv"
+    
+    df.to_csv(arquivo, index=False, encoding="utf-8-sig")
+    print(f"Resultado salvo em: {arquivo}")
 
 
 def main() -> None:
@@ -187,9 +244,15 @@ def main() -> None:
         print("Nenhum relatório válido encontrado. Encerrando.")
         sys.exit(0)
 
-    df_resultado = calcular_ausencias(df_alunos, relatorios)
-    exibir_resultado(df_resultado, list(relatorios.keys()))
-    salvar_resultado(df_resultado, diretorio / "resultado_auditoria.csv")
+    modo = selecionar_modo()
+
+    if modo == "nao_feitos":
+        df_resultado = calcular_ausencias(df_alunos, relatorios)
+    else:
+        df_resultado = calcular_presencas(df_alunos, relatorios)
+
+    exibir_resultado(df_resultado, list(relatorios.keys()), modo)
+    salvar_resultado(df_resultado, diretorio / "resultado_auditoria.csv", modo)
 
 
 if __name__ == "__main__":
