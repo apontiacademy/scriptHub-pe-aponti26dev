@@ -154,6 +154,29 @@ def selecionar_modo() -> str:
             print("  Entrada inválida. Digite apenas o número.")
 
 
+def selecionar_caminho_output(diretorio: Path) -> Path:
+    print("\nEscolha o caminho para salvar o arquivo de resultado:")
+    print(f"  [1] Padrão - {diretorio / 'resultado.csv'}")
+    print(f"  [2] Outro local")
+    while True:
+        try:
+            escolha = int(input("\nDigite o número da opção: "))
+            if escolha == 1:
+                return diretorio / "resultado.csv"
+            elif escolha == 2:
+                while True:
+                    caminho_input = input("Digite o caminho completo (ex: /caminho/arquivo.csv): ").strip()
+                    try:
+                        path = Path(caminho_input).resolve()
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        return path
+                    except Exception as e:
+                        print(f"  ERRO: Caminho inválido. {e}")
+            print("  Digite 1 ou 2.")
+        except ValueError:
+            print("  Entrada inválida. Digite apenas o número.")
+
+
 def exibir_resultado(df: pd.DataFrame, nomes_relatorios: list[str], modo: str = "nao_feitos") -> None:
     print(f"\nRelatórios processados: {', '.join(sorted(nomes_relatorios))}")
     print("-" * 80)
@@ -212,13 +235,8 @@ def salvar_resultado(df: pd.DataFrame, destino: Path, modo: str = "nao_feitos") 
         print("Nenhum resultado encontrado. Arquivo de resultado não gerado.")
         return
     
-    if modo == "nao_feitos":
-        arquivo = destino.parent / "resultado_auditoria.csv"
-    else:
-        arquivo = destino.parent / "resultado_relatorios_feitos.csv"
-    
-    df.to_csv(arquivo, index=False, encoding="utf-8-sig")
-    print(f"Resultado salvo em: {arquivo}")
+    df.to_csv(destino, index=False, encoding="utf-8-sig")
+    print(f"Resultado salvo em: {destino}")
 
 
 def main() -> None:
@@ -229,7 +247,7 @@ def main() -> None:
 Exemplos de uso:
   python pente_fino.py                              # Modo interativo
   python pente_fino.py --planilha residentes.csv --modo feitos
-  python pente_fino.py -p residentes.csv -m nao_feitos
+  python pente_fino.py -p residentes.csv -m nao_feitos -o resultado_customizado.csv
         """
     )
     parser.add_argument(
@@ -243,6 +261,12 @@ Exemplos de uso:
         type=str,
         choices=["feitos", "nao_feitos"],
         help="Modo de visualização: 'feitos' ou 'nao_feitos'",
+        default=None
+    )
+    parser.add_argument(
+        "--output", "-o",
+        type=str,
+        help="Caminho do arquivo de saída (padrão: resultado.csv)",
         default=None
     )
     
@@ -292,7 +316,15 @@ Exemplos de uso:
         df_resultado = calcular_presencas(df_alunos, relatorios)
 
     exibir_resultado(df_resultado, list(relatorios.keys()), modo)
-    salvar_resultado(df_resultado, diretorio / "resultado_auditoria.csv", modo)
+    
+    # Selecionar caminho do output
+    if args.output:
+        caminho_output = Path(args.output).resolve()
+        caminho_output.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        caminho_output = selecionar_caminho_output(diretorio)
+    
+    salvar_resultado(df_resultado, caminho_output, modo)
 
 
 if __name__ == "__main__":
