@@ -18,17 +18,19 @@ pip install pandas
 
 ## Como usar
 
-1. Coloque todos os arquivos `.csv` no mesmo diretório:
+1. Coloque todos os arquivos `.csv` na mesma pasta:
    - A **planilha geral** de alunos
    - As **planilhas de relatório** (uma por relatório)
 
-2. Execute o script na pasta onde estão os arquivos:
+2. Execute o script apontando a pasta de origem ou navegue interativamente até ela:
 
 ```bash
-python pente_fino.py
+python pente_fino.py --pasta-origem ./relatorios
 ```
 
-3. O script lista os CSVs encontrados e pergunta qual é a planilha geral:
+Ou, se preferir, rode apenas `python pente_fino.py` e informe a pasta quando o script perguntar.
+
+3. O script lista os CSVs encontrados nessa pasta e pergunta qual é a planilha geral:
 
 ```
 Arquivos CSV encontrados:
@@ -50,6 +52,13 @@ Digite o número do modo:
 ```
 
 5. O resultado é exibido no terminal e salvo em arquivo CSV (nome varia conforme o modo).
+
+### Argumentos de CLI
+
+- `--pasta-origem` ou `-d`: define a pasta onde estão os CSVs.
+- `--planilha` ou `-p`: define o arquivo da planilha geral dentro da pasta de origem.
+- `--modo` ou `-m`: escolhe entre `feitos` e `nao_feitos`.
+- `--output` ou `-o`: define o caminho do CSV de saída.
 
 ## Formato esperado das planilhas
 

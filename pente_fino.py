@@ -40,6 +40,27 @@ def listar_csvs(diretorio: Path) -> list[Path]:
     return csvs
 
 
+def selecionar_pasta_origem(padrao: Path) -> Path:
+    print("\nEscolha a pasta de origem dos relatórios:")
+    print(f"  [1] Usar a pasta atual - {padrao.resolve()}")
+    print("  [2] Informar outro caminho")
+    while True:
+        try:
+            escolha = int(input("\nDigite o número da opção: "))
+            if escolha == 1:
+                return padrao.resolve()
+            if escolha == 2:
+                while True:
+                    caminho_input = input("Digite o caminho da pasta: ").strip()
+                    pasta = Path(caminho_input).expanduser().resolve()
+                    if pasta.is_dir():
+                        return pasta
+                    print("  ERRO: a pasta informada não existe ou não é um diretório.")
+            print("  Digite 1 ou 2.")
+        except ValueError:
+            print("  Entrada inválida. Digite apenas o número.")
+
+
 def selecionar_planilha_geral(csvs: list[Path]) -> Path:
     while True:
         try:
@@ -49,6 +70,25 @@ def selecionar_planilha_geral(csvs: list[Path]) -> Path:
             print(f"  Digite um número entre 1 e {len(csvs)}.")
         except ValueError:
             print("  Entrada inválida. Digite apenas o número.")
+
+
+def resolver_arquivo_csv(valor: str, diretorio: Path) -> Path:
+    caminho = Path(valor).expanduser()
+
+    candidatos = []
+    if caminho.is_absolute():
+        candidatos.append(caminho)
+    else:
+        candidatos.append(diretorio / caminho)
+        candidatos.append(diretorio / caminho.name)
+        candidatos.append(caminho)
+
+    for candidato in candidatos:
+        if candidato.exists() and candidato.is_file():
+            return candidato.resolve()
+
+    print(f"ERRO: Arquivo '{valor}' não encontrado na pasta '{diretorio}'.")
+    sys.exit(1)
 
 
 def carregar_alunos(path: Path) -> pd.DataFrame:
@@ -246,9 +286,16 @@ def main() -> None:
         epilog="""
 Exemplos de uso:
   python pente_fino.py                              # Modo interativo
+  python pente_fino.py --pasta-origem ./relatorios
   python pente_fino.py --planilha residentes.csv --modo feitos
-  python pente_fino.py -p residentes.csv -m nao_feitos -o resultado_customizado.csv
+  python pente_fino.py -d ./relatorios -p residentes.csv -m nao_feitos -o resultado_customizado.csv
         """
+    )
+    parser.add_argument(
+        "--pasta-origem", "-d",
+        type=str,
+        help="Pasta onde ficam a planilha geral e os relatórios CSV",
+        default=None
     )
     parser.add_argument(
         "--planilha", "-p",
@@ -271,17 +318,21 @@ Exemplos de uso:
     )
     
     args = parser.parse_args()
-    
-    diretorio = Path(".")
+
+    pasta_padrao = Path(".")
+    if args.pasta_origem:
+        diretorio = Path(args.pasta_origem).expanduser().resolve()
+        if not diretorio.is_dir():
+            print(f"ERRO: Pasta '{args.pasta_origem}' não encontrada ou inválida.")
+            sys.exit(1)
+    else:
+        diretorio = selecionar_pasta_origem(pasta_padrao)
+
     csvs = listar_csvs(diretorio)
     
     # Selecionar planilha geral
     if args.planilha:
-        planilha_path = Path(args.planilha)
-        if planilha_path not in csvs:
-            print(f"ERRO: Arquivo '{args.planilha}' não encontrado no diretório.")
-            sys.exit(1)
-        planilha_geral = planilha_path
+        planilha_geral = resolver_arquivo_csv(args.planilha, diretorio)
     else:
         planilha_geral = selecionar_planilha_geral(csvs)
 
