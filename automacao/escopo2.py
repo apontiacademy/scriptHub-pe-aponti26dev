@@ -23,7 +23,7 @@ def main():
     # Captura os dados configurados no seu .env
     pasta_origem = os.getenv("MOODLE_DOWNLOAD_DIR")
     planilha_alunos = os.getenv("MOODLE_STUDENTS_CSV")
-    modo_analise = os.getenv("MOODLE_ANALYSIS_MODO", "nao_feitos")
+    modo_analise = "feitos"
     arquivo_saida = os.getenv("MOODLE_ANALYSIS_OUTPUT_CSV", "resultado.csv")
 
     # Monta a lista de argumentos exatamente como a CLI do pente_fino espera
