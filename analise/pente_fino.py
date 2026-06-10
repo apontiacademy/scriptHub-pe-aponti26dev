@@ -1,3 +1,32 @@
+"""
+Análise de Conformidade de Relatórios — Pente Fino
+
+Cruza dados de alunos com relatórios respondidos para identificar:
+- Alunos que faltam completar relatórios (modo: nao_feitos)
+- Alunos que completaram relatórios (modo: feitos)
+
+Uso:
+    Modo Interativo:
+        python -m analise.pente_fino
+        ou
+        python analise/pente_fino.py
+
+    Modo CLI (Automático):
+        python -m analise.pente_fino -d ./dados -p alunos.csv -m nao_feitos -o resultado.csv
+
+Argumentos CLI:
+    --pasta-origem, -d   : Pasta com relatórios CSV
+    --planilha, -p       : Arquivo da planilha geral de alunos
+    --modo, -m          : 'feitos' ou 'nao_feitos'
+    --output, -o        : Arquivo de saída (padrão: resultado.csv)
+
+Exemplo:
+    python -m analise.pente_fino \\
+      -d ./dados/relatorios \\
+      -p ./dados/residentes.csv \\
+      -m nao_feitos \\
+      -o resultado_auditoria.csv
+"""
 import argparse
 import re
 import sys

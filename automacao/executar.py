@@ -1,4 +1,3 @@
-# automacao/executar.py
 import automacao.escopo1 as escopo1
 import automacao.escopo2 as escopo2
 

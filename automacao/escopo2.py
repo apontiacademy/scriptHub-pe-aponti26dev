@@ -1,4 +1,3 @@
-# automacao/escopo2.py
 import os
 import sys
 from pathlib import Path
