@@ -1,3 +1,4 @@
+import argparse
 import re
 import sys
 from pathlib import Path
@@ -221,9 +222,44 @@ def salvar_resultado(df: pd.DataFrame, destino: Path, modo: str = "nao_feitos") 
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Analisa presenças e ausências em relatórios de alunos.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Exemplos de uso:
+  python pente_fino.py                              # Modo interativo
+  python pente_fino.py --planilha residentes.csv --modo feitos
+  python pente_fino.py -p residentes.csv -m nao_feitos
+        """
+    )
+    parser.add_argument(
+        "--planilha", "-p",
+        type=str,
+        help="Nome do arquivo CSV com a planilha geral de alunos",
+        default=None
+    )
+    parser.add_argument(
+        "--modo", "-m",
+        type=str,
+        choices=["feitos", "nao_feitos"],
+        help="Modo de visualização: 'feitos' ou 'nao_feitos'",
+        default=None
+    )
+    
+    args = parser.parse_args()
+    
     diretorio = Path(".")
     csvs = listar_csvs(diretorio)
-    planilha_geral = selecionar_planilha_geral(csvs)
+    
+    # Selecionar planilha geral
+    if args.planilha:
+        planilha_path = Path(args.planilha)
+        if planilha_path not in csvs:
+            print(f"ERRO: Arquivo '{args.planilha}' não encontrado no diretório.")
+            sys.exit(1)
+        planilha_geral = planilha_path
+    else:
+        planilha_geral = selecionar_planilha_geral(csvs)
 
     print(f"\nCarregando planilha geral: {planilha_geral.name}")
     df_alunos = carregar_alunos(planilha_geral)
@@ -244,7 +280,11 @@ def main() -> None:
         print("Nenhum relatório válido encontrado. Encerrando.")
         sys.exit(0)
 
-    modo = selecionar_modo()
+    # Selecionar modo
+    if args.modo:
+        modo = args.modo
+    else:
+        modo = selecionar_modo()
 
     if modo == "nao_feitos":
         df_resultado = calcular_ausencias(df_alunos, relatorios)
