@@ -14,11 +14,7 @@ def normalizar_nome(nome: str) -> str:
 
 
 def parsear_grupos(valor: str) -> tuple[str, str]:
-    """Extrai estado e empresa do campo Grupos.
-
-    Formato esperado: 'Pernambuco: Aponti PE - 00.501.070/0001-23'
-    Retorna: (estado, empresa)
-    """
+    """Extrai estado e empresa do campo Grupos."""
     if not isinstance(valor, str):
         return ("", "")
     partes = valor.split(":", 1)
@@ -91,13 +87,11 @@ def carregar_alunos(path: Path) -> pd.DataFrame:
     cols = set(df.columns)
 
     if "residente" in cols:
-        # Formato: cnpj, empresa, residente, cpf_residente
         df["nome_completo"] = df["residente"].str.strip()
         df["_nome_norm"] = df["nome_completo"].apply(normalizar_nome)
         df["empresa"] = df["empresa"].str.strip() if "empresa" in cols else ""
         df["estado"] = ""
     elif {"Nome", "Sobrenome"}.issubset(cols):
-        # Formato: Nome, Sobrenome, Grupos
         df["nome_completo"] = (df["Nome"] + " " + df["Sobrenome"]).str.strip()
         df["_nome_norm"] = df["nome_completo"].apply(normalizar_nome)
         if "Grupos" in cols:
@@ -129,9 +123,7 @@ def carregar_relatorio(path: Path) -> set[str]:
     return {normalizar_nome(n) for n in df["Nome completo"] if n.strip()}
 
 
-def calcular_ausencias(
-    df_alunos: pd.DataFrame, relatorios: dict[str, set[str]]
-) -> pd.DataFrame:
+def calcular_ausencias(df_alunos: pd.DataFrame, relatorios: dict[str, set[str]]) -> pd.DataFrame:
     linhas = []
     for _, aluno in df_alunos.iterrows():
         ausentes = [
@@ -151,9 +143,7 @@ def calcular_ausencias(
     return pd.DataFrame(linhas)
 
 
-def calcular_presencas(
-    df_alunos: pd.DataFrame, relatorios: dict[str, set[str]]
-) -> pd.DataFrame:
+def calcular_presencas(df_alunos: pd.DataFrame, relatorios: dict[str, set[str]]) -> pd.DataFrame:
     linhas = []
     for _, aluno in df_alunos.iterrows():
         presentes = [
@@ -216,7 +206,7 @@ def exibir_resultado(df: pd.DataFrame, nomes_relatorios: list[str], modo: str = 
         header_col = "Relatórios Ausentes"
         mensagem_vazio = "—"
         mensagem_final = "aluno(s) com pelo menos 1 ausência"
-    else:  # modo == "feitos"
+    else:
         col_relatorios = "relatorios_feitos"
         col_total = "total_feitos"
         header_col = "Relatórios Feitos"
@@ -260,49 +250,25 @@ def salvar_resultado(df: pd.DataFrame, destino: Path, modo: str = "nao_feitos") 
         print("Nenhum resultado encontrado. Arquivo de resultado não gerado.")
         return
     
+    # Garante a criação da pasta pai (ex: /dados) antes de salvar
+    destino.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(destino, index=False, encoding="utf-8-sig")
-    print(f"Resultado salvo em: {destino}")
+    print(f"Resultado salvo com sucesso em: {destino}")
 
 
 def main(args_list: Optional[list[str]] = None) -> None:
     parser = argparse.ArgumentParser(
         description="Analisa presenças e ausências em relatórios de alunos.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Exemplos de uso:
-  python pente_fino.py                              # Modo interativo
-  python pente_fino.py --pasta-origem ./relatorios
-  python pente_fino.py --planilha residentes.csv --modo feitos
-  python pente_fino.py -d ./relatorios -p residentes.csv -m nao_feitos -o resultado_customizado.csv
-        """
     )
-    parser.add_argument(
-        "--pasta-origem", "-d",
-        type=str,
-        help="Pasta onde ficam a planilha geral e os relatórios CSV",
-        default=None
-    )
-    parser.add_argument(
-        "--planilha", "-p",
-        type=str,
-        help="Nome do arquivo CSV com a planilha geral de alunos",
-        default=None
-    )
-    parser.add_argument(
-        "--modo", "-m",
-        type=str,
-        choices=["feitos", "nao_feitos"],
-        help="Modo de visualização: 'feitos' ou 'nao_feitos'",
-        default=None
-    )
-    parser.add_argument(
-        "--output", "-o",
-        type=str,
-        help="Caminho do arquivo de saída (padrão: resultado.csv)",
-        default=None
-    )
+    parser.add_argument("--pasta-origem", "-d", type=str, default=None)
+    parser.add_argument("--planilha", "-p", type=str, default=None)
+    parser.add_argument("--modo", "-m", type=str, choices=["feitos", "nao_feitos"], default=None)
+    parser.add_argument("--output", "-o", type=str, default=None)
     
-    args = parser.parse_args()
+    # === CORREÇÃO CRÍTICA AQUI ===
+    # Se args_list for passado via função, usamos ele. Se for None, o argparse olha o sys.argv.
+    args = parser.parse_args(args_list)
 
     # === PASSO 1: Determinar pasta de input ===
     pasta_padrao = Path(".")
@@ -316,10 +282,8 @@ Exemplos de uso:
 
     # === PASSO 2: Determinar planilha geral ===
     if args.planilha:
-        # Argumento CLI: busca o arquivo usando apenas o caminho descrito (ignora pasta de input)
         planilha_geral = resolver_arquivo_csv(args.planilha, Path.cwd())
     else:
-        # Modo interativo: lista CSVs da pasta de input e pede para escolher
         csvs = listar_csvs(diretorio)
         planilha_geral = selecionar_planilha_geral(csvs)
 
@@ -327,34 +291,23 @@ Exemplos de uso:
     df_alunos = carregar_alunos(planilha_geral)
     print(f"  {len(df_alunos)} aluno(s) encontrado(s).")
 
-    # === PASSO 3: Determinar relatórios (sempre a partir da pasta de input) ===
+    # === PASSO 3: Determinar relatórios ===
     if not args.planilha:
-        # Já listamos no passo 2
         csvs = listar_csvs(diretorio)
     else:
-        # Precisamos listar de novo para determinar os relatórios
         csvs = list(diretorio.glob("*.csv"))
 
-    relatorios_paths = [p for p in csvs if p != planilha_geral]
-    if not relatorios_paths:
-        print("Nenhum relatório encontrado além da planilha geral. Encerrando.")
-        sys.exit(0)
-
+    # Filtra mantendo apenas os relatórios reais
+    relatorios_paths = [p for p in csvs if p.resolve() != planilha_geral.resolve()]
+    
     relatorios: dict[str, set[str]] = {}
     for path in relatorios_paths:
         respondentes = carregar_relatorio(path)
         if respondentes or "Nome completo" in pd.read_csv(path, nrows=0).columns:
             relatorios[path.stem] = respondentes
 
-    if not relatorios:
-        print("Nenhum relatório válido encontrado. Encerrando.")
-        sys.exit(0)
-
     # === PASSO 4: Determinar modo de visualização ===
-    if args.modo:
-        modo = args.modo
-    else:
-        modo = selecionar_modo()
+    modo = args.modo if args.modo else selecionar_modo()
 
     if modo == "nao_feitos":
         df_resultado = calcular_ausencias(df_alunos, relatorios)
@@ -363,10 +316,9 @@ Exemplos de uso:
 
     exibir_resultado(df_resultado, list(relatorios.keys()), modo)
 
-    # === PASSO 5: Determinar caminho de saída ===
+    # === PASSO 5: Determinar caminho de saída e Salvar ===
     if args.output:
         caminho_output = Path(args.output).resolve()
-        caminho_output.parent.mkdir(parents=True, exist_ok=True)
     else:
         caminho_output = selecionar_caminho_output(diretorio)
 
