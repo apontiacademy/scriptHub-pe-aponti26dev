@@ -1,6 +1,6 @@
-import automacao.escopo1 as escopo1
-import automacao.escopo2 as escopo2
-import automacao.escopo3 as escopo3  # 🚀 O novo integrante do time
+import automacao_de_relatorios.escopo1 as escopo1
+import automacao_de_relatorios.escopo2 as escopo2
+import automacao_de_relatorios.escopo3 as escopo3
 
 
 def main():

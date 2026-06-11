@@ -1,4 +1,3 @@
-# automacao/escopo3.py
 import os
 import sys
 from pathlib import Path
@@ -7,24 +6,35 @@ import gspread
 import pandas as pd
 from dotenv import load_dotenv
 
-# Garante que a raiz do projeto esteja no sys.path
-raiz_projeto = Path(__file__).resolve().parent.parent
-if str(raiz_projeto) not in sys.path:
-    sys.path.append(str(raiz_projeto))
+# =========================================================================
+# ANCORAGEM DINÂMICA DE ESCOPO
+# =========================================================================
+# Caminho absoluto da pasta 'automacao_de_relatorios'
+PASTA_ESCOPO = Path(__file__).resolve().parent
 
-# Carrega o .env da raiz
-env_path = raiz_projeto / '.env'
-load_dotenv(dotenv_path=env_path)
+# Força o carregamento do .env que está EXCLUSIVAMENTE dentro desta pasta
+env_path = PASTA_ESCOPO / ".env"
+load_dotenv(dotenv_path=env_path, override=True)
+
+
+def tratar_caminho_relativo(valor_env: str | None, padrao: str) -> Path:
+    """Se o caminho for relativo (começar com ./), ancora ele dentro da PASTA_ESCOPO."""
+    caminho_str = valor_env if valor_env else padrao
+    if caminho_str.startswith("./") or caminho_str.startswith("../"):
+        caminho_limpo = caminho_str.lstrip("./")
+        return (PASTA_ESCOPO / caminho_limpo).resolve()
+    return Path(caminho_str).resolve()
 
 
 def main():
     print("\n--- [Escopo 3: Sincronizando Coluna D com Google Sheets] ---")
 
-    # 1. Carrega caminhos e configurações
-    caminho_csv = Path(os.getenv("MOODLE_ANALYSIS_OUTPUT_CSV", "./dados/resultado.csv")).resolve()
+    # 1. Carrega caminhos e configurações tratando os caminhos relativos para a pasta do escopo
+    caminho_csv = tratar_caminho_relativo(os.getenv("MOODLE_ANALYSIS_OUTPUT_CSV"), "./dados/resultado.csv")
+    credentials_path = tratar_caminho_relativo(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), "./credentials.json")
+    
     sheet_id = os.getenv("GOOGLE_SHEETS_ID")
     aba_name = os.getenv("GOOGLE_SHEETS_ABA_NAME", "Página1")
-    credentials_path = Path(os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "./credentials.json")).resolve()
 
     if not caminho_csv.exists():
         print(f"ERRO: Arquivo de auditoria não encontrado em: {caminho_csv}")
@@ -41,7 +51,10 @@ def main():
 
     # 2. Ler a coluna D do arquivo CSV local
     print(f"[Escopo 3] Lendo dados locais de {caminho_csv.name}...")
-    df = pd.read_csv(caminho_csv)
+    try:
+        df = pd.read_csv(caminho_csv, encoding="utf-8-sig")
+    except Exception:
+        df = pd.read_csv(caminho_csv, encoding="latin1")
 
     if df.shape[1] < 4:
         print("ERRO: O CSV de resultado possui menos de 4 colunas. Coluna D indisponível.")
@@ -52,7 +65,6 @@ def main():
     valores_coluna_d = df.iloc[:, 3].fillna("").astype(str).tolist()
 
     # Monta a estrutura de lista de listas exigida pela API do Google para colunas: [[linha1], [linha2], ...]
-    # Inclui o cabeçalho original no topo para que a substituição seja completa e limpa
     dados_para_enviar = [[nome_coluna_d]] + [[valor] for valor in valores_coluna_d]
 
     # 3. Autenticar e conectar ao Google Sheets
@@ -66,7 +78,6 @@ def main():
 
         # 4. Sobrescrever a Coluna D com segurança
         print(f"[Escopo 3] Limpando dados antigos da Coluna D na aba '{aba_name}'...")
-        # 'D:D' seleciona a coluna inteira para evitar que dados antigos mais longos fiquem "sobrando" embaixo
         worksheet.batch_clear(['D:D'])
 
         print(f"[Escopo 3] Colando os novos dados na Coluna D (Total de linhas: {len(dados_para_enviar)})...")
