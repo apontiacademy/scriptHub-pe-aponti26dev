@@ -1,16 +1,16 @@
-{
-    "moodle": {
-        "loginUrl": "https://moodle.yourinstitution.edu/login/index.php",
-        "reportUrls": [
-            "https://moodle.yourinstitution.edu/mod/feedback/show_entries.php?id=1111",
-            "https://moodle.yourinstitution.edu/mod/feedback/show_entries.php?id=2222"
-        ],
-        "exportReportAnalysis": true,
-        "exportReportAnalysisPath": "/home/you/Downloads"
-    },
-    "googleSheets": {
-        "spreadsheetId": "abcdefghijklmnopqrstuvwxyz1234567890",
-        "sheetName": "Spreadsheet1",
-        "localBackupPath": "/home/you/Downloads"
+    {
+        "moodle": {
+            "loginUrl": "https://moodle.yourinstitution.edu/login/index.php",
+            "reportUrls": [
+                "https://moodle.yourinstitution.edu/mod/feedback/show_entries.php?id=1111",
+                "https://moodle.yourinstitution.edu/mod/feedback/show_entries.php?id=2222"
+            ],
+            "exportReportAnalysis": true,
+            "exportReportAnalysisPath": "/home/you/Downloads"
+        },
+        "gsheets": {
+            "spreadsheetId": "abcdefghijklmnopqrstuvwxyz1234567890",
+            "sheetName": "Spreadsheet1",
+            "localBackupPath": "/home/you/Downloads"
+        }
     }
-}
