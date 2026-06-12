@@ -1,5 +1,5 @@
 """Entry point para executar pipeline via python -m automacao"""
-from .executar import main
+from .main import main
 
 if __name__ == "__main__":
     main()
