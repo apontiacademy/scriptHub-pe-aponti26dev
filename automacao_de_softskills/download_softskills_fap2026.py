@@ -10,10 +10,10 @@ from collections import defaultdict
 # ── Config ────────────────────────────────────────────────────────────────────
 
 MOODLE_URL        = 'https://moodle.aponti.org.br'
-USERNAME          = 'ruan-bfd@aponti.org.br'
-PASSWORD          = '@Ponti4557'
-BOOTCAMP_CAT_ID   = '136'
-APROVADOS_CAT_ID  = '140'
+USERNAME          = 'yourmail-bfd@aponti.org.br'
+PASSWORD          = 'youpassword'
+BOOTCAMP_CAT_ID   = 'xxxx'
+APROVADOS_CAT_ID  = 'xxxx'
 OUTPUT_DIR        = os.path.join(os.path.dirname(__file__), 'resultados_softskills')
 
 ACTIVITIES = [
