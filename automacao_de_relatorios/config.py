@@ -6,29 +6,29 @@ from typing import Optional
 
 from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent
+DIRETORIO_BASE = Path(__file__).resolve().parent
 
 
 @dataclass
 class MoodleConfig:
-    username: str
-    password: str
-    report_download_path: Path 
-    headless: bool
-    students_csv: Path  
-    report_analysis_output_csv: Path
-    login_url: str
-    report_urls: list[str]
-    export_report_analysis: bool
-    export_report_analysis_path: Optional[Path] 
+    usuario: str
+    senha: str
+    caminho_download_relatorio: Path 
+    headless: bool 
+    csv_residentes: Path  
+    csv_saida_analise: Path
+    url_login: str
+    urls_relatorios: list[str]
+    exportar_analise_relatorio: bool
+    caminho_exportacao_analise: Optional[Path] 
 
 
 @dataclass
 class GsheetsConfig:
-    spreadsheet_id: str
-    sheet_name: str
-    local_backup_path: Path 
-    credentials_json_path: Path 
+    id_planilha: str
+    nome_aba: str
+    caminho_backup_local: Path 
+    caminho_json_credenciais: Path 
 
 
 @dataclass
@@ -38,58 +38,61 @@ class Config:
 
     @staticmethod
     def load() -> "Config":        
-        env_data = Config.__load_env()
-        settings_data = Config.__load_settings_json()
+        dados_env = Config.__carregar_env()
+        dados_settings = Config.__carregar_settings_json()
 
-        moodle_json = settings_data.get("moodle", {})
-        gsheets_json = settings_data.get("gsheets", {})
+        moodle_json = dados_settings.get("moodle", {})
+        gsheets_json = dados_settings.get("gsheets", {})
 
+        # CORRIGIDO: Chaves do 'dados_env' sincronizadas com o método abaixo
         moodle_config = MoodleConfig(
-            username=env_data["moodle_username"],
-            password=env_data["moodle_password"],
-            report_download_path=BASE_DIR / "data" / "reports",
+            usuario=dados_env["moodle_usuario"],
+            senha=dados_env["moodle_senha"],
+            caminho_download_relatorio=DIRETORIO_BASE / "dados" / "relatorios",
             headless=True,
-            students_csv=BASE_DIR / "data" / "students.csv",
-            report_analysis_output_csv=BASE_DIR / "data" / "analysis_output.csv",
-            login_url=moodle_json["loginUrl"],
-            report_urls=list(map(lambda i: i.strip(), moodle_json["reportUrls"])),
-            export_report_analysis=moodle_json["exportReportAnalysis"],
-            export_report_analysis_path=(
-                Path(moodle_json["exportReportAnalysisPath"]) 
-                if moodle_json["exportReportAnalysis"] and moodle_json.get("exportReportAnalysisPath")
+            csv_residentes=DIRETORIO_BASE / "dados" / "residentes.csv",
+            csv_saida_analise=DIRETORIO_BASE / "dados" / "resultado_analise.csv",
+            url_login=moodle_json["urlLogin"],
+            urls_relatorios=list(map(lambda i: i.strip(), moodle_json["urlsRelatorios"])),
+            exportar_analise_relatorio=moodle_json["exportarAnaliseRelatorio"],
+            caminho_exportacao_analise=(
+                Path(moodle_json["caminhoExportacaoAnalise"]) 
+                if moodle_json["exportarAnaliseRelatorio"] and moodle_json.get("caminhoExportacaoAnalise")
                 else None
             )
         )
 
         gsheets_config = GsheetsConfig(
-            spreadsheet_id=gsheets_json["spreadsheetId"],
-            sheet_name=gsheets_json["sheetName"],
-            local_backup_path=Path(gsheets_json["localBackupPath"]),
-            credentials_json_path=BASE_DIR / "credentials.json"
+            id_planilha=gsheets_json["idPlanilha"],
+            nome_aba=gsheets_json["nomeAba"],
+            caminho_backup_local=Path(gsheets_json["caminhoBackupLocal"]),
+            caminho_json_credenciais=DIRETORIO_BASE / "credentials.json"
         )
 
         return Config(moodle=moodle_config, gsheets=gsheets_config)
 
     @staticmethod
-    def __load_env() -> dict:
-        load_dotenv(dotenv_path=BASE_DIR / ".env")
+    def __carregar_env() -> dict:
+        load_dotenv(dotenv_path=DIRETORIO_BASE / ".env")
         
-        data = {
-            "moodle_username": os.getenv("MOODLE_USERNAME"),
-            "moodle_password": os.getenv("MOODLE_PASSWORD")
+        # CORRIGIDO: Chaves padronizadas em português para evitar KeyError
+        dados = {
+            "moodle_usuario": os.getenv("MOODLE_USUARIO"),
+            "moodle_senha": os.getenv("MOODLE_SENHA")
         }
 
-        if not data["moodle_username"] or not data["moodle_password"]:
-            raise ValueError("MOODLE_USERNAME e MOODLE_PASSWORD devem ser definidos no arquivo .env")
-        return data
+        # CORRIGIDO: Validação utilizando exatamente as mesmas chaves do dicionário local
+        if not dados["moodle_usuario"] or not dados["moodle_senha"]:
+            raise ValueError("MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env")
+        return dados
         
     @staticmethod
-    def __load_settings_json() -> dict:
-        settings_path = BASE_DIR / "settings.json"
+    def __carregar_settings_json() -> dict:
+        caminho_settings = DIRETORIO_BASE / "settings.json"
         
-        if not settings_path.exists():
-            raise FileNotFoundError(f"O arquivo {settings_path} não foi encontrado.")
+        if not caminho_settings.exists():
+            raise FileNotFoundError(f"O arquivo {caminho_settings} não foi encontrado.")
             
-        with open(settings_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return data
+        with open(caminho_settings, "r", encoding="utf-8") as f:
+            dados = json.load(f)
+            return dados
