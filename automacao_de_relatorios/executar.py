@@ -1,8 +1,8 @@
 
-import automacao_de_relatorios.escopo1 as escopo1
-import automacao_de_relatorios.escopo2 as escopo2
-import automacao_de_relatorios.escopo3 as escopo3
-import automacao_de_relatorios.escopo4 as escopo4
+import automacao_de_relatorios.backup as backup
+import automacao_de_relatorios.download_de_relatorios as download_de_relatorios
+import automacao_de_relatorios.integracao_google_sheets as integracao_google_sheets
+import automacao_de_relatorios.middleware_analise_de_relatorios as middleware_analise_de_relatorios
 
 from .config import Config
 
@@ -18,16 +18,16 @@ def main():
     print()  # Quebra de linha para dar respiro visual
 
     # Injetando a mesma instância de 'config' em todos os escopos sequencialmente
-    escopo1.main(config)
+    download_de_relatorios.main(config)
     print()
 
-    escopo2.main(config)
+    middleware_analise_de_relatorios.main(config)
     print()
 
-    escopo3.main(config)
+    integracao_google_sheets.main(config)
     print()
 
-    escopo4.main(config)
+    backup.main(config)
     print()
     
     # Banner de encerramento de sucesso absoluto
