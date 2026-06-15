@@ -23,7 +23,7 @@ def main():
 
     escopo4.main()
     print()
-    
+
     # Banner de encerramento de sucesso absoluto
     print("=" * 80)
     print("✔ PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")
