@@ -7,14 +7,44 @@ import pandas as pd
 # --- Configuração de alertas ---
 
 PALAVRAS_NEGATIVAS = [
-    "péssimo", "pessimo", "ruim", "terrível", "terrivel", "horrível", "horrivel",
-    "desorganizado", "desorganizada", "falta de", "sem suporte", "sem orientação",
-    "sem orientacao", "não aprendi", "nao aprendi", "não consegui", "nao consegui",
-    "desmotivado", "desmotivada", "abandono", "ignorado", "ignorada",
-    "ninguém me ajudou", "ninguem me ajudou", "sem retorno", "sem resposta",
-    "não fui ajudado", "nao fui ajudado", "não recebi", "nao recebi",
-    "muito difícil", "muito dificil", "impossível", "impossivel",
-    "mal organizado", "mal organizada", "não aprendo", "nao aprendo",
+    "péssimo",
+    "pessimo",
+    "ruim",
+    "terrível",
+    "terrivel",
+    "horrível",
+    "horrivel",
+    "desorganizado",
+    "desorganizada",
+    "falta de",
+    "sem suporte",
+    "sem orientação",
+    "sem orientacao",
+    "não aprendi",
+    "nao aprendi",
+    "não consegui",
+    "nao consegui",
+    "desmotivado",
+    "desmotivada",
+    "abandono",
+    "ignorado",
+    "ignorada",
+    "ninguém me ajudou",
+    "ninguem me ajudou",
+    "sem retorno",
+    "sem resposta",
+    "não fui ajudado",
+    "nao fui ajudado",
+    "não recebi",
+    "nao recebi",
+    "muito difícil",
+    "muito dificil",
+    "impossível",
+    "impossivel",
+    "mal organizado",
+    "mal organizada",
+    "não aprendo",
+    "nao aprendo",
 ]
 
 # Prefixo da questão → respostas que disparam alerta (comparação case-insensitive)
@@ -27,6 +57,7 @@ ALERTAS_NOTA: dict[str, list[str]] = {
 
 
 # --- Utilitários (espelhados de pente_fino.py) ---
+
 
 def normalizar_nome(nome: str) -> str:
     if not isinstance(nome, str):
@@ -82,12 +113,11 @@ def carregar_alunos(path: Path) -> pd.DataFrame:
     else:
         df["estado"] = ""
         df["empresa"] = ""
-    return df[["nome_completo", "_nome_norm", "estado", "empresa"]].drop_duplicates(
-        subset=["_nome_norm"]
-    )
+    return df[["nome_completo", "_nome_norm", "estado", "empresa"]].drop_duplicates(subset=["_nome_norm"])
 
 
 # --- Detecção de alertas ---
+
 
 def _achar_coluna(colunas: list[str], prefixo: str) -> str | None:
     """Retorna o nome da coluna cujo início (sem espaços) começa com o prefixo."""
@@ -108,9 +138,7 @@ def detectar_alerta_texto(texto: str) -> list[str]:
     return [kw for kw in PALAVRAS_NEGATIVAS if kw in texto_lower]
 
 
-def analisar_relatorio(
-    path: Path, df_alunos: pd.DataFrame
-) -> list[dict]:
+def analisar_relatorio(path: Path, df_alunos: pd.DataFrame) -> list[dict]:
     df = pd.read_csv(path, dtype=str).fillna("")
     colunas = list(df.columns)
 
@@ -119,10 +147,7 @@ def analisar_relatorio(
         return []
 
     # Mapear prefixo → nome real da coluna no CSV
-    colunas_nota = {
-        prefixo: _achar_coluna(colunas, prefixo)
-        for prefixo in ALERTAS_NOTA
-    }
+    colunas_nota = {prefixo: _achar_coluna(colunas, prefixo) for prefixo in ALERTAS_NOTA}
     col_q5 = _achar_coluna(colunas, "5.")
     col_q6 = _achar_coluna(colunas, "6.")
 
@@ -140,14 +165,16 @@ def analisar_relatorio(
         # Alertas por nota
         for prefixo, col in colunas_nota.items():
             if col and detectar_alerta_nota(row[col], prefixo):
-                alertas.append({
-                    "nome_completo": aluno["nome_completo"],
-                    "estado": aluno["estado"],
-                    "empresa": aluno["empresa"],
-                    "relatorio": path.stem,
-                    "tipo_alerta": "nota_baixa",
-                    "detalhe": f"{col.strip()[:60]} → '{row[col]}'",
-                })
+                alertas.append(
+                    {
+                        "nome_completo": aluno["nome_completo"],
+                        "estado": aluno["estado"],
+                        "empresa": aluno["empresa"],
+                        "relatorio": path.stem,
+                        "tipo_alerta": "nota_baixa",
+                        "detalhe": f"{col.strip()[:60]} → '{row[col]}'",
+                    }
+                )
 
         # Alertas por texto (Q5 e Q6)
         for col_texto in [col_q5, col_q6]:
@@ -155,19 +182,22 @@ def analisar_relatorio(
                 continue
             palavras = detectar_alerta_texto(row[col_texto])
             if palavras:
-                alertas.append({
-                    "nome_completo": aluno["nome_completo"],
-                    "estado": aluno["estado"],
-                    "empresa": aluno["empresa"],
-                    "relatorio": path.stem,
-                    "tipo_alerta": "texto_negativo",
-                    "detalhe": f"{col_texto.strip()[:50]} | keywords: {', '.join(palavras)}",
-                })
+                alertas.append(
+                    {
+                        "nome_completo": aluno["nome_completo"],
+                        "estado": aluno["estado"],
+                        "empresa": aluno["empresa"],
+                        "relatorio": path.stem,
+                        "tipo_alerta": "texto_negativo",
+                        "detalhe": f"{col_texto.strip()[:50]} | keywords: {', '.join(palavras)}",
+                    }
+                )
 
     return alertas
 
 
 # --- Saída ---
+
 
 def exibir_resultado(alertas: list[dict]) -> None:
     if not alertas:
@@ -177,17 +207,15 @@ def exibir_resultado(alertas: list[dict]) -> None:
     df = pd.DataFrame(alertas)
 
     # --- Visão detalhada ---
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print("ALERTAS DETALHADOS")
-    print(f"{'='*80}")
+    print(f"{'=' * 80}")
 
     col_nome = max(df["nome_completo"].str.len().max(), len("Nome"))
     col_rel = max(df["relatorio"].str.len().max(), len("Relatório"))
     col_tipo = max(df["tipo_alerta"].str.len().max(), len("Tipo"))
 
-    header = (
-        f"{'Nome':<{col_nome}}  {'Relatório':<{col_rel}}  {'Tipo':<{col_tipo}}  Detalhe"
-    )
+    header = f"{'Nome':<{col_nome}}  {'Relatório':<{col_rel}}  {'Tipo':<{col_tipo}}  Detalhe"
     print(header)
     print("-" * min(len(header) + 40, 120))
 
@@ -200,9 +228,9 @@ def exibir_resultado(alertas: list[dict]) -> None:
         )
 
     # --- Resumo por aluno ---
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print("RESUMO POR ALUNO")
-    print(f"{'='*80}")
+    print(f"{'=' * 80}")
 
     resumo = (
         df.groupby(["nome_completo", "estado", "empresa"])
@@ -212,10 +240,7 @@ def exibir_resultado(alertas: list[dict]) -> None:
     )
 
     for _, row in resumo.iterrows():
-        print(
-            f"{row['nome_completo']}  |  {row['estado']}  |  "
-            f"{row['empresa']}  |  {row['total_alertas']} alerta(s)"
-        )
+        print(f"{row['nome_completo']}  |  {row['estado']}  |  {row['empresa']}  |  {row['total_alertas']} alerta(s)")
 
     print(f"\nTotal: {len(resumo)} aluno(s) com alertas | {len(df)} ocorrência(s).")
 
@@ -229,6 +254,7 @@ def salvar_resultado(alertas: list[dict], destino: Path) -> None:
 
 
 # --- Main ---
+
 
 def main() -> None:
     diretorio = Path(".")
