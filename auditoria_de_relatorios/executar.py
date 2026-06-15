@@ -27,11 +27,11 @@ Exemplo:
       -m nao_feitos \\
       -o resultado_auditoria.csv
 """
+
 import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
@@ -70,10 +70,10 @@ def selecionar_pasta_origem(padrao: Path) -> Path:
     print("\nEscolha a pasta de origem dos relatórios:")
     print(f"  (Deixe em branco para usar a pasta atual: {padrao.resolve()})")
     caminho_input = input("Digite o caminho da pasta ou deixe em branco: ").strip()
-    
+
     if not caminho_input:
         return padrao.resolve()
-    
+
     pasta = Path(caminho_input).expanduser().resolve()
     if not pasta.is_dir():
         print(f"ERRO: A pasta '{caminho_input}' não existe ou não é um diretório.")
@@ -131,15 +131,10 @@ def carregar_alunos(path: Path) -> pd.DataFrame:
             df["estado"] = ""
             df["empresa"] = ""
     else:
-        print(
-            "ERRO: A planilha geral precisa ter a coluna 'residente' "
-            "ou as colunas 'Nome' e 'Sobrenome'."
-        )
+        print("ERRO: A planilha geral precisa ter a coluna 'residente' ou as colunas 'Nome' e 'Sobrenome'.")
         sys.exit(1)
 
-    return df[["nome_completo", "_nome_norm", "estado", "empresa"]].drop_duplicates(
-        subset=["_nome_norm"]
-    )
+    return df[["nome_completo", "_nome_norm", "estado", "empresa"]].drop_duplicates(subset=["_nome_norm"])
 
 
 def carregar_relatorio(path: Path) -> set[str]:
@@ -156,9 +151,7 @@ def calcular_ausencias(df_alunos: pd.DataFrame, relatorios: dict[str, set[str]])
     linhas = []
     for _, aluno in df_alunos.iterrows():
         ausentes = [
-            nome_rel
-            for nome_rel, respondentes in relatorios.items()
-            if aluno["_nome_norm"] not in respondentes
+            nome_rel for nome_rel, respondentes in relatorios.items() if aluno["_nome_norm"] not in respondentes
         ]
         linhas.append(
             {
@@ -175,11 +168,7 @@ def calcular_ausencias(df_alunos: pd.DataFrame, relatorios: dict[str, set[str]])
 def calcular_presencas(df_alunos: pd.DataFrame, relatorios: dict[str, set[str]]) -> pd.DataFrame:
     linhas = []
     for _, aluno in df_alunos.iterrows():
-        presentes = [
-            nome_rel
-            for nome_rel, respondentes in relatorios.items()
-            if aluno["_nome_norm"] in respondentes
-        ]
+        presentes = [nome_rel for nome_rel, respondentes in relatorios.items() if aluno["_nome_norm"] in respondentes]
         linhas.append(
             {
                 "nome_completo": aluno["nome_completo"],
@@ -212,10 +201,10 @@ def selecionar_caminho_output(diretorio: Path) -> Path:
     print("\nEscolha o caminho para salvar o arquivo de resultado:")
     print("  (Deixe em branco para usar o padrão: ./resultado.csv)")
     caminho_input = input("Digite o caminho completo ou deixe em branco: ").strip()
-    
+
     if not caminho_input:
         return Path("resultado.csv").resolve()
-    
+
     path = Path(caminho_input).resolve()
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
@@ -278,14 +267,14 @@ def salvar_resultado(df: pd.DataFrame, destino: Path, modo: str = "nao_feitos") 
     if df.empty:
         print("Nenhum resultado encontrado. Arquivo de resultado não gerado.")
         return
-    
+
     # Garante a criação da pasta pai (ex: /dados) antes de salvar
     destino.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(destino, index=False, encoding="utf-8-sig")
     print(f"Resultado salvo com sucesso em: {destino}")
 
 
-def main(args_list: Optional[list[str]] = None) -> None:
+def main(args_list: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="Analisa presenças e ausências em relatórios de alunos.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -294,7 +283,7 @@ def main(args_list: Optional[list[str]] = None) -> None:
     parser.add_argument("--planilha", "-p", type=str, default=None)
     parser.add_argument("--modo", "-m", type=str, choices=["feitos", "nao_feitos"], default=None)
     parser.add_argument("--output", "-o", type=str, default=None)
-    
+
     # === CORREÇÃO CRÍTICA AQUI ===
     # Se args_list for passado via função, usamos ele. Se for None, o argparse olha o sys.argv.
     args = parser.parse_args(args_list)
@@ -328,7 +317,7 @@ def main(args_list: Optional[list[str]] = None) -> None:
 
     # Filtra mantendo apenas os relatórios reais
     relatorios_paths = [p for p in csvs if p.resolve() != planilha_geral.resolve()]
-    
+
     relatorios: dict[str, set[str]] = {}
     for path in relatorios_paths:
         respondentes = carregar_relatorio(path)
