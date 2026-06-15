@@ -159,6 +159,31 @@ def _definir_conteudo_editor(page, html_content: str) -> None:
     raise RuntimeError("Editor de conteúdo do fórum não encontrado.")
 
 
+def _verificar_conteudo_editor(page) -> bool:
+    """Retorna True se o editor tem conteúdo não-vazio."""
+    try:
+        content = page.evaluate(
+            "() => {"
+            "  if (typeof tinymce !== 'undefined' && tinymce.activeEditor)"
+            "    return tinymce.activeEditor.getContent();"
+            "  if (typeof tinyMCE !== 'undefined' && tinyMCE.activeEditor)"
+            "    return tinyMCE.activeEditor.getContent();"
+            "  return null;"
+            "}"
+        )
+        if content and content.strip() not in ("", "<p></p>", "<p><br></p>"):
+            return True
+    except Exception:
+        pass
+    for selector in (".editor_atto_content", "#id_messageeditable"):
+        el = page.locator(selector)
+        if el.count() > 0:
+            html = el.inner_html()
+            if html and html.strip() not in ("", "<br>", "<p><br></p>"):
+                return True
+    return False
+
+
 def _fazer_upload_imagem(page, image_path: str) -> None:
     direct_input = page.locator(
         'input[type=file][name*="attachment"], input[type=file][name*="file"]'
@@ -212,7 +237,7 @@ def _sincronizar_editor(page) -> None:
 
 def _submeter_formulario(page) -> None:
     _sincronizar_editor(page)
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(1_500)
     btn = page.locator("#id_submitbutton")
     if btn.count() > 0:
         btn.first.scroll_into_view_if_needed()
@@ -256,7 +281,11 @@ def publicar_no_forum(
         page.wait_for_timeout(2_000)
         print("  • Preenchendo conteúdo do editor...")
         _definir_conteudo_editor(page, html_content)
-        page.wait_for_timeout(1_000)
+        page.wait_for_timeout(1_500)
+        if not _verificar_conteudo_editor(page):
+            print("  • Conteúdo não detectado no editor — tentando novamente...")
+            _definir_conteudo_editor(page, html_content)
+            page.wait_for_timeout(1_500)
         if image_path:
             print(f"  • Anexando imagem: {Path(image_path).name}")
             _fazer_upload_imagem(page, image_path)
@@ -264,6 +293,12 @@ def publicar_no_forum(
         _submeter_formulario(page)
         print("  • Aguardando confirmação de publicação...")
         page.wait_for_url(lambda url: "post.php" not in url, timeout=30_000)
+        erros_moodle = page.locator(
+            ".alert-danger, .notifyproblem, #id_error_message, .error"
+        ).count()
+        if erros_moodle > 0:
+            print("  ⚠️ Moodle exibiu mensagem de erro após a submissão.", file=sys.stderr)
+            return False
         return True
     except PlaywrightTimeoutError as exc:
         print(f"  ❌ [TIMEOUT] {exc}", file=sys.stderr)
