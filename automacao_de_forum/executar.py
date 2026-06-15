@@ -293,11 +293,21 @@ def publicar_no_forum(
         _submeter_formulario(page)
         print("  • Aguardando confirmação de publicação...")
         page.wait_for_url(lambda url: "post.php" not in url, timeout=30_000)
-        erros_moodle = page.locator(
-            ".alert-danger, .notifyproblem, #id_error_message, .error"
-        ).count()
-        if erros_moodle > 0:
-            print("  ⚠️ Moodle exibiu mensagem de erro após a submissão.", file=sys.stderr)
+        # Verifica erros reais: elementos visíveis com texto de erro (evita
+        # falso-positivo do .error usado como classe de estilo em campos Moodle).
+        erro_real = page.evaluate(
+            "() => {"
+            "  const sels = ['.alert-danger', '.notifyproblem', '#id_error_message'];"
+            "  for (const s of sels) {"
+            "    const el = document.querySelector(s);"
+            "    if (el && el.offsetParent !== null && el.textContent.trim()) return true;"
+            "  }"
+            "  return false;"
+            "}"
+        )
+        if erro_real:
+            msg = page.locator(".alert-danger, .notifyproblem, #id_error_message").first.inner_text()
+            print(f"  ⚠️ Moodle exibiu erro: {msg.strip()[:120]}", file=sys.stderr)
             return False
         return True
     except PlaywrightTimeoutError as exc:
@@ -337,6 +347,7 @@ def main(args_list: list[str] | None = None) -> None:
     password = os.getenv("MOODLE_PASSWORD", "")
     forum_urls_raw = os.getenv("MOODLE_FORUM_URLS", "")
     headless = os.getenv("MOODLE_HEADLESS", "true").lower() == "true"
+    post_delay = int(os.getenv("MOODLE_POST_DELAY", "3"))
 
     post_file_env = os.getenv("MOODLE_POST_FILE", "")
     if args.content:
@@ -399,6 +410,9 @@ def main(args_list: list[str] | None = None) -> None:
             resultados[url] = sucesso
             status = "✔ Publicado" if sucesso else "❌ FALHOU"
             print(f"  {status}\n")
+            if i < len(forum_urls):
+                print(f"  ⏳ Aguardando {post_delay}s antes do próximo fórum...")
+                page.wait_for_timeout(post_delay * 1_000)
 
         browser.close()
 
