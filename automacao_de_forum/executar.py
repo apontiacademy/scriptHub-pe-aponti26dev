@@ -185,12 +185,67 @@ def _verificar_conteudo_editor(page) -> bool:
 
 
 def _fazer_upload_imagem(page, image_path: str) -> None:
+    # Caminho 1: botão de imagem na toolbar do TinyMCE (plugin tiny_image do Moodle)
+    img_btn = page.locator('button[data-mce-name="tiny_media_image"]')
+    if img_btn.count() > 0:
+        img_btn.first.click()
+        try:
+            page.wait_for_selector(
+                ".tiny_image_insert_image, .tiny_image_dropzone", timeout=6_000
+            )
+        except Exception:
+            pass
+        # O input de arquivo pode ser o fixo (#tiny_image_fileinput) ou o do dropzone
+        file_input = page.locator(
+            "#tiny_image_fileinput, input.drop-zone-fileinput, input[type=file][accept='image/*']"
+        ).first
+        if file_input.count() == 0:
+            print("  [AVISO] Input de imagem do TinyMCE não encontrado — imagem ignorada.")
+            # Fecha o dialog se abriu
+            esc = page.locator(".tox-dialog__footer .tox-button--secondary, button[aria-label='Fechar'], button[aria-label='Close']")
+            if esc.count() > 0:
+                esc.first.click()
+            return
+        file_input.set_input_files(image_path)
+        # Aguarda upload para o servidor
+        try:
+            page.wait_for_load_state("networkidle", timeout=12_000)
+        except Exception:
+            page.wait_for_timeout(3_000)
+        # Clica no botão de salvar/inserir do dialog
+        for label in (
+            "Salvar imagem", "Save image",
+            "Salvar", "Save",
+            "Inserir", "Insert",
+            "Inserir imagem", "Insert image",
+            "OK",
+        ):
+            btn = page.get_by_role("button", name=label)
+            if btn.count() > 0:
+                btn.first.click()
+                page.wait_for_timeout(1_500)
+                return
+        # Fallback: botão primário no rodapé do dialog TinyMCE ou modal Bootstrap
+        save_btn = page.locator(
+            ".tox-dialog__footer .tox-button:not(.tox-button--secondary),"
+            " .modal-footer .btn-primary"
+        )
+        if save_btn.count() > 0:
+            save_btn.first.click()
+            page.wait_for_timeout(1_500)
+            return
+        print("  [AVISO] Botão de salvar imagem não encontrado — imagem pode não ter sido inserida.")
+        return
+
+    # Caminho 2: input de anexo direto na área de attachments do formulário
     direct_input = page.locator(
         'input[type=file][name*="attachment"], input[type=file][name*="file"]'
     )
     if direct_input.count() > 0:
         direct_input.first.set_input_files(image_path)
         return
+
+    # Caminho 3: filemanager widget (Moodle clássico)
     add_btn = page.locator(".filemanager .fp-btn-add, .filemanager button").first
     if add_btn.count() == 0:
         print("  [AVISO] Área de anexos não encontrada — imagem ignorada.")
