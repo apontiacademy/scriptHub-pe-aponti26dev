@@ -4,7 +4,7 @@ from pathlib import Path
 import gspread
 import pandas as pd
 
-from .config import Config  # Importa a nossa Dataclass centralizada
+from .config import Config
 
 DIRETORIO_BASE = Path(__file__).resolve().parent
 
@@ -15,7 +15,6 @@ def main(config: Config):
     print("▶ [ESCOPO 3] INTEGRAÇÃO (GOOGLE SHEETS)")
     print("=" * 80)
 
-    # CORRIGIDO: Atributos mapeados conforme a nova dataclass traduzida para PT
     caminho_csv = config.moodle.csv_saida_analise
     caminho_credenciais = config.gsheets.caminho_json_credenciais
     id_planilha = config.gsheets.id_planilha
@@ -23,18 +22,30 @@ def main(config: Config):
 
     # Validação da existência dos arquivos antes de iniciar a operação
     if not caminho_csv.exists():
-        print(f"  ❌ ERRO: Arquivo de auditoria não encontrado em: {caminho_csv}", file=sys.stderr)
-        print("  • Certifique-se de rodar o Escopo 2 antes de iniciar o Escopo 3.", file=sys.stderr)
+        print(
+            f"  ❌ ERRO: Arquivo de auditoria não encontrado em: {caminho_csv}",
+            file=sys.stderr,
+        )
+        print(
+            "  • Certifique-se de rodar o Escopo 2 antes de iniciar o Escopo 3.",
+            file=sys.stderr,
+        )
         print("=" * 80)
         sys.exit(1)
 
     if not caminho_credenciais.exists():
-        print(f"  ❌ ERRO: Arquivo de credenciais do Google não encontrado em: {caminho_credenciais}", file=sys.stderr)
+        print(
+            f"  ❌ ERRO: Arquivo de credenciais do Google não encontrado em: {caminho_credenciais}",
+            file=sys.stderr,
+        )
         print("=" * 80)
         sys.exit(1)
 
     if not id_planilha:
-        print("  ❌ ERRO: id_planilha não configurado no arquivo de configurações.", file=sys.stderr)
+        print(
+            "  ❌ ERRO: id_planilha não configurado no arquivo de configurações.",
+            file=sys.stderr,
+        )
         print("=" * 80)
         sys.exit(1)
 
@@ -51,7 +62,10 @@ def main(config: Config):
             sys.exit(1)
 
     if df.shape[1] < 4:
-        print("  ❌ ERRO: O CSV de resultado possui menos de 4 colunas. Coluna D indisponível.", file=sys.stderr)
+        print(
+            "  ❌ ERRO: O CSV de resultado possui menos de 4 colunas. Coluna D indisponível.",
+            file=sys.stderr,
+        )
         print("=" * 80)
         sys.exit(1)
 
@@ -66,27 +80,35 @@ def main(config: Config):
     try:
         print("  • Autenticando com a API do Google...")
         gc = gspread.service_account(filename=str(caminho_credenciais))
-        
+
         print("  • Abrindo a planilha por ID...")
         planilha = gc.open_by_key(id_planilha)
         aba = planilha.worksheet(nome_aba)
 
         # Sobrescrevendo a Coluna D de forma segura
         print(f"  • Limpando dados antigos da Coluna D na aba '{nome_aba}'...")
-        aba.batch_clear(['D:D'])
+        aba.batch_clear(["D:D"])
 
-        print(f"  • Colando novos dados na Coluna D (Total de linhas: {len(dados_para_upload)})...")
-        aba.update(range_name='D1', values=dados_para_upload)
+        print(
+            f"  • Colando novos dados na Coluna D (Total de linhas: {len(dados_para_upload)})..."
+        )
+        aba.update(range_name="D1", values=dados_para_upload)
 
         print("  ✔ Google Sheets atualizado com sucesso!")
         print("\n✔ Escopo 3 finalizado com sucesso!")
 
     except gspread.exceptions.WorksheetNotFound:
-        print(f"  ❌ ERRO: A aba '{nome_aba}' não foi encontrada na planilha fornecida.", file=sys.stderr)
+        print(
+            f"  ❌ ERRO: A aba '{nome_aba}' não foi encontrada na planilha fornecida.",
+            file=sys.stderr,
+        )
         print("=" * 80)
         sys.exit(1)
     except Exception as e:
-        print(f"  ❌ ERRO inesperado durante a integração com o Google Sheets: {e}", file=sys.stderr)
+        print(
+            f"  ❌ ERRO inesperado durante a integração com o Google Sheets: {e}",
+            file=sys.stderr,
+        )
         print("=" * 80)
         sys.exit(1)
 
