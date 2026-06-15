@@ -47,3 +47,30 @@ def realizar_login(page, url_login, usuario, senha):
         page.wait_for_load_state("networkidle")
 
     print("  ✔ Login realizado com sucesso!")
+
+
+def exportar_frequencia(page, url, nome_turma, caminho_saida, url_login, usuario, senha):
+    print(f"  • Exportando frequência: {nome_turma}")
+    page.goto(url)
+    page.wait_for_load_state("networkidle")
+
+    if "login" in page.url:
+        print("  • Sessão expirada. Reconectando...")
+        realizar_login(page, url_login, usuario, senha)
+        page.goto(url)
+        page.wait_for_load_state("networkidle")
+
+    try:
+        checkbox = page.get_by_label(re.compile(r"observa", re.IGNORECASE))
+        if not checkbox.is_checked():
+            checkbox.check()
+
+        caminho_arquivo = caminho_saida / f"{nome_turma}.xlsx"
+        with page.expect_download(timeout=15000) as download_info:
+            page.get_by_role("button", name="OK").click()
+
+        download_info.value.save_as(str(caminho_arquivo))
+        print(f"  ✔ Salvo em: {caminho_arquivo}")
+
+    except Exception as e:
+        print(f"  ❌ ERRO ao exportar {nome_turma}: {e}", file=sys.stderr)
