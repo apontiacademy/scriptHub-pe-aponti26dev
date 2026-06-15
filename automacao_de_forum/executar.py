@@ -207,32 +207,31 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
                 esc.first.click()
             return
         file_input.set_input_files(image_path)
-        # Aguarda upload para o servidor
+        # Aguarda o Moodle processar o upload e exibir "Detalhes da imagem"
         try:
-            page.wait_for_load_state("networkidle", timeout=12_000)
+            page.wait_for_selector(
+                ".tiny_image_image_details, .tiny_image_preview",
+                timeout=20_000,
+            )
         except Exception:
-            page.wait_for_timeout(3_000)
-        # Clica no botão de salvar/inserir do dialog
-        for label in (
-            "Salvar imagem", "Save image",
-            "Salvar", "Save",
-            "Inserir", "Insert",
-            "Inserir imagem", "Insert image",
-            "OK",
-        ):
-            btn = page.get_by_role("button", name=label)
-            if btn.count() > 0:
-                btn.first.click()
-                page.wait_for_timeout(1_500)
-                return
-        # Fallback: botão primário no rodapé do dialog TinyMCE ou modal Bootstrap
+            print("  [AVISO] Tela de detalhes da imagem não apareceu — imagem pode não ter sido inserida.")
+            cancel = page.locator("button[data-action='cancel'], button[data-action='hide']")
+            if cancel.count() > 0:
+                cancel.first.click()
+            page.wait_for_timeout(500)
+            return
+        page.wait_for_timeout(500)
+        # Marca como decorativa para evitar bloqueio por validação de alt text
+        decorativa = page.locator("input.tiny_image_presentation")
+        if decorativa.count() > 0 and not decorativa.is_checked():
+            decorativa.check()
+        # Usa o seletor CSS específico da classe do plugin tiny_image
         save_btn = page.locator(
-            ".tox-dialog__footer .tox-button:not(.tox-button--secondary),"
-            " .modal-footer .btn-primary"
+            "button.tiny_image_urlentrysubmit, .modal-footer button[type=submit]"
         )
         if save_btn.count() > 0:
             save_btn.first.click()
-            page.wait_for_timeout(1_500)
+            page.wait_for_timeout(2_000)
             return
         print("  [AVISO] Botão de salvar imagem não encontrado — imagem pode não ter sido inserida.")
         return
