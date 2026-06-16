@@ -1,10 +1,8 @@
 import argparse
-import os
 import re
 import sys
 from pathlib import Path
 
-from dotenv import load_dotenv
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
