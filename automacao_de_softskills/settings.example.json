@@ -1,0 +1,41 @@
+{
+  "moodle": {
+    "urlBase": "https://moodle.aponti.org.br",
+    "bootcampCategoryId": "xxxx",
+    "aprovadosCategoryId": "xxxx",
+    "outputDirectory": "resultados_softskills",
+    "activities": [
+      {
+        "label": "Gestão de Tempo",
+        "filename": "gestao_de_tempo",
+        "keywords": ["gestão de tempo", "gestao de tempo"]
+      },
+      {
+        "label": "Inteligência Emocional",
+        "filename": "inteligencia_emocional",
+        "keywords": ["inteligência emocional", "inteligencia emocional"]
+      },
+      {
+        "label": "Trabalho em Equipe",
+        "filename": "trabalho_em_equipe",
+        "keywords": ["trabalho em equipe"]
+      },
+      {
+        "label": "Resolução de Problemas",
+        "filename": "resolucao_de_problemas",
+        "keywords": ["resolução de problemas", "resolucao de problemas", "resolução dos problemas", "resolução problemas"]
+      },
+      {
+        "label": "Comunicação",
+        "filename": "comunicacao",
+        "keywords": ["comunicação", "comunicacao"]
+      },
+      {
+        "label": "Liderança Pessoal",
+        "filename": "lideranca_pessoal",
+        "keywords": ["liderança pessoal", "lideranca pessoal"]
+      }
+    ],
+    "softskillsKeywords": ["soft skills", "softskills", "soft skill"]
+  }
+}
