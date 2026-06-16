@@ -1,0 +1,13 @@
+{
+  "moodle": {
+    "url": "https://moodle.example.com",
+    "bootcampCatId": "xxxx",
+    "aprovadosCatId": "xxxx"
+  },
+  "drive": {
+    "folderId": "xxxx",
+    "credentialsPath": "credentials.json"
+  },
+  "outputDir": "bootcamps",
+  "aprovadosDir": "aprovados"
+}
