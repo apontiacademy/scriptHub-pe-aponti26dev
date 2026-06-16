@@ -1,8 +1,6 @@
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from menu import discover_modules, read_docstring
 
@@ -72,3 +70,9 @@ def test_discover_modules_sem_descricao_retorna_string_vazia(tmp_path):
 
     result = discover_modules(tmp_path)
     assert result == [("sem_doc", "")]
+
+
+def test_read_docstring_docstring_vazio_retorna_vazio(tmp_path):
+    f = tmp_path / "__main__.py"
+    f.write_text('""""""', encoding="utf-8")
+    assert read_docstring(f) == ""

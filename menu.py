@@ -15,7 +15,8 @@ def read_docstring(main_py: Path) -> str:
             rest = stripped[len(quote):]
             end = rest.find(quote)
             if end != -1:
-                return rest[:end].strip().splitlines()[0]
+                lines = rest[:end].strip().splitlines()
+                return lines[0] if lines else ""
     return ""
 
 
