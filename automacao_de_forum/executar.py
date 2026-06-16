@@ -159,13 +159,92 @@ def _definir_conteudo_editor(page, html_content: str) -> None:
     raise RuntimeError("Editor de conteúdo do fórum não encontrado.")
 
 
+def _verificar_conteudo_editor(page) -> bool:
+    """Retorna True se o editor tem conteúdo não-vazio."""
+    try:
+        content = page.evaluate(
+            "() => {"
+            "  if (typeof tinymce !== 'undefined' && tinymce.activeEditor)"
+            "    return tinymce.activeEditor.getContent();"
+            "  if (typeof tinyMCE !== 'undefined' && tinyMCE.activeEditor)"
+            "    return tinyMCE.activeEditor.getContent();"
+            "  return null;"
+            "}"
+        )
+        if content and content.strip() not in ("", "<p></p>", "<p><br></p>"):
+            return True
+    except Exception:
+        pass
+    for selector in (".editor_atto_content", "#id_messageeditable"):
+        el = page.locator(selector)
+        if el.count() > 0:
+            html = el.inner_html()
+            if html and html.strip() not in ("", "<br>", "<p><br></p>"):
+                return True
+    return False
+
+
 def _fazer_upload_imagem(page, image_path: str) -> None:
+    # Caminho 1: botão de imagem na toolbar do TinyMCE (plugin tiny_image do Moodle)
+    img_btn = page.locator('button[data-mce-name="tiny_media_image"]')
+    if img_btn.count() > 0:
+        img_btn.first.click()
+        try:
+            page.wait_for_selector(
+                ".tiny_image_insert_image, .tiny_image_dropzone", timeout=6_000
+            )
+        except Exception:
+            pass
+        # O input de arquivo pode ser o fixo (#tiny_image_fileinput) ou o do dropzone
+        file_input = page.locator(
+            "#tiny_image_fileinput, input.drop-zone-fileinput, input[type=file][accept='image/*']"
+        ).first
+        if file_input.count() == 0:
+            print("  [AVISO] Input de imagem do TinyMCE não encontrado — imagem ignorada.")
+            # Fecha o dialog se abriu
+            esc = page.locator(".tox-dialog__footer .tox-button--secondary, button[aria-label='Fechar'], button[aria-label='Close']")
+            if esc.count() > 0:
+                esc.first.click()
+            return
+        file_input.set_input_files(image_path)
+        # Aguarda o Moodle processar o upload e exibir "Detalhes da imagem"
+        try:
+            page.wait_for_selector(
+                ".tiny_image_image_details, .tiny_image_preview",
+                timeout=20_000,
+            )
+        except Exception:
+            print("  [AVISO] Tela de detalhes da imagem não apareceu — imagem pode não ter sido inserida.")
+            cancel = page.locator("button[data-action='cancel'], button[data-action='hide']")
+            if cancel.count() > 0:
+                cancel.first.click()
+            page.wait_for_timeout(500)
+            return
+        page.wait_for_timeout(500)
+        # Marca como decorativa para evitar bloqueio por validação de alt text
+        decorativa = page.locator("input.tiny_image_presentation")
+        if decorativa.count() > 0 and not decorativa.is_checked():
+            decorativa.check()
+        # Usa o seletor CSS específico da classe do plugin tiny_image
+        save_btn = page.locator(
+            "button.tiny_image_urlentrysubmit, .modal-footer button[type=submit]"
+        )
+        if save_btn.count() > 0:
+            save_btn.first.click()
+            page.wait_for_timeout(2_000)
+            return
+        print("  [AVISO] Botão de salvar imagem não encontrado — imagem pode não ter sido inserida.")
+        return
+
+    # Caminho 2: input de anexo direto na área de attachments do formulário
     direct_input = page.locator(
         'input[type=file][name*="attachment"], input[type=file][name*="file"]'
     )
     if direct_input.count() > 0:
         direct_input.first.set_input_files(image_path)
         return
+
+    # Caminho 3: filemanager widget (Moodle clássico)
     add_btn = page.locator(".filemanager .fp-btn-add, .filemanager button").first
     if add_btn.count() == 0:
         print("  [AVISO] Área de anexos não encontrada — imagem ignorada.")
@@ -212,7 +291,7 @@ def _sincronizar_editor(page) -> None:
 
 def _submeter_formulario(page) -> None:
     _sincronizar_editor(page)
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(1_500)
     btn = page.locator("#id_submitbutton")
     if btn.count() > 0:
         btn.first.scroll_into_view_if_needed()
@@ -256,7 +335,11 @@ def publicar_no_forum(
         page.wait_for_timeout(2_000)
         print("  • Preenchendo conteúdo do editor...")
         _definir_conteudo_editor(page, html_content)
-        page.wait_for_timeout(1_000)
+        page.wait_for_timeout(1_500)
+        if not _verificar_conteudo_editor(page):
+            print("  • Conteúdo não detectado no editor — tentando novamente...")
+            _definir_conteudo_editor(page, html_content)
+            page.wait_for_timeout(1_500)
         if image_path:
             print(f"  • Anexando imagem: {Path(image_path).name}")
             _fazer_upload_imagem(page, image_path)
@@ -264,6 +347,22 @@ def publicar_no_forum(
         _submeter_formulario(page)
         print("  • Aguardando confirmação de publicação...")
         page.wait_for_url(lambda url: "post.php" not in url, timeout=30_000)
+        # Verifica erros reais: elementos visíveis com texto de erro (evita
+        # falso-positivo do .error usado como classe de estilo em campos Moodle).
+        erro_real = page.evaluate(
+            "() => {"
+            "  const sels = ['.alert-danger', '.notifyproblem', '#id_error_message'];"
+            "  for (const s of sels) {"
+            "    const el = document.querySelector(s);"
+            "    if (el && el.offsetParent !== null && el.textContent.trim()) return true;"
+            "  }"
+            "  return false;"
+            "}"
+        )
+        if erro_real:
+            msg = page.locator(".alert-danger, .notifyproblem, #id_error_message").first.inner_text()
+            print(f"  ⚠️ Moodle exibiu erro: {msg.strip()[:120]}", file=sys.stderr)
+            return False
         return True
     except PlaywrightTimeoutError as exc:
         print(f"  ❌ [TIMEOUT] {exc}", file=sys.stderr)
@@ -302,6 +401,7 @@ def main(args_list: list[str] | None = None) -> None:
     password = os.getenv("MOODLE_PASSWORD", "")
     forum_urls_raw = os.getenv("MOODLE_FORUM_URLS", "")
     headless = os.getenv("MOODLE_HEADLESS", "true").lower() == "true"
+    post_delay = int(os.getenv("MOODLE_POST_DELAY", "3"))
 
     post_file_env = os.getenv("MOODLE_POST_FILE", "")
     if args.content:
@@ -364,6 +464,9 @@ def main(args_list: list[str] | None = None) -> None:
             resultados[url] = sucesso
             status = "✔ Publicado" if sucesso else "❌ FALHOU"
             print(f"  {status}\n")
+            if i < len(forum_urls):
+                print(f"  ⏳ Aguardando {post_delay}s antes do próximo fórum...")
+                page.wait_for_timeout(post_delay * 1_000)
 
         browser.close()
 
