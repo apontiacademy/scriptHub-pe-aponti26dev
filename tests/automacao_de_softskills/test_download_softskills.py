@@ -1,19 +1,29 @@
-from unittest.mock import MagicMock, patch
+from pathlib import Path
+from unittest.mock import MagicMock
 
-import gspread
 import pytest
 from bs4 import BeautifulSoup
 
-from automacao_de_softskills.download_softskills_fap2026 import (
+from automacao_de_softskills.download_softskills import (
     download_csv,
     extract_participant_name,
     get_approved_courses,
     get_course_participants,
-    upload_to_drive,
     get_quiz_ids,
     get_turmas,
     split_trilha,
 )
+from automacao_de_softskills.config import Config, MoodleConfig, DriveConfig
+
+
+def _make_config(url='https://moodle.test', bootcamp_cat_id='136', aprovados_cat_id='140'):
+    return Config(
+        moodle=MoodleConfig(usuario='user', senha='pass', url=url,
+                            bootcamp_cat_id=bootcamp_cat_id, aprovados_cat_id=aprovados_cat_id),
+        drive=DriveConfig(folder_id='folder-id', credentials_path=Path('creds.json')),
+        output_dir=Path('/tmp/bootcamps'),
+        aprovados_dir=Path('/tmp/aprovados'),
+    )
 
 
 # ── split_trilha ──────────────────────────────────────────────────────────────
@@ -92,7 +102,7 @@ def test_get_turmas_encontra_turmas():
     </body></html>
     """
     session = _mock_session_get(html)
-    turmas = get_turmas(session)
+    turmas = get_turmas(session, config=_make_config(url='https://moodle.test'))
 
     assert '01' in turmas
     assert '02' in turmas
@@ -108,7 +118,7 @@ def test_get_turmas_ignora_links_sem_padrao():
     </body></html>
     """
     session = _mock_session_get(html)
-    turmas = get_turmas(session)
+    turmas = get_turmas(session, config=_make_config(url='https://moodle.test'))
 
     assert len(turmas) == 1
     assert '03' in turmas
@@ -122,7 +132,7 @@ def test_get_turmas_sem_duplicatas():
     </body></html>
     """
     session = _mock_session_get(html)
-    turmas = get_turmas(session)
+    turmas = get_turmas(session, config=_make_config(url='https://moodle.test'))
 
     assert len(turmas) == 1
     assert turmas['01'] == '/course/view.php?id=10'
@@ -130,7 +140,7 @@ def test_get_turmas_sem_duplicatas():
 
 def test_get_turmas_vazio():
     session = _mock_session_get('<html><body></body></html>')
-    assert get_turmas(session) == {}
+    assert get_turmas(session, config=_make_config(url='https://moodle.test')) == {}
 
 
 # ── get_quiz_ids ──────────────────────────────────────────────────────────────
@@ -219,7 +229,7 @@ def test_download_csv_retorna_conteudo():
     post_resp.content = b'Nome,Nota\nJoao,8.5'
     session.post.return_value = post_resp
 
-    result = download_csv(session, '42')
+    result = download_csv(session, '42', config=_make_config())
 
     assert result == b'Nome,Nota\nJoao,8.5'
 
@@ -230,7 +240,7 @@ def test_download_csv_sem_sesskey_retorna_none():
     get_resp.text = '<html><p>Sem sesskey aqui</p></html>'
     session.get.return_value = get_resp
 
-    result = download_csv(session, '42')
+    result = download_csv(session, '42', config=_make_config())
 
     assert result is None
     session.post.assert_not_called()
@@ -248,7 +258,7 @@ def test_download_csv_post_sem_csv_retorna_none():
     post_resp.headers = {'Content-Type': 'text/html'}
     session.post.return_value = post_resp
 
-    result = download_csv(session, '42')
+    result = download_csv(session, '42', config=_make_config())
 
     assert result is None
 
@@ -265,7 +275,7 @@ def test_download_csv_post_status_erro_retorna_none():
     post_resp.headers = {'Content-Type': 'text/csv'}
     session.post.return_value = post_resp
 
-    result = download_csv(session, '42')
+    result = download_csv(session, '42', config=_make_config())
 
     assert result is None
 
@@ -280,7 +290,7 @@ def test_get_approved_courses_retorna_cursos():
     </body></html>
     """
     session = _mock_session_get(html)
-    courses = get_approved_courses(session)
+    courses = get_approved_courses(session, config=_make_config())
 
     assert '5' in courses
     assert courses['5'] == 'Trilha Backend - Turma 1'
@@ -296,7 +306,7 @@ def test_get_approved_courses_sem_duplicatas():
     </body></html>
     """
     session = _mock_session_get(html)
-    courses = get_approved_courses(session)
+    courses = get_approved_courses(session, config=_make_config())
 
     assert len(courses) == 1
     assert courses['5'] == 'Trilha Backend'
@@ -310,7 +320,7 @@ def test_get_approved_courses_ignora_links_sem_course_view():
     </body></html>
     """
     session = _mock_session_get(html)
-    courses = get_approved_courses(session)
+    courses = get_approved_courses(session, config=_make_config())
 
     assert len(courses) == 1
     assert '3' in courses
@@ -334,7 +344,7 @@ def test_get_course_participants_retorna_participantes():
         ('Maria Souza', 'maria@example.com'),
     ])
     session = _mock_session_get(html)
-    parts = get_course_participants(session, '5', 'Trilha Backend - Turma 1')
+    parts = get_course_participants(session, '5', 'Trilha Backend - Turma 1', config=_make_config())
 
     assert len(parts) == 2
     assert parts[0]['nome'] == 'João Silva'
@@ -345,7 +355,7 @@ def test_get_course_participants_retorna_participantes():
 def test_get_course_participants_sem_tabela_retorna_vazio():
     html = _make_participants_html([], include_table=False)
     session = _mock_session_get(html)
-    parts = get_course_participants(session, '5', 'Trilha Backend')
+    parts = get_course_participants(session, '5', 'Trilha Backend', config=_make_config())
 
     assert parts == []
 
@@ -361,7 +371,7 @@ def test_get_course_participants_ignora_linha_sem_email():
     </body></html>
     """
     session = _mock_session_get(html)
-    parts = get_course_participants(session, '5', 'Trilha X')
+    parts = get_course_participants(session, '5', 'Trilha X', config=_make_config())
 
     assert len(parts) == 1
     assert parts[0]['email'] == 'maria@ok.com'
@@ -370,142 +380,6 @@ def test_get_course_participants_ignora_linha_sem_email():
 def test_get_course_participants_email_normalizado_para_minusculo():
     html = _make_participants_html([('Ana Lima', 'ANA@EXAMPLE.COM')])
     session = _mock_session_get(html)
-    parts = get_course_participants(session, '5', 'Trilha Y')
+    parts = get_course_participants(session, '5', 'Trilha Y', config=_make_config())
 
     assert parts[0]['email'] == 'ana@example.com'
-
-
-# ── upload_to_drive ───────────────────────────────────────────────────────────
-
-def _make_drive_service(existing_files=None):
-    service = MagicMock()
-    files = service.files.return_value
-    files.list.return_value.execute.return_value = {'files': existing_files or []}
-    files.create.return_value.execute.return_value = {'id': 'novo-id-123'}
-    return service
-
-
-def _make_sheets_mock(worksheet_exists=True):
-    """Retorna mocks de gspread (gc, spreadsheet, worksheet)."""
-    ws = MagicMock()
-    sh = MagicMock()
-
-    if worksheet_exists:
-        sh.worksheet.return_value = ws
-    else:
-        sh.worksheet.side_effect = gspread.WorksheetNotFound
-        sh.add_worksheet.return_value = ws
-
-    gc = MagicMock()
-    gc.open_by_key.return_value = sh
-    return gc, sh, ws
-
-
-@patch('automacao_de_softskills.download_softskills_fap2026.gspread.authorize')
-@patch('automacao_de_softskills.download_softskills_fap2026.build')
-@patch('automacao_de_softskills.download_softskills_fap2026.service_account.Credentials.from_service_account_file')
-def test_upload_to_drive_cria_planilha_quando_nao_existe(mock_creds, mock_build, mock_authorize, tmp_path):
-    csv_file = tmp_path / 'aprovados_bootcamp_fap2026.csv'
-    csv_file.write_text('Nome,Email\nJoão,joao@example.com')
-
-    service = _make_drive_service(existing_files=[])
-    mock_build.return_value = service
-    gc, sh, ws = _make_sheets_mock()
-    mock_authorize.return_value = gc
-
-    upload_to_drive(str(csv_file), 'pasta-id-123')
-
-    service.files.return_value.create.assert_called_once()
-    call_kwargs = service.files.return_value.create.call_args
-    assert call_kwargs.kwargs['body']['name'] == 'aprovados_bootcamp_fap2026'
-    assert call_kwargs.kwargs['body']['parents'] == ['pasta-id-123']
-    assert call_kwargs.kwargs['body']['mimeType'] == 'application/vnd.google-apps.spreadsheet'
-
-
-@patch('automacao_de_softskills.download_softskills_fap2026.gspread.authorize')
-@patch('automacao_de_softskills.download_softskills_fap2026.build')
-@patch('automacao_de_softskills.download_softskills_fap2026.service_account.Credentials.from_service_account_file')
-def test_upload_to_drive_reutiliza_planilha_existente(mock_creds, mock_build, mock_authorize, tmp_path):
-    csv_file = tmp_path / 'aprovados_bootcamp_fap2026.csv'
-    csv_file.write_text('Nome,Email\nJoão,joao@example.com')
-
-    service = _make_drive_service(existing_files=[{'id': 'planilha-existente-456'}])
-    mock_build.return_value = service
-    gc, sh, ws = _make_sheets_mock()
-    mock_authorize.return_value = gc
-
-    upload_to_drive(str(csv_file), 'pasta-id-123')
-
-    service.files.return_value.create.assert_not_called()
-    gc.open_by_key.assert_called_once_with('planilha-existente-456')
-
-
-@patch('automacao_de_softskills.download_softskills_fap2026.gspread.authorize')
-@patch('automacao_de_softskills.download_softskills_fap2026.build')
-@patch('automacao_de_softskills.download_softskills_fap2026.service_account.Credentials.from_service_account_file')
-def test_upload_to_drive_atualiza_apenas_aba_dados(mock_creds, mock_build, mock_authorize, tmp_path):
-    csv_file = tmp_path / 'aprovados_bootcamp_fap2026.csv'
-    csv_file.write_text('Nome,Email\nJoão,joao@example.com')
-
-    mock_build.return_value = _make_drive_service(existing_files=[{'id': 'abc'}])
-    gc, sh, ws = _make_sheets_mock(worksheet_exists=True)
-    mock_authorize.return_value = gc
-
-    upload_to_drive(str(csv_file), 'pasta-id-123')
-
-    sh.worksheet.assert_called_once_with('Dados')
-    ws.clear.assert_called_once()
-    ws.update.assert_called_once()
-
-
-@patch('automacao_de_softskills.download_softskills_fap2026.gspread.authorize')
-@patch('automacao_de_softskills.download_softskills_fap2026.build')
-@patch('automacao_de_softskills.download_softskills_fap2026.service_account.Credentials.from_service_account_file')
-def test_upload_to_drive_cria_aba_dados_se_nao_existir(mock_creds, mock_build, mock_authorize, tmp_path):
-    csv_file = tmp_path / 'aprovados_bootcamp_fap2026.csv'
-    csv_file.write_text('Nome,Email\nJoão,joao@example.com')
-
-    mock_build.return_value = _make_drive_service(existing_files=[{'id': 'abc'}])
-    gc, sh, ws = _make_sheets_mock(worksheet_exists=False)
-    mock_authorize.return_value = gc
-
-    upload_to_drive(str(csv_file), 'pasta-id-123')
-
-    sh.add_worksheet.assert_called_once_with(title='Dados', rows=10000, cols=20)
-    ws.clear.assert_called_once()
-    ws.update.assert_called_once()
-
-
-@patch('automacao_de_softskills.download_softskills_fap2026.gspread.authorize')
-@patch('automacao_de_softskills.download_softskills_fap2026.build')
-@patch('automacao_de_softskills.download_softskills_fap2026.service_account.Credentials.from_service_account_file')
-def test_upload_to_drive_nunca_deleta(mock_creds, mock_build, mock_authorize, tmp_path):
-    csv_file = tmp_path / 'aprovados_bootcamp_fap2026.csv'
-    csv_file.write_text('Nome,Email\nJoão,joao@example.com')
-
-    service = _make_drive_service(existing_files=[{'id': 'abc'}])
-    mock_build.return_value = service
-    gc, sh, ws = _make_sheets_mock()
-    mock_authorize.return_value = gc
-
-    upload_to_drive(str(csv_file), 'pasta-id-123')
-
-    service.files.return_value.delete.assert_not_called()
-    sh.del_worksheet.assert_not_called()
-
-
-@patch('automacao_de_softskills.download_softskills_fap2026.gspread.authorize')
-@patch('automacao_de_softskills.download_softskills_fap2026.build')
-@patch('automacao_de_softskills.download_softskills_fap2026.service_account.Credentials.from_service_account_file')
-def test_upload_to_drive_autentica_com_scopes_corretos(mock_creds, mock_build, mock_authorize, tmp_path):
-    csv_file = tmp_path / 'aprovados_bootcamp_fap2026.csv'
-    csv_file.write_text('Nome,Email\nJoão,joao@example.com')
-
-    mock_build.return_value = _make_drive_service()
-    mock_authorize.return_value = _make_sheets_mock()[0]
-
-    upload_to_drive(str(csv_file), 'pasta-id-123')
-
-    _, kwargs = mock_creds.call_args
-    assert 'https://www.googleapis.com/auth/drive.file' in kwargs['scopes']
-    assert 'https://www.googleapis.com/auth/spreadsheets' in kwargs['scopes']
