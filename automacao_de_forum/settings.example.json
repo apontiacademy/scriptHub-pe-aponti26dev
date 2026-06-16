@@ -1,0 +1,13 @@
+{
+  "moodle": {
+    "urlLogin": "https://moodle.yourinstitution.edu/login/index.php",
+    "urlsForuns": [
+      "https://moodle.yourinstitution.edu/mod/forum/view.php?id=1111",
+      "https://moodle.yourinstitution.edu/mod/forum/view.php?id=2222"
+    ],
+    "headless": true,
+    "postDelay": 3,
+    "caminhoPostFile": "post.md",
+    "caminhoImagem": null
+  }
+}

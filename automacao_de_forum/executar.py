@@ -8,13 +8,12 @@ from dotenv import load_dotenv
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
+from .config import Config
+
 # =========================================================================
 # ANCORAGEM DINÂMICA DE ESCOPO
 # =========================================================================
 PASTA_ESCOPO = Path(__file__).resolve().parent
-
-env_path = PASTA_ESCOPO / ".env"
-load_dotenv(dotenv_path=env_path, override=True)
 
 _IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 
@@ -22,6 +21,7 @@ _IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 # ---------------------------------------------------------------------------
 # Conversão de conteúdo
 # ---------------------------------------------------------------------------
+
 
 def carregar_conteudo(filepath: Path) -> tuple[str, str]:
     """Lê o arquivo .md e retorna (titulo, html_conteudo)."""
@@ -38,7 +38,10 @@ def carregar_conteudo(filepath: Path) -> tuple[str, str]:
             body_start = i + 1
             break
     if not title:
-        print("  ❌ ERRO: O arquivo .md deve ter um título na primeira linha com '#'.", file=sys.stderr)
+        print(
+            "  ❌ ERRO: O arquivo .md deve ter um título na primeira linha com '#'.",
+            file=sys.stderr,
+        )
         print("  Exemplo: # Semana 10 - Relatórios", file=sys.stderr)
         sys.exit(1)
     body = "\n".join(lines[body_start:]).strip()
@@ -51,7 +54,10 @@ def encontrar_imagem(pasta: Path, override: str | None = None) -> str | None:
     if override:
         path = Path(override).resolve()
         if not path.exists():
-            print(f"  ❌ ERRO: Arquivo de imagem não encontrado: {override}", file=sys.stderr)
+            print(
+                f"  ❌ ERRO: Arquivo de imagem não encontrado: {override}",
+                file=sys.stderr,
+            )
             sys.exit(1)
         return str(path)
     for ext in _IMAGE_EXTENSIONS:
@@ -85,11 +91,12 @@ def _md_para_html(text: str) -> str:
 # Automação Playwright
 # ---------------------------------------------------------------------------
 
+
 def fazer_login(page, login_url: str, username: str, password: str) -> None:
     page.goto(login_url, timeout=30_000)
     page.fill("#username", username)
     page.fill("#password", password)
-    page.click('[type=submit]')
+    page.click("[type=submit]")
     page.wait_for_function(
         "() => !window.location.href.includes('/login')",
         timeout=30_000,
@@ -135,14 +142,22 @@ def _definir_conteudo_editor(page, html_content: str) -> None:
     except Exception:
         pass
     try:
-        if page.evaluate("typeof tinymce !== 'undefined' && tinymce.activeEditor !== null"):
-            page.evaluate("(html) => tinymce.activeEditor.setContent(html)", html_content)
+        if page.evaluate(
+            "typeof tinymce !== 'undefined' && tinymce.activeEditor !== null"
+        ):
+            page.evaluate(
+                "(html) => tinymce.activeEditor.setContent(html)", html_content
+            )
             return
     except Exception:
         pass
     try:
-        if page.evaluate("typeof tinyMCE !== 'undefined' && tinyMCE.activeEditor !== null"):
-            page.evaluate("(html) => tinyMCE.activeEditor.setContent(html)", html_content)
+        if page.evaluate(
+            "typeof tinyMCE !== 'undefined' && tinyMCE.activeEditor !== null"
+        ):
+            page.evaluate(
+                "(html) => tinyMCE.activeEditor.setContent(html)", html_content
+            )
             return
     except Exception:
         pass
@@ -200,9 +215,13 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
             "#tiny_image_fileinput, input.drop-zone-fileinput, input[type=file][accept='image/*']"
         ).first
         if file_input.count() == 0:
-            print("  [AVISO] Input de imagem do TinyMCE não encontrado — imagem ignorada.")
+            print(
+                "  [AVISO] Input de imagem do TinyMCE não encontrado — imagem ignorada."
+            )
             # Fecha o dialog se abriu
-            esc = page.locator(".tox-dialog__footer .tox-button--secondary, button[aria-label='Fechar'], button[aria-label='Close']")
+            esc = page.locator(
+                ".tox-dialog__footer .tox-button--secondary, button[aria-label='Fechar'], button[aria-label='Close']"
+            )
             if esc.count() > 0:
                 esc.first.click()
             return
@@ -214,8 +233,12 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
                 timeout=20_000,
             )
         except Exception:
-            print("  [AVISO] Tela de detalhes da imagem não apareceu — imagem pode não ter sido inserida.")
-            cancel = page.locator("button[data-action='cancel'], button[data-action='hide']")
+            print(
+                "  [AVISO] Tela de detalhes da imagem não apareceu — imagem pode não ter sido inserida."
+            )
+            cancel = page.locator(
+                "button[data-action='cancel'], button[data-action='hide']"
+            )
             if cancel.count() > 0:
                 cancel.first.click()
             page.wait_for_timeout(500)
@@ -233,7 +256,9 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
             save_btn.first.click()
             page.wait_for_timeout(2_000)
             return
-        print("  [AVISO] Botão de salvar imagem não encontrado — imagem pode não ter sido inserida.")
+        print(
+            "  [AVISO] Botão de salvar imagem não encontrado — imagem pode não ter sido inserida."
+        )
         return
 
     # Caminho 2: input de anexo direto na área de attachments do formulário
@@ -269,7 +294,9 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
             btn.first.click()
             page.wait_for_selector(".fp-btn-add", timeout=10_000)
             return
-    print("  [AVISO] Botão de confirmação de upload não encontrado — imagem pode não ter sido anexada.")
+    print(
+        "  [AVISO] Botão de confirmação de upload não encontrado — imagem pode não ter sido anexada."
+    )
 
 
 def _sincronizar_editor(page) -> None:
@@ -360,7 +387,9 @@ def publicar_no_forum(
             "}"
         )
         if erro_real:
-            msg = page.locator(".alert-danger, .notifyproblem, #id_error_message").first.inner_text()
+            msg = page.locator(
+                ".alert-danger, .notifyproblem, #id_error_message"
+            ).first.inner_text()
             print(f"  ⚠️ Moodle exibiu erro: {msg.strip()[:120]}", file=sys.stderr)
             return False
         return True
@@ -377,11 +406,24 @@ def publicar_no_forum(
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main(args_list: list[str] | None = None) -> None:
     print("=" * 80)
     print("▶ AUTOMAÇÃO DE POSTAGEM EM FÓRUNS (MOODLE)")
     print("=" * 80)
 
+    # Carrega as configurações unificadas (settings.json + .env)
+    config = Config.load()
+
+    # Atributos mapeados conforme a nova dataclass
+    login_url = config.moodle.url_login
+    username = config.moodle.usuario
+    password = config.moodle.senha
+    forum_urls = config.moodle.urls_foruns
+    headless = config.moodle.headless
+    post_delay = config.moodle.post_delay
+
+    # Handle command line arguments for content and image overrides
     parser = argparse.ArgumentParser(
         description="Publica um novo tópico de discussão em fóruns do Moodle."
     )
@@ -396,48 +438,40 @@ def main(args_list: list[str] | None = None) -> None:
     )
     args = parser.parse_args(args_list)
 
-    login_url = os.getenv("MOODLE_LOGIN_URL", "")
-    username = os.getenv("MOODLE_USERNAME", "")
-    password = os.getenv("MOODLE_PASSWORD", "")
-    forum_urls_raw = os.getenv("MOODLE_FORUM_URLS", "")
-    headless = os.getenv("MOODLE_HEADLESS", "true").lower() == "true"
-    post_delay = int(os.getenv("MOODLE_POST_DELAY", "3"))
-
-    post_file_env = os.getenv("MOODLE_POST_FILE", "")
+    # Determine post file path (CLI arg > settings.json > default)
     if args.content:
         post_file = Path(args.content).resolve()
-    elif post_file_env:
-        post_file = (PASTA_ESCOPO / post_file_env.lstrip("./")).resolve()
     else:
-        post_file = PASTA_ESCOPO / "post.md"
+        post_file = config.moodle.caminho_post_file
 
-    erros = []
-    if not login_url:
-        erros.append("- MOODLE_LOGIN_URL")
-    if not username:
-        erros.append("- MOODLE_USERNAME")
-    if not password:
-        erros.append("- MOODLE_PASSWORD")
-    if not forum_urls_raw:
-        erros.append("- MOODLE_FORUM_URLS")
-
-    if erros:
-        print("  ❌ ERRO: Variáveis de ambiente ausentes no .env:", file=sys.stderr)
-        for erro in erros:
-            print(f"    {erro}", file=sys.stderr)
+    # Validação da existência dos arquivos antes de iniciar a operação
+    if not post_file.exists():
+        print(
+            f"  ❌ ERRO: Arquivo de post não encontrado em: {post_file}",
+            file=sys.stderr,
+        )
         print("=" * 80)
         sys.exit(1)
 
-    forum_urls = [u.strip() for u in forum_urls_raw.split(",") if u.strip()]
     if not forum_urls:
-        print("  ❌ ERRO: MOODLE_FORUM_URLS está vazio.", file=sys.stderr)
+        print(
+            "  ❌ ERRO: Nenhuma URL de fórum encontrada no settings.json",
+            file=sys.stderr,
+        )
         print("=" * 80)
         sys.exit(1)
 
     print(f"  • Carregando conteúdo: {post_file.name}")
     title, html_content = carregar_conteudo(post_file)
 
-    image_path = encontrar_imagem(PASTA_ESCOPO, args.image)
+    # Determine image path (CLI arg > settings.json > auto-detect)
+    if args.image:
+        image_path = args.image
+    elif config.moodle.caminho_imagem:
+        image_path = str(config.moodle.caminho_imagem)
+    else:
+        image_path = encontrar_imagem(PASTA_ESCOPO)
+
     if image_path:
         print(f"  • Imagem detectada: {Path(image_path).name}")
 
@@ -458,8 +492,14 @@ def main(args_list: list[str] | None = None) -> None:
         for i, url in enumerate(forum_urls, 1):
             print(f"  [{i}/{len(forum_urls)}] {url}")
             sucesso = publicar_no_forum(
-                page, url, title, html_content,
-                image_path, login_url, username, password,
+                page,
+                url,
+                title,
+                html_content,
+                image_path,
+                login_url,
+                username,
+                password,
             )
             resultados[url] = sucesso
             status = "✔ Publicado" if sucesso else "❌ FALHOU"
