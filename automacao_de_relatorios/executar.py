@@ -29,7 +29,7 @@ def main():
 
     backup.main(config)
     print()
-    
+
     # Banner de encerramento de sucesso absoluto
     print("=" * 80)
     print("✔ PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")
