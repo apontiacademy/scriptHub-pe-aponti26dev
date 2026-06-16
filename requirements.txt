@@ -33,6 +33,7 @@ pyee==13.0.1
 pygments==2.20.0
 pyparsing==3.3.2
 pytest==9.1.0
+questionary==2.1.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 requests==2.34.2
