@@ -39,6 +39,9 @@ def run_module(name: str) -> None:
     subprocess.run([sys.executable, "-m", name], check=False, cwd=ROOT)
 
 
+_QUIT = object()
+
+
 def main() -> None:
     while True:
         modules = discover_modules(ROOT)
@@ -48,11 +51,11 @@ def main() -> None:
             title = f"{name:<{max_len}}  —  {desc}" if desc else name
             choices.append(questionary.Choice(title=title, value=name))
         choices.append(questionary.Separator())
-        choices.append(questionary.Choice(title="Sair", value=None))
+        choices.append(questionary.Choice(title="Sair", value=_QUIT))
 
         selected = questionary.select("Qual script rodar?", choices=choices).ask()
 
-        if selected is None:
+        if selected is None or selected is _QUIT:
             break
 
         run_module(selected)
