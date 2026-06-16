@@ -462,13 +462,13 @@ def main(args_list: list[str] | None = None) -> None:
     print(f"  • Carregando conteúdo: {post_file.name}")
     title, html_content = carregar_conteudo(post_file)
 
-    # Determine image path (CLI arg > settings.json > auto-detect)
+    # Determine image path (CLI arg > settings.json)
     if args.image:
         image_path = args.image
     elif config.moodle.caminho_imagem:
         image_path = str(config.moodle.caminho_imagem)
     else:
-        image_path = encontrar_imagem(PASTA_ESCOPO)
+        image_path = None
 
     if image_path:
         print(f"  • Imagem detectada: {Path(image_path).name}")

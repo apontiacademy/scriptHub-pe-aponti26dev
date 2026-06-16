@@ -41,7 +41,7 @@ class Config:
             post_delay=moodle_json.get("postDelay", 3),
             caminho_post_file=DIRETORIO_BASE
             / moodle_json.get("caminhoPostFile", "post.md"),
-            caminho_imagem=Path(moodle_json["caminhoImagem"])
+            caminho_imagem=DIRETORIO_BASE / moodle_json["caminhoImagem"]
             if moodle_json.get("caminhoImagem")
             else None,
         )
