@@ -9,8 +9,8 @@ ROOT = Path(__file__).parent
 
 def read_docstring(main_py: Path) -> str:
     src = main_py.read_text(encoding="utf-8")
+    stripped = src.lstrip()
     for quote in ('"""', "'''"):
-        stripped = src.lstrip()
         if stripped.startswith(quote):
             rest = stripped[len(quote):]
             end = rest.find(quote)
@@ -36,7 +36,7 @@ def discover_modules(root: Path) -> list[tuple[str, str]]:
 
 
 def run_module(name: str) -> None:
-    subprocess.run([sys.executable, "-m", name], check=False)
+    subprocess.run([sys.executable, "-m", name], check=False, cwd=ROOT)
 
 
 def main() -> None:
