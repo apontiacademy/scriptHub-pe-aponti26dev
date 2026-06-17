@@ -4,6 +4,12 @@ Extrai dados de frequência do Moodle e exporta um arquivo `.xlsx` por turma.
 
 ## Como rodar
 
+> Na primeira vez, instale o navegador do Playwright:
+>
+> ```bash
+> playwright install chromium
+> ```
+
 ```bash
 python3 -m automacao_de_frequencias
 ```

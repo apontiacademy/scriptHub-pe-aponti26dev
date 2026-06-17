@@ -4,6 +4,12 @@ Posta tópicos em fóruns do Moodle a partir de um arquivo Markdown. Suporta mú
 
 ## Como rodar
 
+> Na primeira vez, instale o navegador do Playwright:
+>
+> ```bash
+> playwright install chromium
+> ```
+
 ```bash
 python3 -m automacao_de_forum
 ```
@@ -60,5 +66,4 @@ Texto do post com **negrito**, *itálico* e [links](https://exemplo.com).
 | Pacote | Uso |
 |---|---|
 | `playwright` | Automação do navegador (login, preenchimento de formulário, upload) |
-| `beautifulsoup4` | Conversão de Markdown para HTML |
 | `python-dotenv` | Leitura do `.env` |

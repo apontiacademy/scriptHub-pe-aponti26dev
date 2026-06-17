@@ -16,6 +16,12 @@ Escopo 4 — Backup local em .xlsx
 
 ## Como rodar
 
+> Na primeira vez, instale o navegador do Playwright:
+>
+> ```bash
+> playwright install chromium
+> ```
+
 ```bash
 python3 -m automacao_de_relatorios
 ```
@@ -53,6 +59,7 @@ cp settings.example.json settings.json
 |---|---|
 | `moodle.urlLogin` | URL de login do Moodle |
 | `moodle.urlsRelatorios` | Lista de URLs dos formulários de relatório |
+| `moodle.headless` | `true` para rodar o navegador sem interface gráfica (use `false` para debug) |
 | `moodle.exportarAnaliseRelatorio` | `true` para exportar análise em CSV |
 | `moodle.caminhoExportacaoAnalise` | Caminho de saída da análise |
 | `gsheets.idPlanilha` | ID da planilha do Google Sheets |

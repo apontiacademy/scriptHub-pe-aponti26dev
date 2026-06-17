@@ -15,6 +15,7 @@ Etapa 4 — Gera aprovados_bootcamp_fap2026.csv → envia ao Google Drive
 ```
 
 > Se os dados já foram baixados anteriormente, as etapas 1 e 3 são puladas automaticamente.
+> O cache é baseado na presença de arquivos nas pastas `bootcamps/` e `aprovados/` — delete essas pastas para forçar um novo download.
 
 ## Como rodar
 
@@ -86,7 +87,7 @@ automacao_de_softskills/
 │   └── softskills_resultado.csv
 ├── aprovados/
 │   └── *.csv
-└── aprovados_bootcamp_fap2026.csv   ← enviado ao Google Drive
+└── aprovados_bootcamp_fap2026.csv   ← enviado ao Google Drive (nome fixo, específico do ciclo FAP 2026)
 ```
 
 ## Planilha no Google Drive

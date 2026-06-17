@@ -13,7 +13,19 @@ Hub de automações para operações do bootcamp Aponti PE. Cada módulo resolve
 ## Como usar
 
 ```bash
+# 1. Crie e ative o ambiente virtual
+python3 -m venv .venv
+source .venv/bin/activate   # Linux/Mac
+.venv\Scripts\activate      # Windows
+
+# 2. Instale as dependências
 pip3 install -r requirements.txt
+
+# 3. Configure as credenciais
+cp .env.example .env        # preencha com usuário e senha do Moodle
+# Módulos que integram com Google precisam de credentials.json na raiz
+
+# 4. Rode o menu principal
 python3 menu.py
 ```
 
