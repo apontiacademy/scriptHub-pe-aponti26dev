@@ -56,6 +56,7 @@ def main() -> None:
         selected = questionary.select("Qual script rodar?", choices=choices).ask()
 
         if selected is None or selected is _QUIT:
+            print("Isso não é um adeus, é um até logo 👋")
             break
 
         run_module(selected)
