@@ -8,17 +8,19 @@ from questionary import Style
 
 ROOT = Path(__file__).parent
 
-STYLE = Style([
-    ("qmark",        "fg:#00bfff bold"),
-    ("question",     "bold"),
-    ("answer",       "fg:#00bfff bold"),
-    ("pointer",      "fg:#00bfff bold"),
-    ("highlighted",  "fg:#00bfff bold"),
-    ("selected",     "fg:#00bfff"),
-    ("separator",    "fg:#444444"),
-    ("instruction",  "fg:#666666"),
-    ("text",         ""),
-])
+STYLE = Style(
+    [
+        ("qmark", "fg:#00bfff bold"),
+        ("question", "bold"),
+        ("answer", "fg:#00bfff bold"),
+        ("pointer", "fg:#00bfff bold"),
+        ("highlighted", "fg:#00bfff bold"),
+        ("selected", "fg:#00bfff"),
+        ("separator", "fg:#444444"),
+        ("instruction", "fg:#666666"),
+        ("text", ""),
+    ]
+)
 
 HEADER = """\
 ╔══════════════════════════════════════════╗
@@ -31,7 +33,7 @@ def read_docstring(main_py: Path) -> str:
     stripped = src.lstrip()
     for quote in ('"""', "'''"):
         if stripped.startswith(quote):
-            rest = stripped[len(quote):]
+            rest = stripped[len(quote) :]
             end = rest.find(quote)
             if end != -1:
                 lines = rest[:end].strip().splitlines()
@@ -87,7 +89,7 @@ def main() -> None:
         ).ask()
 
         if selected is None or selected is _QUIT:
-            os.system("clear")
+            print("Isso não é um adeus, é um até logo 👋")
             break
 
         run_module(selected)
