@@ -65,38 +65,45 @@ _QUIT = object()
 
 
 def main() -> None:
-    os.system("clear")
-    print(HEADER)
-    print()
+    feedback: str | None = None
 
-    modules = discover_modules(ROOT)
-    max_len = max((len(name) for name, _ in modules), default=0)
-    choices = []
-    for name, desc in modules:
-        bracketed = f"[{name}]"
-        if desc:
-            title = f"{bracketed:<{max_len + 2}}  {desc}"
+    while True:
+        os.system("clear")
+        print(HEADER)
+        print()
+
+        if feedback:
+            print(feedback)
+            print()
+
+        modules = discover_modules(ROOT)
+        max_len = max((len(name) for name, _ in modules), default=0)
+        choices = []
+        for name, desc in modules:
+            bracketed = f"[{name}]"
+            if desc:
+                title = f"{bracketed:<{max_len + 2}}  {desc}"
+            else:
+                title = bracketed
+            choices.append(questionary.Choice(title=title, value=name))
+        choices.append(questionary.Separator())
+        choices.append(questionary.Choice(title="[ sair ]", value=_QUIT))
+
+        selected = questionary.select(
+            "Qual script rodar?",
+            choices=choices,
+            style=STYLE,
+        ).ask()
+
+        if selected is None or selected is _QUIT:
+            print("Isso não é um adeus, é um até logo 👋")
+            break
+
+        returncode = run_module(selected)
+        if returncode == 0:
+            feedback = f"✅ {selected} finalizado com sucesso."
         else:
-            title = bracketed
-        choices.append(questionary.Choice(title=title, value=name))
-    choices.append(questionary.Separator())
-    choices.append(questionary.Choice(title="[ sair ]", value=_QUIT))
-
-    selected = questionary.select(
-        "Qual script rodar?",
-        choices=choices,
-        style=STYLE,
-    ).ask()
-
-    if selected is None or selected is _QUIT:
-        print("Isso não é um adeus, é um até logo 👋")
-        return
-
-    returncode = run_module(selected)
-    if returncode == 0:
-        print(f"✅ {selected} finalizado com sucesso.")
-    else:
-        print(f"❌ {selected} finalizado com erro (código {returncode}).")
+            feedback = f"❌ {selected} finalizado com erro (código {returncode})."
 
 
 if __name__ == "__main__":
