@@ -56,43 +56,47 @@ def discover_modules(root: Path) -> list[tuple[str, str]]:
     return modules
 
 
-def run_module(name: str) -> None:
-    subprocess.run([sys.executable, "-m", name], check=False, cwd=ROOT)
+def run_module(name: str) -> int:
+    result = subprocess.run([sys.executable, "-m", name], check=False, cwd=ROOT)
+    return result.returncode
 
 
 _QUIT = object()
 
 
 def main() -> None:
-    while True:
-        os.system("clear")
-        print(HEADER)
-        print()
+    os.system("clear")
+    print(HEADER)
+    print()
 
-        modules = discover_modules(ROOT)
-        max_len = max((len(name) for name, _ in modules), default=0)
-        choices = []
-        for name, desc in modules:
-            bracketed = f"[{name}]"
-            if desc:
-                title = f"{bracketed:<{max_len + 2}}  {desc}"
-            else:
-                title = bracketed
-            choices.append(questionary.Choice(title=title, value=name))
-        choices.append(questionary.Separator())
-        choices.append(questionary.Choice(title="[ sair ]", value=_QUIT))
+    modules = discover_modules(ROOT)
+    max_len = max((len(name) for name, _ in modules), default=0)
+    choices = []
+    for name, desc in modules:
+        bracketed = f"[{name}]"
+        if desc:
+            title = f"{bracketed:<{max_len + 2}}  {desc}"
+        else:
+            title = bracketed
+        choices.append(questionary.Choice(title=title, value=name))
+    choices.append(questionary.Separator())
+    choices.append(questionary.Choice(title="[ sair ]", value=_QUIT))
 
-        selected = questionary.select(
-            "Qual script rodar?",
-            choices=choices,
-            style=STYLE,
-        ).ask()
+    selected = questionary.select(
+        "Qual script rodar?",
+        choices=choices,
+        style=STYLE,
+    ).ask()
 
-        if selected is None or selected is _QUIT:
-            print("Isso não é um adeus, é um até logo 👋")
-            break
+    if selected is None or selected is _QUIT:
+        print("Isso não é um adeus, é um até logo 👋")
+        return
 
-        run_module(selected)
+    returncode = run_module(selected)
+    if returncode == 0:
+        print(f"✅ {selected} finalizado com sucesso.")
+    else:
+        print(f"❌ {selected} finalizado com erro (código {returncode}).")
 
 
 if __name__ == "__main__":
