@@ -1,6 +1,5 @@
 argcomplete==3.6.3
 beautifulsoup4==4.15.0
-beautifulsoup4==4.15.0
 certifi==2026.5.20
 cffi==2.0.0
 charset-normalizer==3.4.7
@@ -8,25 +7,18 @@ click==8.3.3
 cryptography==48.0.1
 google-api-core==2.31.0
 google-api-python-client==2.197.0
-google-api-python-client==2.197.0
 google-auth==2.53.0
-google-auth-httplib2==0.4.0
-google-auth-oauthlib==1.4.0
 google-auth-httplib2==0.4.0
 google-auth-oauthlib==1.4.0
 googleapis-common-protos==1.75.0
 greenlet==3.5.1
 gspread==6.2.1
-greenlet==3.5.1
-gspread==6.2.1
 httplib2==0.31.2
 idna==3.18
 iniconfig==2.3.0
-numpy==2.4.6
 oauthlib==3.3.1
 packaging==26.2
 pandas==3.0.3
-pipx==1.12.0
 platformdirs==4.9.6
 playwright==1.60.0
 pluggy==1.6.0
@@ -50,4 +42,3 @@ soupsieve==2.8.4
 typing-extensions==4.15.0
 uritemplate==4.2.0
 urllib3==2.7.0
-userpath==1.9.2
