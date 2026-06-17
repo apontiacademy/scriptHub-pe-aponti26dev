@@ -1,10 +1,31 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import questionary
+from questionary import Style
 
 ROOT = Path(__file__).parent
+
+STYLE = Style(
+    [
+        ("qmark", "fg:#00bfff bold"),
+        ("question", "bold"),
+        ("answer", "fg:#00bfff bold"),
+        ("pointer", "fg:#00bfff bold"),
+        ("highlighted", "fg:#00bfff bold"),
+        ("selected", "fg:#00bfff"),
+        ("separator", "fg:#444444"),
+        ("instruction", "fg:#666666"),
+        ("text", ""),
+    ]
+)
+
+HEADER = """\
+╔══════════════════════════════════════════╗
+║           ScriptHub — Aponti PE          ║
+╚══════════════════════════════════════════╝"""
 
 
 def read_docstring(main_py: Path) -> str:
@@ -44,16 +65,28 @@ _QUIT = object()
 
 def main() -> None:
     while True:
+        os.system("clear")
+        print(HEADER)
+        print()
+
         modules = discover_modules(ROOT)
         max_len = max((len(name) for name, _ in modules), default=0)
         choices = []
         for name, desc in modules:
-            title = f"{name:<{max_len}}  —  {desc}" if desc else name
+            bracketed = f"[{name}]"
+            if desc:
+                title = f"{bracketed:<{max_len + 2}}  {desc}"
+            else:
+                title = bracketed
             choices.append(questionary.Choice(title=title, value=name))
         choices.append(questionary.Separator())
-        choices.append(questionary.Choice(title="Sair", value=_QUIT))
+        choices.append(questionary.Choice(title="[ sair ]", value=_QUIT))
 
-        selected = questionary.select("Qual script rodar?", choices=choices).ask()
+        selected = questionary.select(
+            "Qual script rodar?",
+            choices=choices,
+            style=STYLE,
+        ).ask()
 
         if selected is None or selected is _QUIT:
             print("Isso não é um adeus, é um até logo 👋")
