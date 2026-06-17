@@ -2,7 +2,6 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -20,7 +19,7 @@ class MoodleConfig:
     url_login: str
     urls_relatorios: list[str]
     exportar_analise_relatorio: bool
-    caminho_exportacao_analise: Optional[Path]
+    caminho_exportacao_analise: Path | None
 
 
 @dataclass
@@ -52,14 +51,11 @@ class Config:
             csv_residentes=DIRETORIO_BASE / "dados" / "residentes.csv",
             csv_saida_analise=DIRETORIO_BASE / "dados" / "resultado_analise.csv",
             url_login=moodle_json["urlLogin"],
-            urls_relatorios=list(
-                map(lambda i: i.strip(), moodle_json["urlsRelatorios"])
-            ),
+            urls_relatorios=[i.strip() for i in moodle_json["urlsRelatorios"]],
             exportar_analise_relatorio=moodle_json["exportarAnaliseRelatorio"],
             caminho_exportacao_analise=(
                 Path(moodle_json["caminhoExportacaoAnalise"])
-                if moodle_json["exportarAnaliseRelatorio"]
-                and moodle_json.get("caminhoExportacaoAnalise")
+                if moodle_json["exportarAnaliseRelatorio"] and moodle_json.get("caminhoExportacaoAnalise")
                 else None
             ),
         )
@@ -83,9 +79,7 @@ class Config:
         }
 
         if not dados["moodle_usuario"] or not dados["moodle_senha"]:
-            raise ValueError(
-                "MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env"
-            )
+            raise ValueError("MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env")
         return dados
 
     @staticmethod
@@ -95,6 +89,6 @@ class Config:
         if not caminho_settings.exists():
             raise FileNotFoundError(f"O arquivo {caminho_settings} não foi encontrado.")
 
-        with open(caminho_settings, "r", encoding="utf-8") as f:
+        with open(caminho_settings, encoding="utf-8") as f:
             dados = json.load(f)
             return dados

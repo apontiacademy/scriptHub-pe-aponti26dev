@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import gspread
 
+from automacao_de_softskills.config import Config, DriveConfig, MoodleConfig
 from automacao_de_softskills.integracao_drive import upload_to_drive
-from automacao_de_softskills.config import Config, MoodleConfig, DriveConfig
 
 
 def _make_config(tmp_path):
@@ -49,12 +49,8 @@ def _make_sheets_mock(worksheet_exists=True):
 
 @patch("automacao_de_softskills.integracao_drive.gspread.authorize")
 @patch("automacao_de_softskills.integracao_drive.build")
-@patch(
-    "automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file"
-)
-def test_upload_to_drive_cria_planilha_quando_nao_existe(
-    mock_creds, mock_build, mock_authorize, tmp_path
-):
+@patch("automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file")
+def test_upload_to_drive_cria_planilha_quando_nao_existe(mock_creds, mock_build, mock_authorize, tmp_path):
     csv_file = tmp_path / "aprovados_bootcamp_fap2026.csv"
     csv_file.write_text("Nome,Email\nJoão,joao@example.com")
 
@@ -70,20 +66,13 @@ def test_upload_to_drive_cria_planilha_quando_nao_existe(
     call_kwargs = service.files.return_value.create.call_args
     assert call_kwargs.kwargs["body"]["name"] == "aprovados_bootcamp_fap2026"
     assert call_kwargs.kwargs["body"]["parents"] == ["pasta-id-123"]
-    assert (
-        call_kwargs.kwargs["body"]["mimeType"]
-        == "application/vnd.google-apps.spreadsheet"
-    )
+    assert call_kwargs.kwargs["body"]["mimeType"] == "application/vnd.google-apps.spreadsheet"
 
 
 @patch("automacao_de_softskills.integracao_drive.gspread.authorize")
 @patch("automacao_de_softskills.integracao_drive.build")
-@patch(
-    "automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file"
-)
-def test_upload_to_drive_reutiliza_planilha_existente(
-    mock_creds, mock_build, mock_authorize, tmp_path
-):
+@patch("automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file")
+def test_upload_to_drive_reutiliza_planilha_existente(mock_creds, mock_build, mock_authorize, tmp_path):
     csv_file = tmp_path / "aprovados_bootcamp_fap2026.csv"
     csv_file.write_text("Nome,Email\nJoão,joao@example.com")
 
@@ -101,12 +90,8 @@ def test_upload_to_drive_reutiliza_planilha_existente(
 
 @patch("automacao_de_softskills.integracao_drive.gspread.authorize")
 @patch("automacao_de_softskills.integracao_drive.build")
-@patch(
-    "automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file"
-)
-def test_upload_to_drive_atualiza_apenas_aba_dados(
-    mock_creds, mock_build, mock_authorize, tmp_path
-):
+@patch("automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file")
+def test_upload_to_drive_atualiza_apenas_aba_dados(mock_creds, mock_build, mock_authorize, tmp_path):
     csv_file = tmp_path / "aprovados_bootcamp_fap2026.csv"
     csv_file.write_text("Nome,Email\nJoão,joao@example.com")
 
@@ -124,12 +109,8 @@ def test_upload_to_drive_atualiza_apenas_aba_dados(
 
 @patch("automacao_de_softskills.integracao_drive.gspread.authorize")
 @patch("automacao_de_softskills.integracao_drive.build")
-@patch(
-    "automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file"
-)
-def test_upload_to_drive_cria_aba_dados_se_nao_existir(
-    mock_creds, mock_build, mock_authorize, tmp_path
-):
+@patch("automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file")
+def test_upload_to_drive_cria_aba_dados_se_nao_existir(mock_creds, mock_build, mock_authorize, tmp_path):
     csv_file = tmp_path / "aprovados_bootcamp_fap2026.csv"
     csv_file.write_text("Nome,Email\nJoão,joao@example.com")
 
@@ -147,9 +128,7 @@ def test_upload_to_drive_cria_aba_dados_se_nao_existir(
 
 @patch("automacao_de_softskills.integracao_drive.gspread.authorize")
 @patch("automacao_de_softskills.integracao_drive.build")
-@patch(
-    "automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file"
-)
+@patch("automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file")
 def test_upload_to_drive_nunca_deleta(mock_creds, mock_build, mock_authorize, tmp_path):
     csv_file = tmp_path / "aprovados_bootcamp_fap2026.csv"
     csv_file.write_text("Nome,Email\nJoão,joao@example.com")
@@ -168,12 +147,8 @@ def test_upload_to_drive_nunca_deleta(mock_creds, mock_build, mock_authorize, tm
 
 @patch("automacao_de_softskills.integracao_drive.gspread.authorize")
 @patch("automacao_de_softskills.integracao_drive.build")
-@patch(
-    "automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file"
-)
-def test_upload_to_drive_autentica_com_scopes_corretos(
-    mock_creds, mock_build, mock_authorize, tmp_path
-):
+@patch("automacao_de_softskills.integracao_drive.service_account.Credentials.from_service_account_file")
+def test_upload_to_drive_autentica_com_scopes_corretos(mock_creds, mock_build, mock_authorize, tmp_path):
     csv_file = tmp_path / "aprovados_bootcamp_fap2026.csv"
     csv_file.write_text("Nome,Email\nJoão,joao@example.com")
 

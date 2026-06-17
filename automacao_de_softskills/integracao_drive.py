@@ -13,20 +13,14 @@ def upload_to_drive(file_path: str, config: Config) -> None:
         "https://www.googleapis.com/auth/drive",
         "https://www.googleapis.com/auth/spreadsheets",
     ]
-    creds = service_account.Credentials.from_service_account_file(
-        str(config.drive.credentials_path), scopes=scopes
-    )
+    creds = service_account.Credentials.from_service_account_file(str(config.drive.credentials_path), scopes=scopes)
     drive_service = build("drive", "v3", credentials=creds)
 
     folder_id = config.drive.folder_id
 
     # Verifica se a pasta está acessível (suporta Shared Drives)
     try:
-        folder_info = (
-            drive_service.files()
-            .get(fileId=folder_id, fields="id,name", supportsAllDrives=True)
-            .execute()
-        )
+        folder_info = drive_service.files().get(fileId=folder_id, fields="id,name", supportsAllDrives=True).execute()
         print(f"  • Pasta acessível: {folder_info['name']}")
     except Exception as e:
         print(f"  ❌ Pasta não acessível (verifique o compartilhamento): {e}")
@@ -86,15 +80,8 @@ def upload_to_drive(file_path: str, config: Config) -> None:
     with open(file_path, encoding="utf-8-sig") as f:
         reader = csv.reader(f)
         header = next(reader)
-        num_cols = {
-            i
-            for i, col in enumerate(header)
-            if col.startswith("Nota") or col == "Turma Trilha"
-        }
-        data = [
-            [_parse(cell) if i in num_cols else cell for i, cell in enumerate(row)]
-            for row in reader
-        ]
+        num_cols = {i for i, col in enumerate(header) if col.startswith("Nota") or col == "Turma Trilha"}
+        data = [[_parse(cell) if i in num_cols else cell for i, cell in enumerate(row)] for row in reader]
 
     ws.clear()
     ws.update([header] + data)

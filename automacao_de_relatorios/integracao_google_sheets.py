@@ -89,9 +89,7 @@ def main(config: Config):
         print(f"  • Limpando dados antigos da Coluna D na aba '{nome_aba}'...")
         aba.batch_clear(["D:D"])
 
-        print(
-            f"  • Colando novos dados na Coluna D (Total de linhas: {len(dados_para_upload)})..."
-        )
+        print(f"  • Colando novos dados na Coluna D (Total de linhas: {len(dados_para_upload)})...")
         aba.update(range_name="D1", values=dados_para_upload)
 
         print("  ✔ Google Sheets atualizado com sucesso!")

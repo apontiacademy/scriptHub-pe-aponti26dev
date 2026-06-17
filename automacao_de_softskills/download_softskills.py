@@ -57,9 +57,7 @@ def login(session, config: Config):
 
 
 def get_turmas(session, config: Config):
-    resp = session.get(
-        f"{config.moodle.url}/course/index.php?categoryid={config.moodle.bootcamp_cat_id}"
-    )
+    resp = session.get(f"{config.moodle.url}/course/index.php?categoryid={config.moodle.bootcamp_cat_id}")
     soup = BeautifulSoup(resp.text, "html.parser")
     turmas = {}
     for a in soup.find_all("a", href=True):
@@ -96,9 +94,7 @@ def get_quiz_ids(session, course_url):
                 seen.add(qid)
                 break
         else:
-            if ids["avaliativa"] is None and any(
-                kw in text for kw in SOFTSKILLS_KEYWORDS
-            ):
+            if ids["avaliativa"] is None and any(kw in text for kw in SOFTSKILLS_KEYWORDS):
                 if "software" not in text and "letramento" not in text:
                     ids["avaliativa"] = qid
                     seen.add(qid)
@@ -107,9 +103,7 @@ def get_quiz_ids(session, course_url):
 
 
 def download_csv(session, quiz_id, config: Config):
-    r = session.get(
-        f"{config.moodle.url}/mod/quiz/report.php?id={quiz_id}&mode=overview"
-    )
+    r = session.get(f"{config.moodle.url}/mod/quiz/report.php?id={quiz_id}&mode=overview")
     sk = BeautifulSoup(r.text, "html.parser").find("input", {"name": "sesskey"})
     if not sk:
         return None
@@ -135,9 +129,7 @@ def download_csv(session, quiz_id, config: Config):
 
 
 def get_approved_courses(session, config: Config):
-    resp = session.get(
-        f"{config.moodle.url}/course/index.php?categoryid={config.moodle.aprovados_cat_id}"
-    )
+    resp = session.get(f"{config.moodle.url}/course/index.php?categoryid={config.moodle.aprovados_cat_id}")
     soup = BeautifulSoup(resp.text, "html.parser")
     courses = {}
     for a in soup.find_all("a", href=True):
@@ -186,9 +178,7 @@ def get_course_participants(session, course_id, course_name, config: Config):
             nome = extract_participant_name(cells[0])
             email = cells[1].text.strip().lower()
             if "@" in email:
-                participants.append(
-                    {"nome": nome, "email": email, "trilha_raw": course_name}
-                )
+                participants.append({"nome": nome, "email": email, "trilha_raw": course_name})
         if len(rows) < 5000:
             break
         page += 1
@@ -214,9 +204,7 @@ def turmas_do_disco(config: Config) -> list:
     output_dir = config.output_dir
     if not output_dir.is_dir():
         return []
-    return sorted(
-        d.name for d in output_dir.iterdir() if d.is_dir() and d.name.isdigit()
-    )
+    return sorted(d.name for d in output_dir.iterdir() if d.is_dir() and d.name.isdigit())
 
 
 def aprovados_ja_baixados(config: Config) -> bool:

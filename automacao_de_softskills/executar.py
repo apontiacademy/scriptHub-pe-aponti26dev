@@ -9,6 +9,7 @@ import requests
 
 import automacao_de_softskills.download_softskills as download_softskills
 import automacao_de_softskills.integracao_drive as integracao_drive
+
 from .config import Config
 
 
@@ -52,13 +53,9 @@ def main():
                 content = download_softskills.download_csv(session, qid, config)
                 if content:
                     (turma_dir / f"{fname}.csv").write_bytes(content)
-                    rows = list(
-                        csv.DictReader(io.StringIO(content.decode("utf-8-sig")))
-                    )
+                    rows = list(csv.DictReader(io.StringIO(content.decode("utf-8-sig"))))
                     has_nota = "Nota/10,00" in (list(rows[0].keys()) if rows else [])
-                    print(
-                        f"    [OK] {label} — {len(rows)} alunos | nota={'sim' if has_nota else 'não'}"
-                    )
+                    print(f"    [OK] {label} — {len(rows)} alunos | nota={'sim' if has_nota else 'não'}")
                 else:
                     print(f"    [ERROR] {label}")
                 time.sleep(0.2)
@@ -67,12 +64,8 @@ def main():
             if qid:
                 content = download_softskills.download_csv(session, qid, config)
                 if content:
-                    (turma_dir / "atividade_avaliativa_softskills.csv").write_bytes(
-                        content
-                    )
-                    rows = list(
-                        csv.DictReader(io.StringIO(content.decode("utf-8-sig")))
-                    )
+                    (turma_dir / "atividade_avaliativa_softskills.csv").write_bytes(content)
+                    rows = list(csv.DictReader(io.StringIO(content.decode("utf-8-sig"))))
                     print(f"    [OK] Atividade Avaliativa SS — {len(rows)} alunos")
                 else:
                     print("    [ERROR] Atividade Avaliativa SS")
@@ -102,11 +95,7 @@ def main():
                     if email not in students:
                         nome = row.get("Nome", "").strip()
                         sobrenome = row.get("Sobrenome", "").strip()
-                        students[email] = (
-                            nome
-                            if sobrenome in (".", "-", "")
-                            else f"{nome} {sobrenome}".strip()
-                        )
+                        students[email] = nome if sobrenome in (".", "-", "") else f"{nome} {sobrenome}".strip()
                     act_notas[email][label] = row.get("Nota/10,00", "").strip()
 
         geral_notas = {}
@@ -173,9 +162,7 @@ def main():
 
         approved = {}
         for cid, name in approved_courses.items():
-            parts = download_softskills.get_course_participants(
-                session, cid, name, config
-            )
+            parts = download_softskills.get_course_participants(session, cid, name, config)
             new = 0
             for p in parts:
                 if p["email"] not in approved:
@@ -212,8 +199,8 @@ def main():
         trilha, turma_trilha = download_softskills.split_trilha(info["trilha_raw"])
         ss = softskills_lookup.get(email, {})
 
-        def nota(campo):
-            return ss.get(campo, "") or "0"
+        def nota(campo, _ss=ss):
+            return _ss.get(campo, "") or "0"
 
         ap_rows.append(
             {
@@ -239,9 +226,7 @@ def main():
 
     sem_ss = sum(1 for r in ap_rows if not r["Nota Gestão de Tempo"])
     print("Construindo aprovados_bootcamp_fap2026.csv...")
-    print(
-        f"✓ {ap_path} — {len(ap_rows)} aprovados ({len(ap_rows) - sem_ss} com notas soft skills)"
-    )
+    print(f"✓ {ap_path} — {len(ap_rows)} aprovados ({len(ap_rows) - sem_ss} com notas soft skills)")
     print()
 
     # ── 4. Upload para Google Drive ───────────────────────────────────────────

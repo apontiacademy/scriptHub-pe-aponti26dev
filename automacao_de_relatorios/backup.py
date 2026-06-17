@@ -10,25 +10,17 @@ from .config import Config
 BASE_DIR = Path(__file__).resolve().parent
 
 
-def realizar_backup_xlsx_local(
-    caminho_credenciais: Path, id_planilha: str, diretorio_backup: Path
-) -> str | None:
+def realizar_backup_xlsx_local(caminho_credenciais: Path, id_planilha: str, diretorio_backup: Path) -> str | None:
     """Busca a planilha do Google Sheets, exporta como um arquivo .xlsx e salva localmente com um timestamp."""
     escopos = ["https://www.googleapis.com/auth/drive"]
 
     try:
         print("  • Autenticando com a conta de serviço...")
-        credenciais = Credentials.from_service_account_file(
-            str(caminho_credenciais), scopes=escopos
-        )
+        credenciais = Credentials.from_service_account_file(str(caminho_credenciais), scopes=escopos)
         servico = build("drive", "v3", credentials=credenciais)
 
         print("  • Buscando informações da planilha original...")
-        metadados_arquivo = (
-            servico.files()
-            .get(fileId=id_planilha, fields="name", supportsAllDrives=True)
-            .execute()
-        )
+        metadados_arquivo = servico.files().get(fileId=id_planilha, fields="name", supportsAllDrives=True).execute()
         nome_original = metadados_arquivo.get("name", "Planilha_Sem_Nome")
 
         # Formata o timestamp atual para o nome do arquivo
@@ -89,9 +81,7 @@ def main(config: Config):
     diretorio_backup.mkdir(parents=True, exist_ok=True)
 
     # Executa a tarefa principal de backup passando as configurações injetadas
-    arquivo_gerado = realizar_backup_xlsx_local(
-        caminho_credenciais, id_planilha, diretorio_backup
-    )
+    arquivo_gerado = realizar_backup_xlsx_local(caminho_credenciais, id_planilha, diretorio_backup)
 
     if arquivo_gerado:
         print("\n✔ Escopo 4 finalizado com sucesso!")

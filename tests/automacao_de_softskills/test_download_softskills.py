@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 from bs4 import BeautifulSoup
 
+from automacao_de_softskills.config import Config, DriveConfig, MoodleConfig
 from automacao_de_softskills.download_softskills import (
     download_csv,
     extract_participant_name,
@@ -12,12 +13,9 @@ from automacao_de_softskills.download_softskills import (
     get_turmas,
     split_trilha,
 )
-from automacao_de_softskills.config import Config, MoodleConfig, DriveConfig
 
 
-def _make_config(
-    url="https://moodle.test", bootcamp_cat_id="136", aprovados_cat_id="140"
-):
+def _make_config(url="https://moodle.test", bootcamp_cat_id="136", aprovados_cat_id="140"):
     return Config(
         moodle=MoodleConfig(
             usuario="user",
@@ -344,10 +342,7 @@ def test_get_approved_courses_ignora_links_sem_course_view():
 def _make_participants_html(rows, include_table=True):
     if not include_table:
         return "<html><body><p>sem tabela</p></body></html>"
-    trs = "".join(
-        f"<tr><td><label>Selecione '{nome}'</label></td><td>{email}</td></tr>"
-        for nome, email in rows
-    )
+    trs = "".join(f"<tr><td><label>Selecione '{nome}'</label></td><td>{email}</td></tr>" for nome, email in rows)
     return f'<html><body><table id="participants"><tr><th>Nome</th><th>Email</th></tr>{trs}</table></body></html>'
 
 
@@ -359,9 +354,7 @@ def test_get_course_participants_retorna_participantes():
         ]
     )
     session = _mock_session_get(html)
-    parts = get_course_participants(
-        session, "5", "Trilha Backend - Turma 1", config=_make_config()
-    )
+    parts = get_course_participants(session, "5", "Trilha Backend - Turma 1", config=_make_config())
 
     assert len(parts) == 2
     assert parts[0]["nome"] == "João Silva"
@@ -372,9 +365,7 @@ def test_get_course_participants_retorna_participantes():
 def test_get_course_participants_sem_tabela_retorna_vazio():
     html = _make_participants_html([], include_table=False)
     session = _mock_session_get(html)
-    parts = get_course_participants(
-        session, "5", "Trilha Backend", config=_make_config()
-    )
+    parts = get_course_participants(session, "5", "Trilha Backend", config=_make_config())
 
     assert parts == []
 

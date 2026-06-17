@@ -2,7 +2,6 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -18,7 +17,7 @@ class MoodleConfig:
     headless: bool
     post_delay: int
     caminho_post_file: Path
-    caminho_imagem: Optional[Path]
+    caminho_imagem: Path | None
 
 
 @dataclass
@@ -36,14 +35,11 @@ class Config:
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
             url_login=moodle_json["urlLogin"],
-            urls_foruns=list(map(lambda i: i.strip(), moodle_json["urlsForuns"])),
+            urls_foruns=[i.strip() for i in moodle_json["urlsForuns"]],
             headless=moodle_json.get("headless", True),
             post_delay=moodle_json.get("postDelay", 3),
-            caminho_post_file=DIRETORIO_BASE
-            / moodle_json.get("caminhoPostFile", "post.md"),
-            caminho_imagem=DIRETORIO_BASE / moodle_json["caminhoImagem"]
-            if moodle_json.get("caminhoImagem")
-            else None,
+            caminho_post_file=DIRETORIO_BASE / moodle_json.get("caminhoPostFile", "post.md"),
+            caminho_imagem=DIRETORIO_BASE / moodle_json["caminhoImagem"] if moodle_json.get("caminhoImagem") else None,
         )
 
         return Config(moodle=moodle_config)
@@ -58,9 +54,7 @@ class Config:
         }
 
         if not dados["moodle_usuario"] or not dados["moodle_senha"]:
-            raise ValueError(
-                "MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env"
-            )
+            raise ValueError("MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env")
         return dados
 
     @staticmethod
@@ -70,6 +64,6 @@ class Config:
         if not caminho_settings.exists():
             raise FileNotFoundError(f"O arquivo {caminho_settings} não foi encontrado.")
 
-        with open(caminho_settings, "r", encoding="utf-8") as f:
+        with open(caminho_settings, encoding="utf-8") as f:
             dados = json.load(f)
             return dados
