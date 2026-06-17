@@ -74,13 +74,9 @@ class Config:
         senha = os.getenv("MOODLE_SENHA")
 
         if not usuario:
-            raise ValueError(
-                "MOODLE_USUARIO deve ser definido no arquivo .env"
-            )
+            raise ValueError("MOODLE_USUARIO deve ser definido no arquivo .env")
         if not senha:
-            raise ValueError(
-                "MOODLE_SENHA deve ser definida no arquivo .env"
-            )
+            raise ValueError("MOODLE_SENHA deve ser definida no arquivo .env")
 
         return {
             "moodle_usuario": usuario,
@@ -92,9 +88,7 @@ class Config:
         caminho_settings = DIRETORIO_BASE / "settings.json"
 
         if not caminho_settings.exists():
-            raise FileNotFoundError(
-                f"O arquivo {caminho_settings} não foi encontrado."
-            )
+            raise FileNotFoundError(f"O arquivo {caminho_settings} não foi encontrado.")
 
-        with open(caminho_settings, "r", encoding="utf-8") as f:
+        with open(caminho_settings, encoding="utf-8") as f:
             return json.load(f)

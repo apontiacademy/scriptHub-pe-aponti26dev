@@ -1,4 +1,3 @@
-
 import automacao_de_relatorios.backup as backup
 import automacao_de_relatorios.download_de_relatorios as download_de_relatorios
 import automacao_de_relatorios.integracao_google_sheets as integracao_google_sheets

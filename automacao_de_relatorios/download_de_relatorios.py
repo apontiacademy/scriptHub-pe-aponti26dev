@@ -17,9 +17,7 @@ def realizar_login(page, login_url, usuario, senha):
 
     try:
         # Trata possíveis sessões ativas sobrepostas
-        botao_sair = page.locator(
-            "#logininsidebaric, button:has-text('Sair'), button:has-text('Log out')"
-        ).first
+        botao_sair = page.locator("#logininsidebaric, button:has-text('Sair'), button:has-text('Log out')").first
         botao_sair.wait_for(state="visible", timeout=2000)
         print("  • Sessão fantasma detectada! Clicando em 'Sair' para limpar...")
         botao_sair.click()
@@ -118,7 +116,8 @@ def main(config: Config):
             navegador = p.chromium.launch(headless=headless, args=chrome_args)
 
             contexto = navegador.new_context(
-                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 "
+                "Safari/537.36",
                 viewport={"width": 1366, "height": 768},
             )
             pagina = contexto.new_page()

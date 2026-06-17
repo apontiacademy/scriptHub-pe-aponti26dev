@@ -22,9 +22,7 @@ def settings_valido(tmp_path):
 
 def test_load_valido(tmp_path, monkeypatch, settings_valido):
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(
-        json.dumps(settings_valido), encoding="utf-8"
-    )
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
     config = Config.load()
@@ -41,9 +39,7 @@ def test_load_valido(tmp_path, monkeypatch, settings_valido):
 
 def test_load_sem_credenciais_levanta_excecao(tmp_path, monkeypatch, settings_valido):
     (tmp_path / ".env").write_text("")
-    (tmp_path / "settings.json").write_text(
-        json.dumps(settings_valido), encoding="utf-8"
-    )
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
     monkeypatch.delenv("MOODLE_USUARIO", raising=False)
     monkeypatch.delenv("MOODLE_SENHA", raising=False)

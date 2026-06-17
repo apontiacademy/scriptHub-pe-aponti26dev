@@ -1,6 +1,7 @@
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 import automacao_de_forum.config as cfg_module
 from automacao_de_forum.config import Config
@@ -26,9 +27,7 @@ def test_caminho_imagem_relativo(tmp_path, monkeypatch, settings_valido):
     # Configura settings com caminho relativo
     settings_valido["moodle"]["caminhoImagem"] = "teste.png"
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(
-        json.dumps(settings_valido), encoding="utf-8"
-    )
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
     config = Config.load()
@@ -45,9 +44,7 @@ def test_caminho_imagem_absoluto(tmp_path, monkeypatch, settings_valido):
     absolute_image_path = str(tmp_path / "imagens" / "teste.png")
     settings_valido["moodle"]["caminhoImagem"] = absolute_image_path
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(
-        json.dumps(settings_valido), encoding="utf-8"
-    )
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
     config = Config.load()
@@ -61,9 +58,7 @@ def test_sem_caminho_imagem(tmp_path, monkeypatch, settings_valido):
     # Configura settings sem caminho de imagem
     settings_valido["moodle"]["caminhoImagem"] = None
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(
-        json.dumps(settings_valido), encoding="utf-8"
-    )
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
     config = Config.load()
@@ -75,9 +70,7 @@ def test_sem_caminho_imagem(tmp_path, monkeypatch, settings_valido):
 def test_load_valido_completo(tmp_path, monkeypatch, settings_valido):
     """Testa o carregamento completo de configurações válidas."""
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(
-        json.dumps(settings_valido), encoding="utf-8"
-    )
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
     config = Config.load()
@@ -95,9 +88,7 @@ def test_load_valido_completo(tmp_path, monkeypatch, settings_valido):
 def test_load_sem_credenciais_levanta_excecao(tmp_path, monkeypatch, settings_valido):
     """Testa que a falta de credenciais levanta ValueError."""
     (tmp_path / ".env").write_text("")
-    (tmp_path / "settings.json").write_text(
-        json.dumps(settings_valido), encoding="utf-8"
-    )
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
     monkeypatch.delenv("MOODLE_USUARIO", raising=False)
     monkeypatch.delenv("MOODLE_SENHA", raising=False)

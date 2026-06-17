@@ -117,9 +117,7 @@ def test_exportar_frequencia_ja_marcado_nao_marca_novamente(tmp_path):
 def test_exportar_frequencia_redireciona_para_login(tmp_path):
     page, download_mock = _make_page_com_download(url_atual="https://example.com/login")
 
-    with patch(
-        "automacao_de_frequencias.exportar_frequencias.realizar_login"
-    ) as mock_login:
+    with patch("automacao_de_frequencias.exportar_frequencias.realizar_login") as mock_login:
         exportar_frequencia(
             page,
             "https://example.com/freq?id=1",
@@ -130,6 +128,4 @@ def test_exportar_frequencia_redireciona_para_login(tmp_path):
             "pass",
         )
 
-        mock_login.assert_called_once_with(
-            page, "https://example.com/login", "user", "pass"
-        )
+        mock_login.assert_called_once_with(page, "https://example.com/login", "user", "pass")

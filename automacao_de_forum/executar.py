@@ -140,22 +140,14 @@ def _definir_conteudo_editor(page, html_content: str) -> None:
     except Exception:
         pass
     try:
-        if page.evaluate(
-            "typeof tinymce !== 'undefined' && tinymce.activeEditor !== null"
-        ):
-            page.evaluate(
-                "(html) => tinymce.activeEditor.setContent(html)", html_content
-            )
+        if page.evaluate("typeof tinymce !== 'undefined' && tinymce.activeEditor !== null"):
+            page.evaluate("(html) => tinymce.activeEditor.setContent(html)", html_content)
             return
     except Exception:
         pass
     try:
-        if page.evaluate(
-            "typeof tinyMCE !== 'undefined' && tinyMCE.activeEditor !== null"
-        ):
-            page.evaluate(
-                "(html) => tinyMCE.activeEditor.setContent(html)", html_content
-            )
+        if page.evaluate("typeof tinyMCE !== 'undefined' && tinyMCE.activeEditor !== null"):
+            page.evaluate("(html) => tinyMCE.activeEditor.setContent(html)", html_content)
             return
     except Exception:
         pass
@@ -203,9 +195,7 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
     if img_btn.count() > 0:
         img_btn.first.click()
         try:
-            page.wait_for_selector(
-                ".tiny_image_insert_image, .tiny_image_dropzone", timeout=6_000
-            )
+            page.wait_for_selector(".tiny_image_insert_image, .tiny_image_dropzone", timeout=6_000)
         except Exception:
             pass
         # O input de arquivo pode ser o fixo (#tiny_image_fileinput) ou o do dropzone
@@ -213,9 +203,7 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
             "#tiny_image_fileinput, input.drop-zone-fileinput, input[type=file][accept='image/*']"
         ).first
         if file_input.count() == 0:
-            print(
-                "  [AVISO] Input de imagem do TinyMCE não encontrado — imagem ignorada."
-            )
+            print("  [AVISO] Input de imagem do TinyMCE não encontrado — imagem ignorada.")
             # Fecha o dialog se abriu
             esc = page.locator(
                 ".tox-dialog__footer .tox-button--secondary, button[aria-label='Fechar'], button[aria-label='Close']"
@@ -231,12 +219,8 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
                 timeout=20_000,
             )
         except Exception:
-            print(
-                "  [AVISO] Tela de detalhes da imagem não apareceu — imagem pode não ter sido inserida."
-            )
-            cancel = page.locator(
-                "button[data-action='cancel'], button[data-action='hide']"
-            )
+            print("  [AVISO] Tela de detalhes da imagem não apareceu — imagem pode não ter sido inserida.")
+            cancel = page.locator("button[data-action='cancel'], button[data-action='hide']")
             if cancel.count() > 0:
                 cancel.first.click()
             page.wait_for_timeout(500)
@@ -247,22 +231,16 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
         if decorativa.count() > 0 and not decorativa.is_checked():
             decorativa.check()
         # Usa o seletor CSS específico da classe do plugin tiny_image
-        save_btn = page.locator(
-            "button.tiny_image_urlentrysubmit, .modal-footer button[type=submit]"
-        )
+        save_btn = page.locator("button.tiny_image_urlentrysubmit, .modal-footer button[type=submit]")
         if save_btn.count() > 0:
             save_btn.first.click()
             page.wait_for_timeout(2_000)
             return
-        print(
-            "  [AVISO] Botão de salvar imagem não encontrado — imagem pode não ter sido inserida."
-        )
+        print("  [AVISO] Botão de salvar imagem não encontrado — imagem pode não ter sido inserida.")
         return
 
     # Caminho 2: input de anexo direto na área de attachments do formulário
-    direct_input = page.locator(
-        'input[type=file][name*="attachment"], input[type=file][name*="file"]'
-    )
+    direct_input = page.locator('input[type=file][name*="attachment"], input[type=file][name*="file"]')
     if direct_input.count() > 0:
         direct_input.first.set_input_files(image_path)
         return
@@ -279,9 +257,7 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
         if tab.count() > 0:
             tab.first.click()
             break
-    dialog_input = page.locator(
-        '.fp-upload-form input[type=file], input[name="repo_upload_file"]'
-    )
+    dialog_input = page.locator('.fp-upload-form input[type=file], input[name="repo_upload_file"]')
     if dialog_input.count() == 0:
         print("  [AVISO] Input de upload não encontrado — imagem ignorada.")
         return
@@ -292,23 +268,19 @@ def _fazer_upload_imagem(page, image_path: str) -> None:
             btn.first.click()
             page.wait_for_selector(".fp-btn-add", timeout=10_000)
             return
-    print(
-        "  [AVISO] Botão de confirmação de upload não encontrado — imagem pode não ter sido anexada."
-    )
+    print("  [AVISO] Botão de confirmação de upload não encontrado — imagem pode não ter sido anexada.")
 
 
 def _sincronizar_editor(page) -> None:
     try:
         page.evaluate(
-            "() => { if (typeof tinymce !== 'undefined' && tinymce.activeEditor)"
-            " { tinymce.activeEditor.save(); } }"
+            "() => { if (typeof tinymce !== 'undefined' && tinymce.activeEditor) { tinymce.activeEditor.save(); } }"
         )
     except Exception:
         pass
     try:
         page.evaluate(
-            "() => { if (typeof tinyMCE !== 'undefined' && tinyMCE.activeEditor)"
-            " { tinyMCE.activeEditor.save(); } }"
+            "() => { if (typeof tinyMCE !== 'undefined' && tinyMCE.activeEditor) { tinyMCE.activeEditor.save(); } }"
         )
     except Exception:
         pass
@@ -385,9 +357,7 @@ def publicar_no_forum(
             "}"
         )
         if erro_real:
-            msg = page.locator(
-                ".alert-danger, .notifyproblem, #id_error_message"
-            ).first.inner_text()
+            msg = page.locator(".alert-danger, .notifyproblem, #id_error_message").first.inner_text()
             print(f"  ⚠️ Moodle exibiu erro: {msg.strip()[:120]}", file=sys.stderr)
             return False
         return True
@@ -422,9 +392,7 @@ def main(args_list: list[str] | None = None) -> None:
     post_delay = config.moodle.post_delay
 
     # Handle command line arguments for content and image overrides
-    parser = argparse.ArgumentParser(
-        description="Publica um novo tópico de discussão em fóruns do Moodle."
-    )
+    parser = argparse.ArgumentParser(description="Publica um novo tópico de discussão em fóruns do Moodle.")
     parser.add_argument(
         "--content",
         default=None,

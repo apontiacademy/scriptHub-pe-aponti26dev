@@ -12,7 +12,7 @@ def read_docstring(main_py: Path) -> str:
     stripped = src.lstrip()
     for quote in ('"""', "'''"):
         if stripped.startswith(quote):
-            rest = stripped[len(quote):]
+            rest = stripped[len(quote) :]
             end = rest.find(quote)
             if end != -1:
                 lines = rest[:end].strip().splitlines()

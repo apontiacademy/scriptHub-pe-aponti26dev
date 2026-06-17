@@ -18,9 +18,7 @@ def realizar_login(page, url_login, usuario, senha):
 
     try:
         # Trata possíveis sessões ativas sobrepostas
-        botao_sair = page.locator(
-            "#logininsidebaric, button:has-text('Sair'), button:has-text('Log out')"
-        ).first
+        botao_sair = page.locator("#logininsidebaric, button:has-text('Sair'), button:has-text('Log out')").first
         botao_sair.wait_for(state="visible", timeout=2000)
         print("  • Sessão fantasma detectada! Clicando em 'Sair' para limpar...")
         botao_sair.click()
@@ -49,9 +47,7 @@ def realizar_login(page, url_login, usuario, senha):
     print("  ✔ Login realizado com sucesso!")
 
 
-def exportar_frequencia(
-    page, url, nome_turma, caminho_saida, url_login, usuario, senha
-):
+def exportar_frequencia(page, url, nome_turma, caminho_saida, url_login, usuario, senha):
     """Exporta a frequência de uma turma específica."""
     print(f"  • Exportando frequência: {nome_turma}")
     page.goto(url)
@@ -106,7 +102,8 @@ def main(config: Config):
             chrome_args = ["--disable-blink-features=AutomationControlled"]
             navegador = p.chromium.launch(headless=True, args=chrome_args)
             contexto = navegador.new_context(
-                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 "
+                "Safari/537.36",
                 viewport={"width": 1366, "height": 768},
             )
             pagina = contexto.new_page()
@@ -114,9 +111,7 @@ def main(config: Config):
             realizar_login(pagina, url_login, usuario, senha)
 
             for nome_turma, url in urls_frequencias.items():
-                exportar_frequencia(
-                    pagina, url, nome_turma, caminho_saida, url_login, usuario, senha
-                )
+                exportar_frequencia(pagina, url, nome_turma, caminho_saida, url_login, usuario, senha)
                 time.sleep(1.5)
 
         print("\n✔ Escopo 1 finalizado com sucesso!")
