@@ -13,7 +13,7 @@ import scripthub.scripts.auditar_softskills.integracao_drive as integracao_drive
 from .config import Config
 
 
-def main():
+def main(verboso: bool):
     config = Config.load()
 
     print("=" * 80)
@@ -237,7 +237,3 @@ def main():
     print("=" * 80)
     print("✔ PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")
     print("=" * 80)
-
-
-if __name__ == "__main__":
-    main()

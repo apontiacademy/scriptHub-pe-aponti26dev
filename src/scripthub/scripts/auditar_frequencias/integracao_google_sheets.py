@@ -9,7 +9,8 @@ from .config import Config
 DIRETORIO_BASE = Path(__file__).resolve().parent
 
 
-def main(config: Config):
+# TODO: implementar modo verboso
+def main(config: Config, verboso: bool):
     """Função principal que orquestra o Escopo 2 (Integração com Google Sheets)."""
     print("=" * 80)
     print("▶ [ESCOPO 2] INTEGRAÇÃO (GOOGLE SHEETS)")

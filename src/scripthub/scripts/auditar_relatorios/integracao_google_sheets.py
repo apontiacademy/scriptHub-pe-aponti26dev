@@ -9,7 +9,8 @@ from .config import Config
 DIRETORIO_BASE = Path(__file__).resolve().parent
 
 
-def main(config: Config):
+# TODO: implementar modo verboso
+def main(config: Config, verboso: bool):
     """Função principal que orquestra o Escopo 3 (Integração com Google Sheets)."""
     print("=" * 80)
     print("▶ [ESCOPO 3] INTEGRAÇÃO (GOOGLE SHEETS)")
@@ -111,9 +112,3 @@ def main(config: Config):
         sys.exit(1)
 
     print("=" * 80)
-
-
-if __name__ == "__main__":
-    # Carrega as configurações unificadas e injeta na main
-    configuracao_carregada = Config.load()
-    main(configuracao_carregada)

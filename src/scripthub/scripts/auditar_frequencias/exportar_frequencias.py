@@ -75,7 +75,8 @@ def exportar_frequencia(page, url, nome_turma, caminho_saida, url_login, usuario
         print(f"  ❌ ERRO ao exportar {nome_turma}: {e}", file=sys.stderr)
 
 
-def main(config: Config):
+# TODO: implementar modo verboso
+def main(config: Config, verboso: bool):
     """Função principal que orquestra o pipeline de exportação de frequências."""
     print("=" * 80)
     print("▶ [ESCOPO 1] EXPORTAÇÃO DE FREQUÊNCIAS (MOODLE)")

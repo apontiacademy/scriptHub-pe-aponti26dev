@@ -80,7 +80,8 @@ def baixar_relatorio(page, url, caminho_saida, login_url, usuario, senha):
         print(f"  ❌ ERRO: Falha ao baixar o relatório {url}: {e}", file=sys.stderr)
 
 
-def main(config: Config):
+# TODO: implementar modo verboso
+def main(config: Config, verboso: bool):
     """Função principal que orquestra o Escopo 1."""
     print("=" * 80)
     print("▶ [ESCOPO 1] EXTRAÇÃO DE RELATÓRIOS (MOODLE)")
@@ -138,9 +139,3 @@ def main(config: Config):
         print(f"\n⚠️ Escopo 1 terminou com falhas: {e}", file=sys.stderr)
 
     print("=" * 80)
-
-
-if __name__ == "__main__":
-    # Carrega as configurações unificadas e repassa para a main
-    configuracao_carregada = Config.load()
-    main(configuracao_carregada)
