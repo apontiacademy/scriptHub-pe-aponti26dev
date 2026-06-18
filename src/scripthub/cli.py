@@ -3,23 +3,27 @@ import sys
 import typer
 
 from .scripts import auditar_frequencias, auditar_relatorios, auditar_softskills, torpedo_de_forum
-from .scripts.menu import menu
 
-app = typer.Typer(invoke_without_command=True)
+# from .scripts.menu import menu
+
+app = typer.Typer(
+    # invoke_without_command=True,
+)
 
 
 def run():
     app()
 
 
+# TODO: consertar menu
 @app.callback()
 def callback(
     ctx: typer.Context,
     verboso: bool = typer.Option(False, "--verboso", "-v", help="Exibir erros verbosos."),
 ):
     ctx.obj = {"verboso": verboso}
-    if ctx.invoked_subcommand is None:
-        menu(verboso)
+    # if ctx.invoked_subcommand is None:
+    #     menu(verboso)
 
 
 # TODO: implementar help
