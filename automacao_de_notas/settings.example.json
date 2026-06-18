@@ -1,0 +1,13 @@
+{
+  "moodle": {
+    "url": "https://moodle.aponti.org.br",
+    "urlLogin": "https://moodle.aponti.org.br/login/index.php",
+    "urlTurmas": "https://moodle.aponti.org.br/course/index.php",
+    "headless": true
+  },
+  "drive": {
+    "folderId": "1zEXBzH4ovPHEMhRLE_QbUXk7wCow-1y0",
+    "credentialsPath": "credentials.json"
+  },
+  "outputDir": "dados"
+}
