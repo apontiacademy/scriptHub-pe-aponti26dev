@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-import automacao_de_frequencias.config as cfg_module
-from automacao_de_frequencias.config import Config
+import scripthub.scripts.auditar_frequencias.config as cfg_module
+from scripthub.scripts.auditar_frequencias.config import Config
 
 
 @pytest.fixture

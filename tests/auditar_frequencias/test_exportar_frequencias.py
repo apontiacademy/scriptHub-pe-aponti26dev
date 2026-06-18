@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from unittest.mock import MagicMock, call, patch
 
-from automacao_de_frequencias.exportar_frequencias import (
+from scripthub.scripts.auditar_frequencias.exportar_frequencias import (
     exportar_frequencia,
     realizar_login,
 )
