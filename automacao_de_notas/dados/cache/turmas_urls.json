@@ -1,0 +1,137 @@
+[
+  {
+    "nome_moodle": "Testes de Software - Turma 01",
+    "turma": "01",
+    "tipo": "Testes de Software",
+    "dias": "Segunda e Quarta",
+    "horario": "09:00 às 12:00",
+    "professor": "Kathlyn Letícia",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=267"
+  },
+  {
+    "nome_moodle": "DevOps - Turma 2",
+    "turma": "02",
+    "tipo": "DevOps",
+    "dias": "Segunda e Quarta",
+    "horario": "14:00 às 17:00",
+    "professor": "Bruno Álexys",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=268"
+  },
+  {
+    "nome_moodle": "Análise de Dados - Turma 3",
+    "turma": "03",
+    "tipo": "Análise de Dados",
+    "dias": "Segunda e Quarta",
+    "horario": "18:00 às 21:00",
+    "professor": "Danilo Cavalcanti",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=269"
+  },
+  {
+    "nome_moodle": "Testes de Software - Turma 4",
+    "turma": "04",
+    "tipo": "Testes de Software",
+    "dias": "Terça e Quinta",
+    "horario": "09:00 às 12:00",
+    "professor": "Alison Matheus",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=270"
+  },
+  {
+    "nome_moodle": "DevOps - Turma 5",
+    "turma": "05",
+    "tipo": "DevOps",
+    "dias": "Terça e Quinta",
+    "horario": "14:00 às 17:00",
+    "professor": "Carlos Henrique",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=271"
+  },
+  {
+    "nome_moodle": "Análise de Dados - Turma 6",
+    "turma": "06",
+    "tipo": "Análise de Dados",
+    "dias": "Terça e Quinta",
+    "horario": "18:00 às 21:00",
+    "professor": "Danilo Farias",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=272"
+  },
+  {
+    "nome_moodle": "Testes de Software - Turma 7",
+    "turma": "07",
+    "tipo": "Testes de Software",
+    "dias": "Segunda e Quarta",
+    "horario": "14:00 às 17:00",
+    "professor": "Breno Cunha",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=273"
+  },
+  {
+    "nome_moodle": "DevOps - Turma 8",
+    "turma": "08",
+    "tipo": "DevOps",
+    "dias": "Terça e Quinta",
+    "horario": "13:30 às 16:30",
+    "professor": "Diogo Lopes",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=274"
+  },
+  {
+    "nome_moodle": "DevOps - Turma 10",
+    "turma": "10",
+    "tipo": "DevOps",
+    "dias": "Segunda e Quarta",
+    "horario": "16:00 às 19:00",
+    "professor": "Gustavo Rodrigues",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=275"
+  },
+  {
+    "nome_moodle": "DevOps -Turma 15",
+    "turma": "15",
+    "tipo": "DevOps",
+    "dias": "Segunda e Sexta",
+    "horario": "15:00 às 18:00",
+    "professor": "Silvio Monte",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=276"
+  },
+  {
+    "nome_moodle": "DevOps - Turma 16",
+    "turma": "16",
+    "tipo": "DevOps",
+    "dias": "Segunda e Quarta",
+    "horario": "09:00 às 12:00",
+    "professor": "Matheus Darlyson",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=277"
+  },
+  {
+    "nome_moodle": "Análise de Dados - Turma 17",
+    "turma": "17",
+    "tipo": "Análise de Dados",
+    "dias": "Segunda e Quarta",
+    "horario": "18:00 às 21:00",
+    "professor": "Letícia Correira",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=278"
+  },
+  {
+    "nome_moodle": "Testes de Software - Turma 18",
+    "turma": "18",
+    "tipo": "Testes de Software",
+    "dias": "Terça e Quinta",
+    "horario": "09:00 às 12:00",
+    "professor": "André Ribeiro",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=279"
+  },
+  {
+    "nome_moodle": "DevOps - Turma 19",
+    "turma": "19",
+    "tipo": "DevOps",
+    "dias": "Terça e Quinta",
+    "horario": "14:00 às 17:00",
+    "professor": "Emerson Gustavo",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=280"
+  },
+  {
+    "nome_moodle": "Análise de Dados - Turma 20",
+    "turma": "20",
+    "tipo": "Análise de Dados",
+    "dias": "Terça e Quinta",
+    "horario": "18:00 às 21:00",
+    "professor": "Vitor Gabriel",
+    "url": "https://moodle.aponti.org.br/course/view.php?id=281"
+  }
+]

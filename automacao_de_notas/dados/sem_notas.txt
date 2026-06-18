@@ -1,0 +1,19 @@
+Turmas sem notas registradas no momento da extração:
+
+  - Testes de Software - Turma 01
+  - DevOps - Turma 2
+  - Análise de Dados - Turma 3
+  - Testes de Software - Turma 4
+  - DevOps - Turma 5
+  - Análise de Dados - Turma 6
+  - Testes de Software - Turma 7
+  - DevOps - Turma 8
+  - DevOps - Turma 10
+  - DevOps -Turma 15
+  - DevOps - Turma 16
+  - Análise de Dados - Turma 17
+  - Testes de Software - Turma 18
+  - DevOps - Turma 19
+  - Análise de Dados - Turma 20
+
+Nestas turmas todas as colunas de nota foram preenchidas com 0.
