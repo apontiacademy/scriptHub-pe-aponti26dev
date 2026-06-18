@@ -1,0 +1,14 @@
+{
+  "moodle": {
+    "urlLogin": "https://moodle.yourinstitution.edu/login/index.php",
+    "meses": {
+      "Abril 2026": "https://moodle.aponti.org.br/mod/feedback/show_entries.php?id=10000",
+      "Maio 2026": "https://moodle.aponti.org.br/mod/feedback/show_entries.php?id=10363"
+    }
+  },
+  "headless": true,
+  "pdf": {
+    "caminhoSaida": "/home/you/relatorios-pdf",
+    "csvResidentes": "/home/you/residentes.csv"
+  }
+}
