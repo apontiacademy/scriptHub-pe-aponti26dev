@@ -50,7 +50,8 @@ def realizar_backup_xlsx_local(caminho_credenciais: Path, id_planilha: str, dire
         return None
 
 
-def main(config: Config):
+# TODO: implementar modo verboso
+def main(config: Config, verboso: bool):
     """Função principal que orquestra o Escopo 4 (Backup Local Automatizado)."""
     print("=" * 80)
     print("▶ [ESCOPO 4] BACKUP AUTOMÁTICO (.XLSX)")
@@ -89,9 +90,3 @@ def main(config: Config):
         print("\n⚠️ Escopo 4 terminou com falhas (veja os logs acima).", file=sys.stderr)
 
     print("=" * 80)
-
-
-if __name__ == "__main__":
-    # Carrega as configurações unificadas e injeta na main
-    configuracao_carregada = Config.load()
-    main(configuracao_carregada)

@@ -14,10 +14,11 @@ dependencies = [
     "pentefinocli-pe-aponti26dev",
     "playwright>=1.60.0",
     "questionary>=2.1.1",
+    "typer>=0.26.7",
 ]
 
 [project.scripts]
-scripthub = "scripthub.cli:main"
+scripthub = "scripthub.cli:run"
 
 [dependency-groups]
 dev = [

@@ -5,35 +5,10 @@ import scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios as 
 
 from .config import Config
 
-
-def main():
-    # Carrega as configurações unificadas (GUI settings.json + .env) uma única vez
-    config = Config.load()
-
-    # Banner de abertura do Pipeline Geral
-    print("=" * 80)
-    print("▶ INICIANDO PIPELINE DE AUTOMATIZAÇÃO DE RELATÓRIOS")
-    print("=" * 80)
-    print()  # Quebra de linha para dar respiro visual
-
-    # Injetando a mesma instância de 'config' em todos os escopos sequencialmente
-    download_de_relatorios.main(config)
-    print()
-
-    middleware_analise_de_relatorios.main(config)
-    print()
-
-    integracao_google_sheets.main(config)
-    print()
-
-    backup.main(config)
-    print()
-
-    # Banner de encerramento de sucesso absoluto
-    print("=" * 80)
-    print("✔ PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")
-    print("=" * 80)
-
-
-if __name__ == "__main__":
-    main()
+ESCOPOS = [
+    download_de_relatorios.main,
+    middleware_analise_de_relatorios.main,
+    integracao_google_sheets.main,
+    backup.main,
+]
+CONFIG = Config.load()

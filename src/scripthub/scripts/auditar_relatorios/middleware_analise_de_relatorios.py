@@ -8,7 +8,8 @@ from .config import Config
 BASE_DIR = Path(__file__).resolve().parent
 
 
-def main(config: Config):
+# TODO: implementar modo verboso
+def main(config: Config, verboso: bool):
     """Função principal que orquestra o Escopo 2 (Middleware / Análise de Dados)."""
     print("=" * 80)
     print("▶ [ESCOPO 2] ANÁLISE PENTE-FINO (MIDDLEWARE)")
@@ -46,9 +47,3 @@ def main(config: Config):
         print(f"\n⚠️ Escopo 2 terminou com falhas: {e}", file=sys.stderr)
 
     print("=" * 80)
-
-
-if __name__ == "__main__":
-    # Carrega as configurações unificadas e injeta na main
-    configuracao_carregada = Config.load()
-    main(configuracao_carregada)

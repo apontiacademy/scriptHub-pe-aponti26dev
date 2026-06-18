@@ -64,7 +64,8 @@ def run_module(name: str) -> int:
 _QUIT = object()
 
 
-def main() -> None:
+# TODO: implementar modo verboso do menu
+def main(verboso: bool) -> None:
     feedback: str | None = None
 
     while True:
@@ -104,7 +105,3 @@ def main() -> None:
             feedback = f"✅ {selected} finalizado com sucesso."
         else:
             feedback = f"❌ {selected} finalizado com erro (código {returncode})."
-
-
-if __name__ == "__main__":
-    main()

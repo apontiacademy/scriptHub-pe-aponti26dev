@@ -1,4 +1,3 @@
-import argparse
 import re
 import sys
 from pathlib import Path
@@ -375,7 +374,8 @@ def publicar_no_forum(
 # ---------------------------------------------------------------------------
 
 
-def main(args_list: list[str] | None = None) -> None:
+# TODO: implementar modo verboso
+def main(verboso: bool) -> None:
     print("=" * 80)
     print("▶ AUTOMAÇÃO DE POSTAGEM EM FÓRUNS (MOODLE)")
     print("=" * 80)
@@ -391,24 +391,7 @@ def main(args_list: list[str] | None = None) -> None:
     headless = config.moodle.headless
     post_delay = config.moodle.post_delay
 
-    # Handle command line arguments for content and image overrides
-    parser = argparse.ArgumentParser(description="Publica um novo tópico de discussão em fóruns do Moodle.")
-    parser.add_argument(
-        "--content",
-        default=None,
-        help="Arquivo .md com o conteúdo do post (padrão: post.md na pasta do módulo).",
-    )
-    parser.add_argument(
-        "--image",
-        help="Imagem para anexar (padrão: detecta automaticamente na pasta do módulo).",
-    )
-    args = parser.parse_args(args_list)
-
-    # Determine post file path (CLI arg > settings.json > default)
-    if args.content:
-        post_file = Path(args.content).resolve()
-    else:
-        post_file = config.moodle.caminho_post_file
+    post_file = config.moodle.caminho_post_file
 
     # Validação da existência dos arquivos antes de iniciar a operação
     if not post_file.exists():
@@ -430,10 +413,8 @@ def main(args_list: list[str] | None = None) -> None:
     print(f"  • Carregando conteúdo: {post_file.name}")
     title, html_content = carregar_conteudo(post_file)
 
-    # Determine image path (CLI arg > settings.json)
-    if args.image:
-        image_path = args.image
-    elif config.moodle.caminho_imagem:
+    if config.moodle.caminho_imagem:
+        print(f"  • Imagem detectada: {config.moodle.caminho_imagem.name}")
         image_path = str(config.moodle.caminho_imagem)
     else:
         image_path = None
@@ -491,7 +472,3 @@ def main(args_list: list[str] | None = None) -> None:
 
     print("✔ AUTOMAÇÃO DE FÓRUNS CONCLUÍDA COM SUCESSO!")
     print("=" * 80)
-
-
-if __name__ == "__main__":
-    main()
