@@ -5,6 +5,7 @@ cffi==2.0.0
 charset-normalizer==3.4.7
 click==8.3.3
 cryptography==48.0.1
+et-xmlfile==2.0.0
 google-api-core==2.31.0
 google-api-python-client==2.197.0
 google-auth==2.53.0
@@ -16,12 +17,16 @@ gspread==6.2.1
 httplib2==0.31.2
 idna==3.18
 iniconfig==2.3.0
+numpy==2.4.6
 oauthlib==3.3.1
+openpyxl==3.1.5
 packaging==26.2
 pandas==3.0.3
+pipx==1.12.0
 platformdirs==4.9.6
 playwright==1.60.0
 pluggy==1.6.0
+prompt-toolkit==3.0.52
 proto-plus==1.28.0
 protobuf==7.35.0
 pyasn1==0.6.3
@@ -31,9 +36,9 @@ pyee==13.0.1
 pygments==2.20.0
 pyparsing==3.3.2
 pytest==9.1.0
-questionary==2.1.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
+questionary==2.1.1
 requests==2.34.2
 requests-oauthlib==2.0.0
 ruff==0.15.17
@@ -42,3 +47,5 @@ soupsieve==2.8.4
 typing-extensions==4.15.0
 uritemplate==4.2.0
 urllib3==2.7.0
+userpath==1.9.2
+wcwidth==0.8.1

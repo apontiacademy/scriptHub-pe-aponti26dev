@@ -18,8 +18,15 @@ class MoodleConfig:
 
 
 @dataclass
+class GsheetsConfig:
+    id_planilha: str
+    caminho_json_credenciais: Path
+
+
+@dataclass
 class Config:
     moodle: MoodleConfig
+    gsheets: GsheetsConfig
 
     @staticmethod
     def load() -> "Config":
@@ -27,6 +34,7 @@ class Config:
         dados_settings = Config.__carregar_settings_json()
 
         moodle_json = dados_settings.get("moodle", {})
+        gsheets_json = dados_settings.get("gsheets", {})
 
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
@@ -36,7 +44,12 @@ class Config:
             caminho_exportacao=Path(moodle_json["caminhoExportacao"]),
         )
 
-        return Config(moodle=moodle_config)
+        gsheets_config = GsheetsConfig(
+            id_planilha=gsheets_json["idPlanilha"],
+            caminho_json_credenciais=DIRETORIO_BASE / "credentials.json",
+        )
+
+        return Config(moodle=moodle_config, gsheets=gsheets_config)
 
     @staticmethod
     def __carregar_env() -> dict:
