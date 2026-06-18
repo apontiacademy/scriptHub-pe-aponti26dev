@@ -1,4 +1,5 @@
 import automacao_de_frequencias.exportar_frequencias as exportar_frequencias
+import automacao_de_frequencias.integracao_google_sheets as integracao_google_sheets
 
 from .config import Config
 
@@ -13,6 +14,9 @@ def main():
     print()
 
     exportar_frequencias.main(config)
+    print()
+
+    integracao_google_sheets.main(config)
     print()
 
     print("=" * 80)

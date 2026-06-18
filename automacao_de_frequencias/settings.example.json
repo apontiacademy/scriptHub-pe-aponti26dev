@@ -6,5 +6,8 @@
       "Turma B": "https://moodle.yourinstitution.edu/mod/attendance/view.php?id=2222"
     },
     "caminhoExportacao": "/home/you/Downloads/frequencias"
+  },
+  "gsheets": {
+    "idPlanilha": "abcdefghijklmnopqrstuvwxyz12345678"
   }
 }
