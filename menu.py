@@ -56,18 +56,25 @@ def discover_modules(root: Path) -> list[tuple[str, str]]:
     return modules
 
 
-def run_module(name: str) -> None:
-    subprocess.run([sys.executable, "-m", name], check=False, cwd=ROOT)
+def run_module(name: str) -> int:
+    result = subprocess.run([sys.executable, "-m", name], check=False, cwd=ROOT)
+    return result.returncode
 
 
 _QUIT = object()
 
 
 def main() -> None:
+    feedback: str | None = None
+
     while True:
         os.system("clear")
         print(HEADER)
         print()
+
+        if feedback:
+            print(feedback)
+            print()
 
         modules = discover_modules(ROOT)
         max_len = max((len(name) for name, _ in modules), default=0)
@@ -92,7 +99,11 @@ def main() -> None:
             print("Isso não é um adeus, é um até logo 👋")
             break
 
-        run_module(selected)
+        returncode = run_module(selected)
+        if returncode == 0:
+            feedback = f"✅ {selected} finalizado com sucesso."
+        else:
+            feedback = f"❌ {selected} finalizado com erro (código {returncode})."
 
 
 if __name__ == "__main__":
