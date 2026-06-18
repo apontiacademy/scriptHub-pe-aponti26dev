@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-import automacao_de_softskills.config as cfg_module
-from automacao_de_softskills.config import Config
+import scripthub.scripts.auditar_softskills.config as cfg_module
+from scripthub.scripts.auditar_softskills.config import Config
 
 
 @pytest.fixture

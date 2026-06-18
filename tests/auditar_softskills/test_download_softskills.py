@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 
 from bs4 import BeautifulSoup
 
-from automacao_de_softskills.config import Config, DriveConfig, MoodleConfig
-from automacao_de_softskills.download_softskills import (
+from scripthub.scripts.auditar_softskills.config import Config, DriveConfig, MoodleConfig
+from scripthub.scripts.auditar_softskills.download_softskills import (
     download_csv,
     extract_participant_name,
     get_approved_courses,

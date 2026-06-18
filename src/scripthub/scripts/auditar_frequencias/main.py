@@ -1,5 +1,5 @@
-import automacao_de_frequencias.exportar_frequencias as exportar_frequencias
-import automacao_de_frequencias.integracao_google_sheets as integracao_google_sheets
+import scripthub.scripts.auditar_frequencias.exportar_frequencias as exportar_frequencias
+import scripthub.scripts.auditar_frequencias.integracao_google_sheets as integracao_google_sheets
 
 from .config import Config
 

@@ -7,8 +7,8 @@ from pathlib import Path as _Path
 
 import requests
 
-import automacao_de_softskills.download_softskills as download_softskills
-import automacao_de_softskills.integracao_drive as integracao_drive
+import scripthub.scripts.auditar_softskills.download_softskills as download_softskills
+import scripthub.scripts.auditar_softskills.integracao_drive as integracao_drive
 
 from .config import Config
 

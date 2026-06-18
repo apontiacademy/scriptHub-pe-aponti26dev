@@ -1,8 +1,7 @@
 import sys
 from pathlib import Path
 
-# Importa a função principal de execução da ferramenta de análise core
-from auditoria_de_relatorios.executar import main as executar_analise_core
+from pentefino.services.script import main as executar_analise_core
 
 from .config import Config
 

@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-import automacao_de_forum.config as cfg_module
-from automacao_de_forum.config import Config
+import scripthub.scripts.torpedo_de_forum.config as cfg_module
+from scripthub.scripts.torpedo_de_forum.config import Config
 
 
 @pytest.fixture

@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import gspread
 
-from automacao_de_softskills.config import Config, DriveConfig, MoodleConfig
-from automacao_de_softskills.integracao_drive import upload_to_drive
+from scripthub.scripts.auditar_softskills.config import Config, DriveConfig, MoodleConfig
+from scripthub.scripts.auditar_softskills.integracao_drive import upload_to_drive
 
 
 def _make_config(tmp_path):
