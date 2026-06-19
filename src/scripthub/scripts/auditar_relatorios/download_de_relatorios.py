@@ -80,8 +80,7 @@ def baixar_relatorio(page, url, caminho_saida, login_url, usuario, senha):
         print(f"  ❌ ERRO: Falha ao baixar o relatório {url}: {e}", file=sys.stderr)
 
 
-# TODO: implementar modo verboso
-def main(config: Config, verboso: bool):
+def main(config: Config):
     """Função principal que orquestra o Escopo 1."""
     print("=" * 80)
     print("▶ [ESCOPO 1] EXTRAÇÃO DE RELATÓRIOS (MOODLE)")

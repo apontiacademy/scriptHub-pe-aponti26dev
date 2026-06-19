@@ -7,6 +7,7 @@ requires-python = ">3.12"
 dependencies = [
     "beautifulsoup4>=4.15.0",
     "dotenv>=0.9.9",
+    "fpdf2>=2.8.7",
     "google-api-python-client>=2.197.0",
     "google-auth>=2.55.0",
     "gspread>=6.2.1",

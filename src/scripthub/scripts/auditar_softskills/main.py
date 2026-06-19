@@ -13,7 +13,7 @@ import scripthub.scripts.auditar_softskills.integracao_drive as integracao_drive
 from .config import Config
 
 
-def main(verboso: bool):
+def main():
     config = Config.load()
 
     print("=" * 80)

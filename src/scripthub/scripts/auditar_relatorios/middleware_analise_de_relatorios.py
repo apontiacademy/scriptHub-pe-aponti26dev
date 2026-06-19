@@ -8,8 +8,7 @@ from .config import Config
 BASE_DIR = Path(__file__).resolve().parent
 
 
-# TODO: implementar modo verboso
-def main(config: Config, verboso: bool):
+def main(config: Config):
     """Função principal que orquestra o Escopo 2 (Middleware / Análise de Dados)."""
     print("=" * 80)
     print("▶ [ESCOPO 2] ANÁLISE PENTE-FINO (MIDDLEWARE)")

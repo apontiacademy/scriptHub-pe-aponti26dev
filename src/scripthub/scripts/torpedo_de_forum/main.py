@@ -374,8 +374,7 @@ def publicar_no_forum(
 # ---------------------------------------------------------------------------
 
 
-# TODO: implementar modo verboso
-def main(verboso: bool) -> None:
+def main() -> None:
     print("=" * 80)
     print("▶ AUTOMAÇÃO DE POSTAGEM EM FÓRUNS (MOODLE)")
     print("=" * 80)
