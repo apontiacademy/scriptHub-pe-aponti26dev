@@ -238,7 +238,7 @@ def _carregar_relatorios(
     alunos: dict[str, DadosAluno] = {}
 
     for nome_mes, urls_semanais in meses.items():
-        for semana_idx, url_semana in enumerate(urls_semanais, start=1):
+        for semana_idx, _ in enumerate(urls_semanais, start=1):
             semana_nome = f"Semana {semana_idx}"
             slug = nome_mes.lower().replace(" ", "_")
             caminho_csv = caminho_download / f"{slug}_{semana_idx}.csv"
