@@ -10,17 +10,22 @@ from .config import Config
 BASE_DIR = Path(__file__).resolve().parent
 
 
-def _caminho_relatorio(nome_mes: str, diretorio_download: Path) -> Path:
+def _caminho_relatorio(nome_mes: str, diretorio_download: Path, indice: int = 1) -> Path:
     slug = nome_mes.lower().replace(" ", "_")
-    return diretorio_download / f"{slug}.csv"
+    return diretorio_download / f"{slug}_{indice}.csv"
 
 
-def _relatorios_existentes(meses: dict[str, str], diretorio_download: Path) -> dict[str, Path]:
-    return {nome_mes: _caminho_relatorio(nome_mes, diretorio_download) for nome_mes in meses}
+def _relatorios_existentes(meses: dict[str, list[str]], diretorio_download: Path) -> dict[str, list[Path]]:
+    relatorios = {}
+    for nome_mes, urls in meses.items():
+        relatorios[nome_mes] = [_caminho_relatorio(nome_mes, diretorio_download, i + 1) for i in range(len(urls))]
+    return relatorios
 
 
-def _todos_relatorios_existem(caminhos: dict[str, Path]) -> bool:
-    return bool(caminhos) and all(caminho.exists() for caminho in caminhos.values())
+def _todos_relatorios_existem(caminhos: dict[str, list[Path]]) -> bool:
+    if not caminhos:
+        return False
+    return all(caminho.exists() for mes_caminhos in caminhos.values() for caminho in mes_caminhos)
 
 
 def _perguntar_baixar_novamente() -> bool:
@@ -123,8 +128,9 @@ def main(config: Config):
     caminhos = _relatorios_existentes(meses, diretorio_download)
     if _todos_relatorios_existem(caminhos):
         print("\n  • Relatórios CSV já existem em dados/relatorios:")
-        for nome_mes, caminho in caminhos.items():
-            print(f"    - {nome_mes}: {caminho.name}")
+        for nome_mes, caminhos_mes in caminhos.items():
+            for caminho in caminhos_mes:
+                print(f"    - {nome_mes}: {caminho.name}")
 
         if not _perguntar_baixar_novamente():
             print("\n  • Download ignorado. Usando arquivos existentes.")
@@ -148,12 +154,13 @@ def main(config: Config):
 
             realizar_login(pagina, login_url, usuario, senha)
 
-            for nome_mes, url in meses.items():
-                caminho_saida = _caminho_relatorio(nome_mes, diretorio_download)
-
+            for nome_mes, urls in meses.items():
                 print(f"\n  → Mês: {nome_mes}")
-                baixar_relatorio(pagina, url, caminho_saida, login_url, usuario, senha)
-                time.sleep(1.5)
+                for indice, url in enumerate(urls, 1):
+                    caminho_saida = _caminho_relatorio(nome_mes, diretorio_download, indice)
+                    print(f"    • Relatório {indice}/{len(urls)}")
+                    baixar_relatorio(pagina, url, caminho_saida, login_url, usuario, senha)
+                    time.sleep(1.5)
 
         print("\n✔ Escopo 1 finalizado com sucesso!")
     except Exception as e:
