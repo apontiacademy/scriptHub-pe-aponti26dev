@@ -13,7 +13,7 @@ class MoodleConfig:
     usuario: str
     senha: str
     url_login: str
-    meses: dict[str, str]
+    meses: dict[str, list[str]]  # Now stores list of weekly URLs per month
     caminho_download: Path
     headless: bool
 
@@ -41,7 +41,9 @@ class Config:
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
             url_login=moodle_json["urlLogin"],
-            meses={k: v.strip() for k, v in moodle_json["meses"].items()},
+            meses={
+                k: [url.strip() for url in (v if isinstance(v, list) else [v])] for k, v in moodle_json["meses"].items()
+            },
             caminho_download=DIRETORIO_BASE / "dados" / "relatorios",
             headless=dados_settings.get("headless", True),
         )

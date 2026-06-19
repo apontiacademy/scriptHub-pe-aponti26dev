@@ -45,14 +45,14 @@ def _para_latin1(texto: str) -> str:
     """Substitui caracteres fora do Latin-1 por equivalentes ASCII."""
     substituicoes = {
         "—": " - ",  # — em dash
-        "–": "-",    # – en dash
-        "‘": "'",    # ' aspa simples esquerda
-        "’": "'",    # ' aspa simples direita
-        "“": '"',    # " aspa dupla esquerda
-        "”": '"',    # " aspa dupla direita
+        "–": "-",  # – en dash
+        "‘": "'",  # ' aspa simples esquerda
+        "’": "'",  # ' aspa simples direita
+        "“": '"',  # " aspa dupla esquerda
+        "”": '"',  # " aspa dupla direita
         "…": "...",  # … reticências
-        "•": "-",    # • bullet
-        "·": "-",    # · ponto médio
+        "•": "-",  # • bullet
+        "·": "-",  # · ponto médio
     }
     for char, sub in substituicoes.items():
         texto = texto.replace(char, sub)
@@ -67,7 +67,8 @@ class DadosAluno:
     empresa: str
     cnpj: str
     cpf: str = ""
-    meses: dict[str, dict[str, str]] = field(default_factory=dict)
+    meses: dict[str, dict[str, dict[str, str]]] = field(default_factory=dict)
+    # Structure: {month: {question: {week: answer}}}
 
 
 class RelatorioPDF(FPDF):
@@ -78,10 +79,8 @@ class RelatorioPDF(FPDF):
         self.set_auto_page_break(auto=True, margin=MARGEM)
 
     def header(self):
-        self.set_font("Helvetica", "I", 8)
-        self.set_text_color(150, 150, 150)
-        self.cell(0, 5, _para_latin1(self._nome_aluno), align="L")
-        self.ln(3)
+        # Removido o nome do aluno do cabeçalho conforme solicitado
+        pass
 
     def footer(self):
         self.set_y(-12)
@@ -153,8 +152,60 @@ class RelatorioPDF(FPDF):
         self.set_text_color(60, 60, 60)
         self.set_x(MARGEM + recuo * 2)
         resposta_limpa = resposta.strip()
-        self.multi_cell(LARGURA_UTIL - recuo * 2, 5, _para_latin1(resposta_limpa) if resposta_limpa else "-")
-        self.ln(2)
+        self.multi_cell(LARGURA_UTIL - recuo * 2, 5, _para_latin1(resposta_limpa) if resposta_limpa else "")
+        self.ln(1)
+
+    def tabela_respostas_semanais(self, respostas_semanais: dict[str, str]):
+        """Gera uma tabela com respostas por semana."""
+        if not respostas_semanais:
+            return
+
+        # Configurações da tabela
+        col_width = LARGURA_UTIL / 2
+        row_height = 5
+
+        # Cabeçalho da tabela
+        self.set_font("Helvetica", "B", 9)
+        self.set_fill_color(200, 200, 200)
+        self.set_text_color(0, 0, 0)
+
+        # Cabeçalho: Semana
+        self.cell(col_width, row_height, "Semana", border=1, fill=True)
+        # Cabeçalho: Resposta
+        self.cell(col_width, row_height, "Resposta", border=1, fill=True)
+        self.ln(row_height)
+
+        # Linhas de dados
+        self.set_font("Helvetica", "", 9)
+        self.set_fill_color(255, 255, 255)
+
+        for semana, resposta in respostas_semanais.items():
+            # Texto da resposta
+            resposta_texto = _para_latin1(resposta) if resposta else "-"
+
+            # Salvar posição Y inicial
+            y_inicio = self.get_y()
+
+            # Verificar se há espaço para pelo menos uma linha
+            if y_inicio + row_height > self.page_break_trigger:
+                # Forçar quebra de página
+                self.add_page()
+                # Posicionar no topo da nova página
+                self.set_y(self.t_margin)
+                y_inicio = self.get_y()
+
+            # Célula da semana - altura fixa para manter alinhamento
+            self.cell(col_width, row_height, _para_latin1(semana), border=1)
+
+            # Posicionar para a célula da resposta
+            self.set_xy(MARGEM + col_width, y_inicio)
+
+            # Célula da resposta - usando multi_cell com controle de quebra
+            # Desabilitar quebra automática de página para manter o alinhamento
+            self.multi_cell(col_width, row_height, resposta_texto, border=1)
+
+            # Voltar para o início da próxima linha
+            self.set_x(MARGEM)
 
 
 def _extrair_colunas_perguntas(df: pd.DataFrame) -> list[str]:
@@ -179,51 +230,66 @@ def _carregar_cpfs(csv_residentes: Path) -> dict[str, str]:
 
 
 def _carregar_relatorios(
-    meses: dict[str, str],
+    meses: dict[str, list[str]],
     caminho_download: Path,
 ) -> dict[str, DadosAluno]:
-    """Lê os CSVs por mês e agrupa os dados por aluno."""
+    """Lê os CSVs por semana e agrupa os dados por aluno."""
     alunos: dict[str, DadosAluno] = {}
 
-    for nome_mes, _ in meses.items():
-        slug = nome_mes.lower().replace(" ", "_")
-        caminho_csv = caminho_download / f"{slug}.csv"
+    for nome_mes, urls_semanais in meses.items():
+        for semana_idx, url_semana in enumerate(urls_semanais, start=1):
+            semana_nome = f"Semana {semana_idx}"
+            slug = nome_mes.lower().replace(" ", "_")
+            caminho_csv = caminho_download / f"{slug}_{semana_idx}.csv"
 
-        if not caminho_csv.exists():
-            print(f"  ⚠ Aviso: CSV do mês '{nome_mes}' não encontrado em {caminho_csv}. Pulando.", file=sys.stderr)
-            continue
-
-        try:
-            df = pd.read_csv(caminho_csv, dtype=str).fillna("")
-        except Exception as e:
-            print(f"  ❌ ERRO: Falha ao ler {caminho_csv}: {e}", file=sys.stderr)
-            continue
-
-        colunas_perguntas = _extrair_colunas_perguntas(df)
-
-        for _, row in df.iterrows():
-            nome_raw = row.get("Nome completo", "").strip()
-            if not nome_raw:
+            if not caminho_csv.exists():
+                print(
+                    f"  ⚠ Aviso: CSV da {semana_nome} de '{nome_mes}' não encontrado em {caminho_csv}. Pulando.",
+                    file=sys.stderr,
+                )
                 continue
 
-            nome_norm = normalizar_nome(nome_raw)
-            estado, empresa, cnpj = parsear_grupos(row.get("Grupos", ""))
-            email = row.get("Endereço de e-mail", "").strip()
-            respostas = {}
-            for col in colunas_perguntas:
-                pergunta = re.sub(r"^\d+\.\s*", "", col).strip()
-                respostas[pergunta] = row.get(col, "").strip()
+            try:
+                df = pd.read_csv(caminho_csv, dtype=str).fillna("")
+            except Exception as e:
+                print(f"  ❌ ERRO: Falha ao ler {caminho_csv}: {e}", file=sys.stderr)
+                continue
 
-            if nome_norm not in alunos:
-                alunos[nome_norm] = DadosAluno(
-                    nome=nome_raw,
-                    email=email,
-                    estado=estado,
-                    empresa=empresa,
-                    cnpj=cnpj,
-                )
+            colunas_perguntas = _extrair_colunas_perguntas(df)
 
-            alunos[nome_norm].meses[nome_mes] = respostas
+            for _, row in df.iterrows():
+                nome_raw = row.get("Nome completo", "").strip()
+                if not nome_raw:
+                    continue
+
+                nome_norm = normalizar_nome(nome_raw)
+                estado, empresa, cnpj = parsear_grupos(row.get("Grupos", ""))
+                email = row.get("Endereço de e-mail", "").strip()
+
+                if nome_norm not in alunos:
+                    alunos[nome_norm] = DadosAluno(
+                        nome=nome_raw,
+                        email=email,
+                        estado=estado,
+                        empresa=empresa,
+                        cnpj=cnpj,
+                    )
+
+                # Initialize month structure if not exists
+                if nome_mes not in alunos[nome_norm].meses:
+                    alunos[nome_norm].meses[nome_mes] = {}
+
+                # Add responses for each question
+                for col in colunas_perguntas:
+                    pergunta = re.sub(r"^\d+\.\s*", "", col).strip()
+                    resposta = row.get(col, "").strip()
+
+                    # Initialize question structure if not exists
+                    if pergunta not in alunos[nome_norm].meses[nome_mes]:
+                        alunos[nome_norm].meses[nome_mes][pergunta] = {}
+
+                    # Store weekly response
+                    alunos[nome_norm].meses[nome_mes][pergunta][semana_nome] = resposta
 
     return alunos
 
@@ -246,10 +312,13 @@ def _gerar_pdf(aluno: DadosAluno, caminho_saida: Path):
     pdf.campo("Núcleo", aluno.estado)
     pdf.ln(4)
 
-    for nome_mes, respostas in aluno.meses.items():
+    for nome_mes, perguntas in aluno.meses.items():
         pdf.cabecalho_mes(nome_mes)
-        for i, (pergunta, resposta) in enumerate(respostas.items(), start=1):
-            pdf.questao_resposta(i, pergunta, resposta)
+        for i, (pergunta, respostas_semanais) in enumerate(perguntas.items(), start=1):
+            pdf.ln(3)
+            pdf.questao_resposta(i, pergunta, "")
+            pdf.tabela_respostas_semanais(respostas_semanais)
+            pdf.ln(3)
 
     caminho_saida.parent.mkdir(parents=True, exist_ok=True)
     pdf.output(str(caminho_saida))
@@ -285,10 +354,7 @@ def main(config: Config):
     for aluno in alunos.values():
         nome_arquivo = sanitizar_caminho(aluno.nome) + ".pdf"
         caminho_pdf = (
-            config.pdf.caminho_saida
-            / sanitizar_caminho(aluno.estado)
-            / sanitizar_caminho(aluno.empresa)
-            / nome_arquivo
+            config.pdf.caminho_saida / sanitizar_caminho(aluno.estado) / sanitizar_caminho(aluno.empresa) / nome_arquivo
         )
 
         try:
