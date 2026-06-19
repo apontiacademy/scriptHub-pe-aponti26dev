@@ -160,19 +160,18 @@ class RelatorioPDF(FPDF):
         if not respostas_semanais:
             return
 
-        # Configurações da tabela
-        col_width = LARGURA_UTIL / 2
         row_height = 5
 
-        # Cabeçalho da tabela
+        # Largura da coluna semana ajustada ao texto "Semana 99" + padding
         self.set_font("Helvetica", "B", 9)
+        col_semana = self.get_string_width("Semana 99") + 6
+        col_resposta = LARGURA_UTIL - col_semana
+
+        # Cabeçalho
         self.set_fill_color(200, 200, 200)
         self.set_text_color(0, 0, 0)
-
-        # Cabeçalho: Semana
-        self.cell(col_width, row_height, "Semana", border=1, fill=True)
-        # Cabeçalho: Resposta
-        self.cell(col_width, row_height, "Resposta", border=1, fill=True)
+        self.cell(col_semana, row_height, "Semana", border=1, fill=True)
+        self.cell(col_resposta, row_height, "Resposta", border=1, fill=True)
         self.ln(row_height)
 
         # Linhas de dados
@@ -180,32 +179,34 @@ class RelatorioPDF(FPDF):
         self.set_fill_color(255, 255, 255)
 
         for semana, resposta in respostas_semanais.items():
-            # Texto da resposta
             resposta_texto = _para_latin1(resposta) if resposta else "-"
+            semana_texto = _para_latin1(semana)
 
-            # Salvar posição Y inicial
+            # Medir altura da resposta antes de renderizar para evitar que
+            # multi_cell cruze sozinha a quebra de página e deixe y_fim < y_inicio
+            linhas = self.multi_cell(col_resposta, row_height, resposta_texto, split_only=True)
+            altura_estimada = max(len(linhas), 1) * row_height
+
             y_inicio = self.get_y()
-
-            # Verificar se há espaço para pelo menos uma linha
-            if y_inicio + row_height > self.page_break_trigger:
-                # Forçar quebra de página
+            if y_inicio + altura_estimada > self.page_break_trigger:
                 self.add_page()
-                # Posicionar no topo da nova página
-                self.set_y(self.t_margin)
                 y_inicio = self.get_y()
 
-            # Célula da semana - altura fixa para manter alinhamento
-            self.cell(col_width, row_height, _para_latin1(semana), border=1)
+            x_semana = self.l_margin
+            x_resposta = x_semana + col_semana
 
-            # Posicionar para a célula da resposta
-            self.set_xy(MARGEM + col_width, y_inicio)
+            # Renderizar resposta (já garantido que cabe na página)
+            self.set_xy(x_resposta, y_inicio)
+            self.multi_cell(col_resposta, row_height, resposta_texto, border=1)
+            y_fim = self.get_y()
+            altura_linha = y_fim - y_inicio
 
-            # Célula da resposta - usando multi_cell com controle de quebra
-            # Desabilitar quebra automática de página para manter o alinhamento
-            self.multi_cell(col_width, row_height, resposta_texto, border=1)
+            # Célula da semana com a mesma altura da resposta
+            self.rect(x_semana, y_inicio, col_semana, altura_linha)
+            self.set_xy(x_semana, y_inicio + (altura_linha - row_height) / 2)
+            self.cell(col_semana, row_height, semana_texto, align="C")
 
-            # Voltar para o início da próxima linha
-            self.set_x(MARGEM)
+            self.set_xy(x_semana, y_fim)
 
 
 def _extrair_colunas_perguntas(df: pd.DataFrame) -> list[str]:
