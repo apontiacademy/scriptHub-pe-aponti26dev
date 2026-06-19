@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from scripthub.scripts.menu.main import discover_modules, read_docstring
+from scripthub.services.menu.main import discover_modules, read_docstring
 
 
 def test_read_docstring_uma_linha(tmp_path):

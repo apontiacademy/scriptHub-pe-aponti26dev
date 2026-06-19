@@ -6,7 +6,12 @@ from pathlib import Path
 import questionary
 from questionary import Style
 
-ROOT = Path(__file__).parent
+# Encontrar o diretório src/ (raiz do projeto)
+root_dir = Path(__file__)
+while root_dir.name != "src" and root_dir.parent != root_dir:
+    root_dir = root_dir.parent
+
+SCRIPTS_FOLDER = root_dir / "scripthub" / "scripts"
 
 STYLE = Style(
     [
@@ -41,14 +46,14 @@ def read_docstring(main_py: Path) -> str:
     return ""
 
 
-def discover_modules(root: Path) -> list[tuple[str, str]]:
+def discover_modules(scripts_folder: Path) -> list[tuple[str, str]]:
     modules = []
-    for d in sorted(root.iterdir()):
+    for d in sorted(scripts_folder.iterdir()):
         if not d.is_dir():
             continue
         if not (d / "__init__.py").exists():
             continue
-        main_py = d / "__main__.py"
+        main_py = d / "main.py"
         if not main_py.exists():
             continue
         desc = read_docstring(main_py)
@@ -57,7 +62,7 @@ def discover_modules(root: Path) -> list[tuple[str, str]]:
 
 
 def run_module(name: str) -> int:
-    result = subprocess.run([sys.executable, "-m", name], check=False, cwd=ROOT)
+    result = subprocess.run([sys.executable, "-m", name], check=False, cwd=SCRIPTS_FOLDER)
     return result.returncode
 
 
@@ -77,7 +82,7 @@ def main(verboso: bool) -> None:
             print(feedback)
             print()
 
-        modules = discover_modules(ROOT)
+        modules = discover_modules(SCRIPTS_FOLDER)
         max_len = max((len(name) for name, _ in modules), default=0)
         choices = []
         for name, desc in modules:
