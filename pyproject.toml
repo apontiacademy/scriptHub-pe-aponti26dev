@@ -1,3 +1,39 @@
+[project]
+name = "scriptHub-pe-aponti26dev"
+version = "0.5.0"
+description = "Central de scripts de automação da Aponti Academy"
+readme = "README.md"
+requires-python = ">3.12"
+dependencies = [
+    "beautifulsoup4>=4.15.0",
+    "dotenv>=0.9.9",
+    "fpdf2>=2.8.7",
+    "google-api-python-client>=2.197.0",
+    "google-auth>=2.55.0",
+    "gspread>=6.2.1",
+    "pandas>=3.0.3",
+    "pentefinocli-pe-aponti26dev",
+    "playwright>=1.60.0",
+    "questionary>=2.1.1",
+    "typer>=0.26.7",
+]
+
+[project.scripts]
+scripthub = "scripthub.cli:run"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scripthub"]
+
 [tool.ruff]
 # Target Python version
 target-version = "py310"
@@ -26,3 +62,6 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+[tool.uv.sources]
+pentefinocli-pe-aponti26dev = { git = "ssh://git@github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git", rev = "main" }
