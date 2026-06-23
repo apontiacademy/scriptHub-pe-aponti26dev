@@ -10,6 +10,7 @@ from .scripts import (
     compilacao_de_relatorios,
     torpedo_de_forum,
 )
+from .services.config import config as config_service, visualizar as visualizar_config
 from .services.menu import menu
 
 app = typer.Typer(invoke_without_command=True)
@@ -28,13 +29,23 @@ def callback(
         menu(verboso)
 
 
+def _carregar_config(fn, nome_script: str):
+    try:
+        return fn()
+    except (FileNotFoundError, ValueError, KeyError) as e:
+        typer.echo(f"❌ Configuração inválida para {nome_script}: {e}", err=True)
+        typer.echo(f"   Execute: scripthub config -s {nome_script}", err=True)
+        raise typer.Exit(1)
+
+
 # TODO: implementar help
 @app.command()
 @app.command("f", hidden=True)
 def frequencias(
     passo: Annotated[int | None, typer.Option("--passo", "-p", help="Executar um passso específico do script.")] = None,
 ):
-    executar_script(auditar_frequencias.CONFIG, auditar_frequencias.ESCOPOS, passo)
+    config = _carregar_config(auditar_frequencias.get_config, "auditar_frequencias")
+    executar_script(config, auditar_frequencias.ESCOPOS, passo)
 
 
 # TODO: implementar help
@@ -49,11 +60,12 @@ def relatorios(
 ):
     match modo:
         case "auditar":
-            executar_script(auditar_relatorios.CONFIG, auditar_relatorios.ESCOPOS, passo)
+            config = _carregar_config(auditar_relatorios.get_config, "auditar_relatorios")
+            executar_script(config, auditar_relatorios.ESCOPOS, passo)
         case "compilar":
             if passo:
                 raise ValueError('O modo compilar não aceita "passo".')
-            compilacao_de_relatorios.main()
+            _carregar_config(compilacao_de_relatorios.main, "compilacao_de_relatorios")
         case _:
             raise ValueError('Modo deve ser "auditar" ou "compilar".')
 
@@ -63,7 +75,7 @@ def relatorios(
 @app.command()
 @app.command("s", hidden=True)
 def softskills():
-    auditar_softskills.main()
+    _carregar_config(auditar_softskills.main, "auditar_softskills")
 
 
 # TODO: implementar help
@@ -71,7 +83,26 @@ def softskills():
 @app.command()
 @app.command("t", hidden=True)
 def torpedo():
-    torpedo_de_forum.main()
+    _carregar_config(torpedo_de_forum.main, "torpedo_de_forum")
+
+
+@app.command()
+@app.command("c", hidden=True)
+def config(
+    script: Annotated[
+        str | None,
+        typer.Option("--script", "-s", help="Script a configurar (pula a seleção interativa)."),
+    ] = None,
+    apenas_visualizar: Annotated[
+        bool,
+        typer.Option("--opcoes", "-o", help="Visualizar o estado das opções sem editar."),
+    ] = False,
+):
+    """Configurar interativamente as opções de um script."""
+    if apenas_visualizar:
+        visualizar_config(script)
+    else:
+        config_service(script)
 
 
 def executar_script(config, escopos, passo: int | None):
