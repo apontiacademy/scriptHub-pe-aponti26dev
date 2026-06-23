@@ -11,8 +11,6 @@ BASE_DIR = Path(__file__).resolve().parent
 
 def main(config: Config):
     """Função principal que orquestra o Escopo 2 (Middleware / Análise de Dados)."""
-    log.secao("[ESCOPO 2] ANÁLISE PENTE-FINO (MIDDLEWARE)")
-
     log.passo("Mapeando caminhos e variáveis a partir da configuração central...")
 
     diretorio_relatorios = config.moodle.caminho_download_relatorio

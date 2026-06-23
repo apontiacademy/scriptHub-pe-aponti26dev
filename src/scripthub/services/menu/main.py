@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from scripthub.services import log
+
 import questionary
 from questionary import Style
 
@@ -109,18 +111,12 @@ def main() -> None:
 
     name, cmd = selected
 
-    print()
-    print("=" * 80)
-    print(f"▶ Executando: {name}")
-    print("=" * 80)
-    print()
+    log.secao(f"Executando: {name}")
 
     returncode = run_module(cmd)
 
     print()
-    print("=" * 80)
     if returncode == 0:
-        print(f"✔ {name} finalizado com sucesso.")
+        log.ok(f"{name} finalizado com sucesso.")
     else:
-        print(f"❌ {name} finalizado com erro (código {returncode}).")
-    print("=" * 80)
+        log.erro(f"{name} finalizado com erro (código {returncode}).")

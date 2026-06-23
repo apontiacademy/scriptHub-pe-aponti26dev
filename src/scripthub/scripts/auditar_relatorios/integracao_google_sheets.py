@@ -13,8 +13,6 @@ DIRETORIO_BASE = Path(__file__).resolve().parent
 
 def main(config: Config):
     """Função principal que orquestra o Escopo 3 (Integração com Google Sheets)."""
-    log.secao("[ESCOPO 3] INTEGRAÇÃO (GOOGLE SHEETS)")
-
     caminho_csv = config.moodle.csv_saida_analise
     caminho_credenciais = config.gsheets.caminho_json_credenciais
     id_planilha = config.gsheets.id_planilha

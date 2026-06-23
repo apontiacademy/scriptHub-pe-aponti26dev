@@ -81,8 +81,6 @@ def baixar_relatorio(page, url, caminho_saida, login_url, usuario, senha):
 
 def main(config: Config):
     """Função principal que orquestra o Escopo 1."""
-    log.secao("[ESCOPO 1] EXTRAÇÃO DE RELATÓRIOS (MOODLE)")
-
     login_url = config.moodle.url_login
     usuario = config.moodle.usuario
     senha = config.moodle.senha

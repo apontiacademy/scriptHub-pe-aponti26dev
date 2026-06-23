@@ -1,18 +1,13 @@
-import os
 import sys
 from pathlib import Path
 
-from ..menu.main import HEADER, SCRIPTS_FOLDER, STYLE, discover_modules
+from ..menu.main import SCRIPTS_FOLDER, discover_modules
 from .esquemas import ESQUEMAS
 from .persistencia import carregar_valores, persistir
 from .ui import exibir_campos, obter_input, selecionar_campos, selecionar_script
 
 
 def config(nome_script: str | None = None) -> None:
-    os.system("cls" if os.name == "nt" else "clear")
-    print(HEADER)
-    print()
-
     if nome_script is not None:
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
@@ -20,7 +15,7 @@ def config(nome_script: str | None = None) -> None:
             sys.exit(1)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
-        modulos_com_esquema = [(nome, desc) for nome, desc in modulos if nome in ESQUEMAS]
+        modulos_com_esquema = [(nome, desc) for nome, _, desc in modulos if nome in ESQUEMAS]
 
         if not modulos_com_esquema:
             print("❌ Nenhum script com configuração disponível foi encontrado.", file=sys.stderr)
@@ -51,10 +46,6 @@ def config(nome_script: str | None = None) -> None:
 
 
 def visualizar(nome_script: str | None = None) -> None:
-    os.system("cls" if os.name == "nt" else "clear")
-    print(HEADER)
-    print()
-
     if nome_script is not None:
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
@@ -62,7 +53,7 @@ def visualizar(nome_script: str | None = None) -> None:
             sys.exit(1)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
-        modulos_com_esquema = [(nome, desc) for nome, desc in modulos if nome in ESQUEMAS]
+        modulos_com_esquema = [(nome, desc) for nome, _, desc in modulos if nome in ESQUEMAS]
 
         if not modulos_com_esquema:
             print("❌ Nenhum script com configuração disponível foi encontrado.", file=sys.stderr)

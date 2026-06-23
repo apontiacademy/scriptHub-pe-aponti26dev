@@ -103,7 +103,7 @@ def baixar_relatorio(page, url, caminho_saida, login_url, usuario, senha):
 
 
 def main(config: Config):
-    log.secao("[ESCOPO 1] DOWNLOAD DE RELATÓRIOS POR MÊS (MOODLE)")
+    log.secao("DOWNLOAD DE RELATÓRIOS POR MÊS (MOODLE)")
 
     meses = config.moodle.meses
     login_url = config.moodle.url_login

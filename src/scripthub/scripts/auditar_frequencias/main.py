@@ -3,7 +3,10 @@ import scripthub.scripts.auditar_frequencias.integracao_google_sheets as integra
 
 from .config import Config
 
-ESCOPOS = [exportar_frequencias.main, integracao_google_sheets.main]
+ESCOPOS = [
+    ("EXPORTAÇÃO DE FREQUÊNCIAS (MOODLE)", exportar_frequencias.main),
+    ("INTEGRAÇÃO (GOOGLE SHEETS)", integracao_google_sheets.main),
+]
 
 
 def get_config() -> Config:

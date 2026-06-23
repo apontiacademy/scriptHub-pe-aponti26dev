@@ -54,8 +54,6 @@ def realizar_backup_xlsx_local(caminho_credenciais: Path, id_planilha: str, dire
 
 def main(config: Config):
     """Função principal que orquestra o Escopo 4 (Backup Local Automatizado)."""
-    log.secao("[ESCOPO 4] BACKUP AUTOMÁTICO (.XLSX)")
-
     caminho_credenciais = config.gsheets.caminho_json_credenciais
     id_planilha = config.gsheets.id_planilha
     diretorio_backup = config.gsheets.caminho_backup_local

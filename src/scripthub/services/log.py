@@ -22,14 +22,9 @@ if not _logger.handlers:
     )
     _logger.addHandler(_handler)
 
-_SEP = "=" * 80
-
-
 def secao(titulo: str) -> None:
     print()
-    print(_SEP)
     print(f"▶ {titulo}")
-    print(_SEP)
     _logger.info("▶ %s", titulo)
 
 

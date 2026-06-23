@@ -325,7 +325,7 @@ def _gerar_pdf(aluno: DadosAluno, caminho_saida: Path):
 
 
 def main(config: Config):
-    log.secao("[ESCOPO 2] COMPILAÇÃO DE PDFs POR ALUNO")
+    log.secao("COMPILAÇÃO DE PDFs POR ALUNO")
 
     log.passo("Carregando relatórios CSV...")
     alunos = _carregar_relatorios(config.moodle.meses, config.moodle.caminho_download)

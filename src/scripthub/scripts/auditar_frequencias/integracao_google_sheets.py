@@ -13,8 +13,6 @@ DIRETORIO_BASE = Path(__file__).resolve().parent
 
 def main(config: Config):
     """Função principal que orquestra o Escopo 2 (Integração com Google Sheets)."""
-    log.secao("[ESCOPO 2] INTEGRAÇÃO (GOOGLE SHEETS)")
-
     caminho_exportacao = config.moodle.caminho_exportacao
     caminho_credenciais = config.gsheets.caminho_json_credenciais
     id_planilha = config.gsheets.id_planilha
@@ -43,6 +41,7 @@ def main(config: Config):
         log.passo("Abrindo a planilha por ID...")
         planilha = gc.open_by_key(id_planilha)
 
+        falhas = []
         for arquivo_xlsx in arquivos_xlsx:
             nome_arquivo = arquivo_xlsx.stem
             log.passo(f"Processando arquivo: {arquivo_xlsx.name}")
@@ -54,6 +53,7 @@ def main(config: Config):
                 dados_para_upload = [df.columns.tolist()] + df.values.tolist()
             except Exception as e:
                 log.erro(f"Falha ao ler o arquivo {arquivo_xlsx.name}: {e}")
+                falhas.append(arquivo_xlsx.name)
                 continue
 
             try:
@@ -68,14 +68,17 @@ def main(config: Config):
             worksheet.update(range_name="A1", values=dados_para_upload)
             log.ok(f"Página '{nome_arquivo}' atualizada com sucesso!")
 
+        if falhas:
+            raise RuntimeError(f"{len(falhas)} arquivo(s) falharam: {', '.join(falhas)}")
+
         log.ok("Escopo 2 finalizado com sucesso!")
 
     except gspread.exceptions.SpreadsheetNotFound:
         raise RuntimeError(f"A planilha com ID '{id_planilha}' não foi encontrada.")
+    except RuntimeError:
+        raise
     except Exception as e:
-        import traceback
         log.erro(f"Erro inesperado durante a integração com o Google Sheets: {e}")
-        traceback.print_exc()
         raise
 
 

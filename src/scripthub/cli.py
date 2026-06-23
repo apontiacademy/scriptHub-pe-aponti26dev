@@ -4,6 +4,7 @@ from typing import Annotated
 import typer
 
 from ._i18n import instalar as _instalar_i18n
+from .services import log
 
 _instalar_i18n()
 
@@ -50,7 +51,7 @@ def frequencias(
 ):
     """Exporta frequências de presença do Moodle para o Google Sheets."""
     config = _carregar_config(auditar_frequencias.get_config, "auditar_frequencias")
-    executar_script(config, auditar_frequencias.ESCOPOS, passo)
+    executar_script(config, auditar_frequencias.ESCOPOS, passo, "AUDITORIA DE FREQUÊNCIAS")
 
 
 @app.command()
@@ -69,7 +70,7 @@ def relatorios(
     match modo:
         case "auditar":
             config = _carregar_config(auditar_relatorios.get_config, "auditar_relatorios")
-            executar_script(config, auditar_relatorios.ESCOPOS, passo)
+            executar_script(config, auditar_relatorios.ESCOPOS, passo, "AUDITORIA DE RELATÓRIOS")
         case "compilar":
             if passo:
                 raise ValueError('O modo compilar não aceita "passo".')
@@ -87,7 +88,7 @@ def relatorios_auditar(
 ):
     """Alias para 'scripthub relatorios auditar'."""
     config = _carregar_config(auditar_relatorios.get_config, "auditar_relatorios")
-    executar_script(config, auditar_relatorios.ESCOPOS, passo)
+    executar_script(config, auditar_relatorios.ESCOPOS, passo, "AUDITORIA DE RELATÓRIOS")
 
 
 @app.command("rc", hidden=True)
@@ -131,28 +132,26 @@ def config(
         config_service(script)
 
 
-def executar_script(config, escopos, passo: int | None):
-    print("=" * 80)
-    print("▶ INICIANDO PIPELINE DE AUTOMATIZAÇÃO DE RELATÓRIOS")
-    print("=" * 80)
-    print()
+def executar_script(config, escopos, passo: int | None, titulo: str):
+    log.secao(titulo)
+    total = len(escopos)
 
     try:
         if passo is None:
-            for escopo in escopos:
-                escopo(config)
-        elif passo <= 0 or passo > len(escopos):
-            typer.echo(f"  ❌ Passo inválido: deve ser entre 1 e {len(escopos)}.", err=True)
+            for i, (nome, func) in enumerate(escopos, 1):
+                log.secao(f"PASSO {i}/{total} — {nome}")
+                func(config)
+        elif passo <= 0 or passo > total:
+            log.erro(f"Passo inválido: deve ser entre 1 e {total}.")
             raise typer.Exit(1)
         else:
-            escopos[passo - 1](config)
+            nome, func = escopos[passo - 1]
+            log.secao(f"PASSO {passo}/{total} — {nome}")
+            func(config)
     except (typer.Exit, SystemExit):
         raise
     except Exception as e:
-        typer.echo(f"  ❌ Erro durante execução: {e}", err=True)
+        log.erro(f"Erro durante execução: {e}")
         raise typer.Exit(1)
 
-    print()
-    print("=" * 80)
-    print("✔ PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")
-    print("=" * 80)
+    log.ok("PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")

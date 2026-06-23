@@ -78,8 +78,6 @@ def exportar_frequencia(page, url, nome_turma, caminho_saida, url_login, usuario
 
 def main(config: Config):
     """Função principal que orquestra o pipeline de exportação de frequências."""
-    log.secao("[ESCOPO 1] EXPORTAÇÃO DE FREQUÊNCIAS (MOODLE)")
-
     url_login = config.moodle.url_login
     usuario = config.moodle.usuario
     senha = config.moodle.senha
