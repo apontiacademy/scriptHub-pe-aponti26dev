@@ -1,9 +1,10 @@
 import re
-import sys
 import time
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
+
+from scripthub.services import log
 
 from .config import Config
 
@@ -12,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 def realizar_login(page, url_login, usuario, senha):
     """Realiza o login no Moodle de forma agnóstica a idioma e modo de execução."""
-    print("  • Iniciando processo de login...")
+    log.passo("Iniciando processo de login...")
     page.goto(url_login)
     page.wait_for_load_state("domcontentloaded")
 
@@ -20,7 +21,7 @@ def realizar_login(page, url_login, usuario, senha):
         # Trata possíveis sessões ativas sobrepostas
         botao_sair = page.locator("#logininsidebaric, button:has-text('Sair'), button:has-text('Log out')").first
         botao_sair.wait_for(state="visible", timeout=2000)
-        print("  • Sessão fantasma detectada! Clicando em 'Sair' para limpar...")
+        log.passo("Sessão fantasma detectada! Clicando em 'Sair' para limpar...")
         botao_sair.click()
         page.wait_for_load_state("networkidle")
         page.goto(url_login)
@@ -28,7 +29,7 @@ def realizar_login(page, url_login, usuario, senha):
     except Exception:
         pass
 
-    print("  • Preenchendo credenciais...")
+    log.passo("Preenchendo credenciais...")
     page.locator("#username").fill(usuario)
 
     try:
@@ -44,17 +45,17 @@ def realizar_login(page, url_login, usuario, senha):
         page.locator("button[type='submit']").click()
         page.wait_for_load_state("networkidle")
 
-    print("  ✔ Login realizado com sucesso!")
+    log.ok("Login realizado com sucesso!")
 
 
 def exportar_frequencia(page, url, nome_turma, caminho_saida, url_login, usuario, senha):
     """Exporta a frequência de uma turma específica."""
-    print(f"  • Exportando frequência: {nome_turma}")
+    log.passo(f"Exportando frequência: {nome_turma}")
     page.goto(url)
     page.wait_for_load_state("networkidle")
 
     if "login" in page.url:
-        print("  • Sessão expirada. Reconectando...")
+        log.passo("Sessão expirada. Reconectando...")
         realizar_login(page, url_login, usuario, senha)
         page.goto(url)
         page.wait_for_load_state("networkidle")
@@ -69,17 +70,15 @@ def exportar_frequencia(page, url, nome_turma, caminho_saida, url_login, usuario
             page.get_by_role("button", name="OK").click()
 
         download_info.value.save_as(str(caminho_arquivo))
-        print(f"  ✔ Salvo em: {caminho_arquivo}")
+        log.ok(f"Salvo em: {caminho_arquivo}")
 
     except Exception as e:
-        print(f"  ❌ ERRO ao exportar {nome_turma}: {e}", file=sys.stderr)
+        log.erro(f"ERRO ao exportar {nome_turma}: {e}")
 
 
 def main(config: Config):
     """Função principal que orquestra o pipeline de exportação de frequências."""
-    print("=" * 80)
-    print("▶ [ESCOPO 1] EXPORTAÇÃO DE FREQUÊNCIAS (MOODLE)")
-    print("=" * 80)
+    log.secao("[ESCOPO 1] EXPORTAÇÃO DE FREQUÊNCIAS (MOODLE)")
 
     url_login = config.moodle.url_login
     usuario = config.moodle.usuario
@@ -88,12 +87,7 @@ def main(config: Config):
     caminho_saida = config.moodle.caminho_exportacao
 
     if not urls_frequencias:
-        print(
-            "  ❌ ERRO: Nenhuma URL de frequência encontrada no settings.json",
-            file=sys.stderr,
-        )
-        print("=" * 80)
-        return
+        raise RuntimeError("Nenhuma URL de frequência encontrada no settings.json")
 
     caminho_saida.mkdir(parents=True, exist_ok=True)
 
@@ -114,8 +108,6 @@ def main(config: Config):
                 exportar_frequencia(pagina, url, nome_turma, caminho_saida, url_login, usuario, senha)
                 time.sleep(1.5)
 
-        print("\n✔ Escopo 1 finalizado com sucesso!")
+        log.ok("Escopo 1 finalizado com sucesso!")
     except Exception as e:
-        print(f"\n⚠️ Escopo 1 terminou com falhas: {e}", file=sys.stderr)
-
-    print("=" * 80)
+        log.erro(f"Escopo 1 terminou com falhas: {e}")

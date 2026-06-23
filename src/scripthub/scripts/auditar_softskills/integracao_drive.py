@@ -5,6 +5,8 @@ import gspread
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
+from scripthub.services import log
+
 from .config import Config
 
 
@@ -21,9 +23,9 @@ def upload_to_drive(file_path: str, config: Config) -> None:
     # Verifica se a pasta está acessível (suporta Shared Drives)
     try:
         folder_info = drive_service.files().get(fileId=folder_id, fields="id,name", supportsAllDrives=True).execute()
-        print(f"  • Pasta acessível: {folder_info['name']}")
+        log.passo(f"Pasta acessível: {folder_info['name']}")
     except Exception as e:
-        print(f"  ❌ Pasta não acessível (verifique o compartilhamento): {e}")
+        log.erro(f"Pasta não acessível (verifique o compartilhamento): {e}")
         return
 
     sheet_name = Path(file_path).stem  # nome sem extensão
@@ -46,7 +48,7 @@ def upload_to_drive(file_path: str, config: Config) -> None:
 
     if existing:
         sheet_id = existing[0]["id"]
-        print("  • Planilha existente encontrada.")
+        log.passo("Planilha existente encontrada.")
     else:
         sheet_id = (
             drive_service.files()
@@ -61,7 +63,7 @@ def upload_to_drive(file_path: str, config: Config) -> None:
             )
             .execute()["id"]
         )
-        print("  • Nova planilha criada no Drive.")
+        log.passo("Nova planilha criada no Drive.")
 
     gc = gspread.authorize(creds)
     sh = gc.open_by_key(sheet_id)
@@ -94,4 +96,4 @@ def upload_to_drive(file_path: str, config: Config) -> None:
             {"numberFormat": {"type": "NUMBER", "pattern": "0.00"}},
         )
 
-    print(f'  ✔ Aba "Dados" atualizada com {len(data)} linhas.')
+    log.ok(f'Aba "Dados" atualizada com {len(data)} linhas.')

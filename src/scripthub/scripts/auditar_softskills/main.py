@@ -10,54 +10,53 @@ import requests
 import scripthub.scripts.auditar_softskills.download_softskills as download_softskills
 import scripthub.scripts.auditar_softskills.integracao_drive as integracao_drive
 
+from scripthub.services import log
+
 from .config import Config
 
 
 def main():
     config = Config.load()
 
-    print("=" * 80)
-    print("▶ INICIANDO PIPELINE DE SOFT SKILLS")
-    print("=" * 80)
-    print()
+    log.secao("PIPELINE DE SOFT SKILLS")
 
     session = None
 
     # ── 1. Download bootcamp ──────────────────────────────────────────────────
     if download_softskills.bootcamp_ja_baixado(config):
-        print("[CACHE] Dados do bootcamp já existem em disco — pulando download.")
+        log.passo("[CACHE] Dados do bootcamp já existem em disco — pulando download.")
         turmas_nums = download_softskills.turmas_do_disco(config)
-        print(f"  {len(turmas_nums)} turmas encontradas: {turmas_nums}")
+        log.passo(f"{len(turmas_nums)} turmas encontradas: {turmas_nums}")
     else:
         session = requests.Session()
         session.headers.update({"User-Agent": "Mozilla/5.0"})
         download_softskills.login(session, config)
 
-        print("\nBuscando turmas do bootcamp...")
+        log.passo("Buscando turmas do bootcamp...")
         turmas = download_softskills.get_turmas(session, config)
         turmas_nums = sorted(turmas.keys())
-        print(f"  {len(turmas_nums)} turmas: {turmas_nums}")
+        log.passo(f"{len(turmas_nums)} turmas: {turmas_nums}")
 
-        print("\nBaixando atividades...")
+        log.passo("Baixando atividades...")
         for turma_num in turmas_nums:
             turma_dir = config.output_dir / turma_num
             turma_dir.mkdir(parents=True, exist_ok=True)
             quiz_ids = download_softskills.get_quiz_ids(session, turmas[turma_num])
-            print(f"  Turma {turma_num}:")
+            log.passo(f"Turma {turma_num}:")
 
             for label, fname in download_softskills.ACTIVITIES:
                 qid = quiz_ids["activities"].get(fname)
                 if not qid:
-                    print(f"    [NOT FOUND] {label}")
+                    log.aviso(f"[NOT FOUND] {label}")
                     continue
                 content = download_softskills.download_csv(session, qid, config)
                 if content:
                     (turma_dir / f"{fname}.csv").write_bytes(content)
                     rows = list(csv.DictReader(io.StringIO(content.decode("utf-8-sig"))))
                     has_nota = "Nota/10,00" in (list(rows[0].keys()) if rows else [])
-                    print(f"    [OK] {label} — {len(rows)} alunos | nota={'sim' if has_nota else 'não'}")
+                    log.ok(f"{label} — {len(rows)} alunos | nota={'sim' if has_nota else 'não'}")
                 else:
-                    print(f"    [ERROR] {label}")
+                    log.erro(f"[ERROR] {label}")
                 time.sleep(0.2)
 
             qid = quiz_ids["avaliativa"]
@@ -66,17 +65,15 @@ def main():
                 if content:
                     (turma_dir / "atividade_avaliativa_softskills.csv").write_bytes(content)
                     rows = list(csv.DictReader(io.StringIO(content.decode("utf-8-sig"))))
-                    print(f"    [OK] Atividade Avaliativa SS — {len(rows)} alunos")
+                    log.ok(f"Atividade Avaliativa SS — {len(rows)} alunos")
                 else:
-                    print("    [ERROR] Atividade Avaliativa SS")
+                    log.erro("[ERROR] Atividade Avaliativa SS")
             else:
-                print("    [NOT FOUND] Atividade Avaliativa SS")
+                log.aviso("[NOT FOUND] Atividade Avaliativa SS")
             time.sleep(0.2)
 
-    print()
-
     # ── 2. Build softskills_resultado.csv ─────────────────────────────────────
-    print("Construindo softskills_resultado.csv...")
+    log.passo("Construindo softskills_resultado.csv...")
     rows_out = []
     for turma_num in turmas_nums:
         turma_dir = config.output_dir / turma_num
@@ -125,7 +122,7 @@ def main():
         writer.writerows(rows_out)
 
     softskills_lookup = {r["E-mail"]: r for r in rows_out}
-    print(f"✓ {ss_path} — {len(rows_out)} alunos")
+    log.ok(f"{ss_path} — {len(rows_out)} alunos")
 
     sem_notas = [
         t
@@ -138,24 +135,22 @@ def main():
         )
     ]
     if sem_notas:
-        print(f"⚠️  Turmas sem notas: {sem_notas} (alunos ainda não responderam)")
-
-    print()
+        log.aviso(f"Turmas sem notas: {sem_notas} (alunos ainda não responderam)")
 
     # ── 3. Build aprovados_bootcamp_fap2026.csv ───────────────────────────────
     if download_softskills.aprovados_ja_baixados(config):
-        print("[CACHE] Dados dos aprovados já existem em disco — pulando download.")
+        log.passo("[CACHE] Dados dos aprovados já existem em disco — pulando download.")
         approved = download_softskills.aprovados_do_disco(config)
-        print(f"  {len(approved)} aprovados carregados do disco.")
+        log.passo(f"{len(approved)} aprovados carregados do disco.")
     else:
         if session is None:
             session = requests.Session()
             session.headers.update({"User-Agent": "Mozilla/5.0"})
             download_softskills.login(session, config)
 
-        print("\nColetando aprovados...")
+        log.passo("Coletando aprovados...")
         approved_courses = download_softskills.get_approved_courses(session, config)
-        print(f"  {len(approved_courses)} cursos encontrados")
+        log.passo(f"{len(approved_courses)} cursos encontrados")
 
         config.aprovados_dir.mkdir(parents=True, exist_ok=True)
         ap_part_fieldnames = ["nome", "email", "trilha_raw"]
@@ -168,7 +163,7 @@ def main():
                 if p["email"] not in approved:
                     approved[p["email"]] = p
                     new += 1
-            print(f"  {name}: {len(parts)} participantes ({new} novos)")
+            log.passo(f"{name}: {len(parts)} participantes ({new} novos)")
 
             safe_name = re.sub(r"[^\w\s-]", "", name).strip().replace(" ", "_")
             ap_course_path = config.aprovados_dir / f"{safe_name}.csv"
@@ -178,8 +173,6 @@ def main():
                 writer.writerows(parts)
 
             time.sleep(0.2)
-
-    print()
 
     ap_fieldnames = [
         "Nome Completo",
@@ -225,15 +218,11 @@ def main():
         writer.writerows(ap_rows)
 
     sem_ss = sum(1 for r in ap_rows if not r["Nota Gestão de Tempo"])
-    print("Construindo aprovados_bootcamp_fap2026.csv...")
-    print(f"✓ {ap_path} — {len(ap_rows)} aprovados ({len(ap_rows) - sem_ss} com notas soft skills)")
-    print()
+    log.passo("Construindo aprovados_bootcamp_fap2026.csv...")
+    log.ok(f"{ap_path} — {len(ap_rows)} aprovados ({len(ap_rows) - sem_ss} com notas soft skills)")
 
     # ── 4. Upload para Google Drive ───────────────────────────────────────────
-    print("Enviando para o Google Drive...")
+    log.passo("Enviando para o Google Drive...")
     integracao_drive.upload_to_drive(str(ap_path), config)
-    print()
 
-    print("=" * 80)
-    print("✔ PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")
-    print("=" * 80)
+    log.ok("PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")

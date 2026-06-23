@@ -3,6 +3,10 @@ from typing import Annotated
 
 import typer
 
+from ._i18n import instalar as _instalar_i18n
+
+_instalar_i18n()
+
 from .scripts import (
     auditar_frequencias,
     auditar_relatorios,
@@ -11,22 +15,20 @@ from .scripts import (
     torpedo_de_forum,
 )
 from .services.config import config as config_service, visualizar as visualizar_config
-from .services.menu import menu
+from .services.menu import menu as _menu
 
-app = typer.Typer(invoke_without_command=True)
+app = typer.Typer(help="Hub de automações para operações do bootcamp Aponti PE.")
 
 
 def run():
     app()
 
 
-@app.callback()
-def callback(
-    ctx: typer.Context,
-    verboso: Annotated[bool, typer.Option("--verboso", "-v", help="Exibir erros verbosos no menu.")] = False,
-):
-    if ctx.invoked_subcommand is None:
-        menu(verboso)
+@app.command("menu")
+@app.command("m", hidden=True)
+def menu_cmd():
+    """Abrir o menu interativo para selecionar e executar um script."""
+    _menu()
 
 
 def _carregar_config(fn, nome_script: str):
@@ -38,26 +40,32 @@ def _carregar_config(fn, nome_script: str):
         raise typer.Exit(1)
 
 
-# TODO: implementar help
 @app.command()
 @app.command("f", hidden=True)
 def frequencias(
-    passo: Annotated[int | None, typer.Option("--passo", "-p", help="Executar um passso específico do script.")] = None,
+    passo: Annotated[
+        int | None,
+        typer.Option("--passo", "-p", help="Executar somente o passo N do pipeline (começa em 1)."),
+    ] = None,
 ):
+    """Exporta frequências de presença do Moodle para o Google Sheets."""
     config = _carregar_config(auditar_frequencias.get_config, "auditar_frequencias")
     executar_script(config, auditar_frequencias.ESCOPOS, passo)
 
 
-# TODO: implementar help
 @app.command()
 @app.command("r", hidden=True)
 def relatorios(
     modo: Annotated[
         str,
-        typer.Argument(help="Escolher se executar o script no modo auditar ou compilar."),
+        typer.Argument(help="Modo de execução: 'auditar' (pipeline completo) ou 'compilar' (gerar PDFs)."),
     ],
-    passo: Annotated[int | None, typer.Option("--passo", "-p", help="Executar um passso específico do script.")] = None,
+    passo: Annotated[
+        int | None,
+        typer.Option("--passo", "-p", help="Executar somente o passo N do pipeline (começa em 1; indisponível no modo 'compilar')."),
+    ] = None,
 ):
+    """Processa relatórios no modo 'auditar' (pipeline completo) ou 'compilar' (gerar PDFs)."""
     match modo:
         case "auditar":
             config = _carregar_config(auditar_relatorios.get_config, "auditar_relatorios")
@@ -70,19 +78,19 @@ def relatorios(
             raise ValueError('Modo deve ser "auditar" ou "compilar".')
 
 
-# TODO: implementar help
 # TODO: reimplementar utilizando padrões dos scripts anteriores
 @app.command()
 @app.command("s", hidden=True)
 def softskills():
+    """Baixa as notas de soft skills do Moodle e envia ao Google Drive."""
     auditar_softskills.main()
 
 
-# TODO: implementar help
 # TODO: reimplementar utilizando padrões dos scripts anteriores
 @app.command()
 @app.command("t", hidden=True)
 def torpedo():
+    """Posta tópicos em fóruns do Moodle a partir de arquivos Markdown."""
     torpedo_de_forum.main()
 
 
@@ -95,7 +103,7 @@ def config(
     ] = None,
     apenas_visualizar: Annotated[
         bool,
-        typer.Option("--opcoes", "-o", help="Visualizar o estado das opções sem editar."),
+        typer.Option("--opcoes", "-o", help="Apenas visualizar as opções sem editar."),
     ] = False,
 ):
     """Configurar interativamente as opções de um script."""
@@ -111,19 +119,22 @@ def executar_script(config, escopos, passo: int | None):
     print("=" * 80)
     print()
 
-    if passo is None:
-        for escopo in escopos:
-            escopo(config)
-    elif passo <= 0 or passo >= len(escopos):
-        print(
-            "  ❌ O passo especificado é maior que a quantidade de passos disponíveis ou é igual o menor a 0.",
-            file=sys.stderr,
-        )
-        print("=" * 80)
-        return
-    else:
-        escopos[passo - 1](config)
+    try:
+        if passo is None:
+            for escopo in escopos:
+                escopo(config)
+        elif passo <= 0 or passo > len(escopos):
+            typer.echo(f"  ❌ Passo inválido: deve ser entre 1 e {len(escopos)}.", err=True)
+            raise typer.Exit(1)
+        else:
+            escopos[passo - 1](config)
+    except (typer.Exit, SystemExit):
+        raise
+    except Exception as e:
+        typer.echo(f"  ❌ Erro durante execução: {e}", err=True)
+        raise typer.Exit(1)
 
+    print()
     print("=" * 80)
     print("✔ PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")
     print("=" * 80)

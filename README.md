@@ -13,6 +13,9 @@ uv sync
 
 # Configure as opções de cada script (veja a seção Configuração abaixo)
 uv run scripthub config
+
+# Para ver todos os comandos disponíveis:
+uv run scripthub --help
 ```
 
 Após o `uv sync`, também é possível ativar o ambiente virtual e invocar os comandos sem o prefixo `uv run`:
@@ -27,7 +30,7 @@ scripthub config
 
 ```bash
 # Menu interativo (lista todos os scripts disponíveis)
-uv run scripthub
+uv run scripthub menu
 
 # Invocar um script diretamente
 uv run scripthub frequencias
@@ -37,17 +40,19 @@ uv run scripthub softskills
 uv run scripthub torpedo
 ```
 
-## Scripts
+## Comandos
 
 | Comando | Alias | Descrição |
 |---|---|---|
-| `scripthub frequencias [-p passo]` | `f` | Exporta frequências do Moodle e envia ao Google Sheets |
+| `scripthub menu` | `m` | Abre o menu interativo para selecionar e executar um script |
+| `scripthub frequencias [-p passo]` | `f` | Exporta frequências de presença do Moodle para o Google Sheets |
 | `scripthub relatorios auditar [-p passo]` | `r auditar` | Pipeline completo: download → análise → Google Sheets → backup |
 | `scripthub relatorios compilar` | `r compilar` | Compila relatórios em PDF |
-| `scripthub softskills` | `s` | Baixa notas de soft skills e envia ao Google Drive |
+| `scripthub softskills` | `s` | Baixa notas de soft skills do Moodle e envia ao Google Drive |
 | `scripthub torpedo` | `t` | Posta tópicos em fóruns do Moodle a partir de arquivos Markdown |
+| `scripthub config` | `c` | Configura interativamente as opções de um script |
 
-A opção `-p passo` executa apenas o passo indicado (começando em 1) em vez do pipeline completo.
+A opção `-p N` executa apenas o passo N do pipeline (começando em 1) em vez do pipeline completo. Disponível nos comandos `frequencias` e `relatorios auditar`.
 
 ## Configuração
 

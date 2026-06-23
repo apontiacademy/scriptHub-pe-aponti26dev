@@ -69,44 +69,43 @@ def run_module(name: str) -> int:
 _QUIT = object()
 
 
-# TODO: implementar modo verboso do menu
-def main(verboso: bool) -> None:
-    feedback: str | None = None
+def main() -> None:
+    os.system("clear")
+    print(HEADER)
+    print()
 
-    while True:
-        os.system("clear")
-        print(HEADER)
-        print()
+    modules = discover_modules(SCRIPTS_FOLDER)
+    max_len = max((len(name) for name, _ in modules), default=0)
+    choices = []
+    for name, desc in modules:
+        bracketed = f"[{name}]"
+        title = f"{bracketed:<{max_len + 2}}  {desc}" if desc else bracketed
+        choices.append(questionary.Choice(title=title, value=name))
+    choices.append(questionary.Separator())
+    choices.append(questionary.Choice(title="[ sair ]", value=_QUIT))
 
-        if feedback:
-            print(feedback)
-            print()
+    selected = questionary.select(
+        "Qual script rodar?",
+        choices=choices,
+        style=STYLE,
+    ).ask()
 
-        modules = discover_modules(SCRIPTS_FOLDER)
-        max_len = max((len(name) for name, _ in modules), default=0)
-        choices = []
-        for name, desc in modules:
-            bracketed = f"[{name}]"
-            if desc:
-                title = f"{bracketed:<{max_len + 2}}  {desc}"
-            else:
-                title = bracketed
-            choices.append(questionary.Choice(title=title, value=name))
-        choices.append(questionary.Separator())
-        choices.append(questionary.Choice(title="[ sair ]", value=_QUIT))
+    if selected is None or selected is _QUIT:
+        print("Isso não é um adeus, é um até logo 👋")
+        return
 
-        selected = questionary.select(
-            "Qual script rodar?",
-            choices=choices,
-            style=STYLE,
-        ).ask()
+    print()
+    print("=" * 80)
+    print(f"▶ Executando: {selected}")
+    print("=" * 80)
+    print()
 
-        if selected is None or selected is _QUIT:
-            print("Isso não é um adeus, é um até logo 👋")
-            break
+    returncode = run_module(selected)
 
-        returncode = run_module(selected)
-        if returncode == 0:
-            feedback = f"✅ {selected} finalizado com sucesso."
-        else:
-            feedback = f"❌ {selected} finalizado com erro (código {returncode})."
+    print()
+    print("=" * 80)
+    if returncode == 0:
+        print(f"✔ {selected} finalizado com sucesso.")
+    else:
+        print(f"❌ {selected} finalizado com erro (código {returncode}).")
+    print("=" * 80)

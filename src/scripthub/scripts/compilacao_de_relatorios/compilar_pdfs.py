@@ -7,6 +7,8 @@ import pandas as pd
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
+from scripthub.services import log
+
 from .config import Config
 
 LARGURA_PAGINA = 210
@@ -46,10 +48,10 @@ def _para_latin1(texto: str) -> str:
     substituicoes = {
         "—": " - ",  # — em dash
         "–": "-",  # – en dash
-        "‘": "'",  # ' aspa simples esquerda
-        "’": "'",  # ' aspa simples direita
-        "“": '"',  # " aspa dupla esquerda
-        "”": '"',  # " aspa dupla direita
+        "'": "'",  # ' aspa simples esquerda
+        "'": "'",  # ' aspa simples direita
+        """: '"',  # " aspa dupla esquerda
+        """: '"',  # " aspa dupla direita
         "…": "...",  # … reticências
         "•": "-",  # • bullet
         "·": "-",  # · ponto médio
@@ -217,7 +219,7 @@ def _extrair_colunas_perguntas(df: pd.DataFrame) -> list[str]:
 def _carregar_cpfs(csv_residentes: Path) -> dict[str, str]:
     """Retorna dict {nome_norm: cpf} a partir do residentes.csv."""
     if not csv_residentes.exists():
-        print(f"  ⚠ Aviso: {csv_residentes} não encontrado. CPF ficará em branco.", file=sys.stderr)
+        log.aviso(f"{csv_residentes} não encontrado. CPF ficará em branco.")
         return {}
 
     df = pd.read_csv(csv_residentes, dtype=str).fillna("")
@@ -244,16 +246,13 @@ def _carregar_relatorios(
             caminho_csv = caminho_download / f"{slug}_{semana_idx}.csv"
 
             if not caminho_csv.exists():
-                print(
-                    f"  ⚠ Aviso: CSV da {semana_nome} de '{nome_mes}' não encontrado em {caminho_csv}. Pulando.",
-                    file=sys.stderr,
-                )
+                log.aviso(f"CSV da {semana_nome} de '{nome_mes}' não encontrado em {caminho_csv}. Pulando.")
                 continue
 
             try:
                 df = pd.read_csv(caminho_csv, dtype=str).fillna("")
             except Exception as e:
-                print(f"  ❌ ERRO: Falha ao ler {caminho_csv}: {e}", file=sys.stderr)
+                log.erro(f"Falha ao ler {caminho_csv}: {e}")
                 continue
 
             colunas_perguntas = _extrair_colunas_perguntas(df)
@@ -326,29 +325,25 @@ def _gerar_pdf(aluno: DadosAluno, caminho_saida: Path):
 
 
 def main(config: Config):
-    print("=" * 80)
-    print("▶ [ESCOPO 2] COMPILAÇÃO DE PDFs POR ALUNO")
-    print("=" * 80)
+    log.secao("[ESCOPO 2] COMPILAÇÃO DE PDFs POR ALUNO")
 
-    print("\n  • Carregando relatórios CSV...")
+    log.passo("Carregando relatórios CSV...")
     alunos = _carregar_relatorios(config.moodle.meses, config.moodle.caminho_download)
 
     if not alunos:
-        print("  ❌ ERRO: Nenhum dado de aluno encontrado nos CSVs.", file=sys.stderr)
-        print("=" * 80)
-        return
+        raise RuntimeError("Nenhum dado de aluno encontrado nos CSVs.")
 
-    print(f"  ✔ {len(alunos)} aluno(s) encontrado(s).")
+    log.ok(f"{len(alunos)} aluno(s) encontrado(s).")
 
-    print("\n  • Carregando CPFs do residentes.csv...")
+    log.passo("Carregando CPFs do residentes.csv...")
     cpfs = _carregar_cpfs(config.pdf.csv_residentes)
     for nome_norm, cpf in cpfs.items():
         if nome_norm in alunos:
             alunos[nome_norm].cpf = cpf
 
-    print(f"  ✔ {len(cpfs)} CPF(s) carregado(s).")
+    log.ok(f"{len(cpfs)} CPF(s) carregado(s).")
 
-    print("\n  • Gerando PDFs...")
+    log.passo("Gerando PDFs...")
     gerados = 0
     erros = 0
 
@@ -360,16 +355,18 @@ def main(config: Config):
 
         try:
             _gerar_pdf(aluno, caminho_pdf)
-            print(f"  ✔ {caminho_pdf.relative_to(config.pdf.caminho_saida)}")
+            log.ok(f"{caminho_pdf.relative_to(config.pdf.caminho_saida)}")
             gerados += 1
         except Exception as e:
-            print(f"  ❌ ERRO ao gerar PDF para {aluno.nome}: {e}", file=sys.stderr)
+            log.erro(f"Falha ao gerar PDF para {aluno.nome}: {e}")
             erros += 1
 
-    print(f"\n✔ Escopo 2 finalizado: {gerados} PDF(s) gerado(s), {erros} erro(s).")
-    print("=" * 80)
+    log.ok(f"Escopo 2 finalizado: {gerados} PDF(s) gerado(s), {erros} erro(s).")
 
 
 if __name__ == "__main__":
-    configuracao_carregada = Config.load()
-    main(configuracao_carregada)
+    try:
+        main(Config.load())
+    except Exception as e:
+        log.erro(str(e))
+        sys.exit(1)
