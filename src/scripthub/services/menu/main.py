@@ -88,16 +88,19 @@ def main() -> None:
     os.system("clear")
     print(HEADER)
     print()
+    print("⚠️  Aviso: o menu interativo está deprecated.")
+    print("   Prefira usar os comandos do CLI diretamente (scripthub --help).")
+    print()
 
     modules = discover_modules(SCRIPTS_FOLDER)
-    max_len = max((len(name) for name, _, _ in modules), default=0)
+    max_len = max((len(" ".join(cmd)) for _, cmd, _ in modules), default=0)
     choices = []
     for name, cmd, desc in modules:
-        bracketed = f"[{name}]"
-        title = f"{bracketed:<{max_len + 2}}  {desc}" if desc else bracketed
+        cmd_str = " ".join(cmd).ljust(max_len)
+        title = f"{cmd_str}  {desc}" if desc else cmd_str
         choices.append(questionary.Choice(title=title, value=(name, cmd)))
     choices.append(questionary.Separator())
-    choices.append(questionary.Choice(title="[ sair ]", value=_QUIT))
+    choices.append(questionary.Choice(title="sair", value=_QUIT))
 
     selected = questionary.select(
         "Qual script rodar?",

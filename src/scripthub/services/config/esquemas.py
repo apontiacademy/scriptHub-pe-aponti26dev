@@ -1,5 +1,18 @@
 from .campo import Campo
 
+ALIASES_CLI: dict[str, str] = {
+    "frequencias": "auditar_frequencias",
+    "f": "auditar_frequencias",
+    "relatorios": "auditar_relatorios",
+    "r": "auditar_relatorios",
+    "ra": "auditar_relatorios",
+    "rc": "compilacao_de_relatorios",
+    "softskills": "auditar_softskills",
+    "s": "auditar_softskills",
+    "torpedo": "torpedo_de_forum",
+    "t": "torpedo_de_forum",
+}
+
 ESQUEMAS: dict[str, list[Campo]] = {
     "auditar_frequencias": [
         Campo(

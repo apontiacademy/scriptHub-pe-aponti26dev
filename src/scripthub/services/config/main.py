@@ -2,20 +2,31 @@ import sys
 from pathlib import Path
 
 from ..menu.main import SCRIPTS_FOLDER, discover_modules
-from .esquemas import ESQUEMAS
+from .esquemas import ALIASES_CLI, ESQUEMAS
 from .persistencia import _script_dir, carregar_valores, persistir
 from .ui import exibir_campos, obter_input, selecionar_campos, selecionar_script
+from .validacao import validar_campo
+
+
+def _tem_pendencias(nome_script: str) -> bool:
+    campos = ESQUEMAS[nome_script]
+    valores = carregar_valores(nome_script, campos)
+    return not all(validar_campo(c, valores.get(c.chave))[0] for c in campos)
 
 
 def config(nome_script: str | None = None) -> None:
     if nome_script is not None:
+        nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
             print(f"❌ Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}", file=sys.stderr)
             sys.exit(1)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
-        modulos_com_esquema = [(nome, desc) for nome, _, desc in modulos if nome in ESQUEMAS]
+        modulos_com_esquema = [
+            (nome, cmd, desc, _tem_pendencias(nome))
+            for nome, cmd, desc in modulos if nome in ESQUEMAS
+        ]
 
         if not modulos_com_esquema:
             print("❌ Nenhum script com configuração disponível foi encontrado.", file=sys.stderr)
@@ -50,13 +61,17 @@ def config(nome_script: str | None = None) -> None:
 
 def visualizar(nome_script: str | None = None) -> None:
     if nome_script is not None:
+        nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
             print(f"❌ Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}", file=sys.stderr)
             sys.exit(1)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
-        modulos_com_esquema = [(nome, desc) for nome, _, desc in modulos if nome in ESQUEMAS]
+        modulos_com_esquema = [
+            (nome, cmd, desc, _tem_pendencias(nome))
+            for nome, cmd, desc in modulos if nome in ESQUEMAS
+        ]
 
         if not modulos_com_esquema:
             print("❌ Nenhum script com configuração disponível foi encontrado.", file=sys.stderr)
@@ -75,13 +90,17 @@ def visualizar(nome_script: str | None = None) -> None:
 
 def limpar(nome_script: str | None = None) -> None:
     if nome_script is not None:
+        nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
             print(f"❌ Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}", file=sys.stderr)
             return
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
-        modulos_com_esquema = [(nome, desc) for nome, _, desc in modulos if nome in ESQUEMAS]
+        modulos_com_esquema = [
+            (nome, cmd, desc, _tem_pendencias(nome))
+            for nome, cmd, desc in modulos if nome in ESQUEMAS
+        ]
 
         if not modulos_com_esquema:
             print("❌ Nenhum script com configuração disponível foi encontrado.", file=sys.stderr)

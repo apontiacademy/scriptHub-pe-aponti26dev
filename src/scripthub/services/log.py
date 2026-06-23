@@ -13,14 +13,33 @@ def _find_project_root() -> Path:
 _log_dir = _find_project_root() / "logs"
 _log_dir.mkdir(exist_ok=True)
 
+_script_atual: str = "scripthub"
+
+
+class _ScriptFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.script = _script_atual  # type: ignore[attr-defined]
+        return True
+
+
 _logger = logging.getLogger("scripthub")
 if not _logger.handlers:
     _logger.setLevel(logging.DEBUG)
     _handler = logging.FileHandler(_log_dir / "scripthub.log", encoding="utf-8")
     _handler.setFormatter(
-        logging.Formatter("%(asctime)s [%(levelname)-5s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+        logging.Formatter(
+            "%(asctime)s  %(levelname)-7s  %(script)-24s  %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
     )
+    _handler.addFilter(_ScriptFilter())
     _logger.addHandler(_handler)
+
+
+def set_script(nome: str) -> None:
+    global _script_atual
+    _script_atual = nome
+
 
 def secao(titulo: str) -> None:
     print()
