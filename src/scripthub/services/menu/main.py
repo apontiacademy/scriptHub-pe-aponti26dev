@@ -1,4 +1,7 @@
+import ast
 import os
+import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -46,23 +49,33 @@ def read_docstring(main_py: Path) -> str:
     return ""
 
 
-def discover_modules(scripts_folder: Path) -> list[tuple[str, str]]:
+def _read_menu_cmd(init_py: Path) -> tuple[str, ...] | None:
+    src = init_py.read_text(encoding="utf-8")
+    m = re.search(r"^MENU_CMD\s*=\s*(.+)$", src, re.MULTILINE)
+    if not m:
+        return None
+    try:
+        return tuple(ast.literal_eval(m.group(1).strip()))
+    except (ValueError, SyntaxError):
+        return None
+
+
+def discover_modules(scripts_folder: Path) -> list[tuple[str, tuple[str, ...], str]]:
     modules = []
     for d in sorted(scripts_folder.iterdir()):
-        if not d.is_dir():
+        if not d.is_dir() or not (d / "__init__.py").exists():
             continue
-        if not (d / "__init__.py").exists():
+        cmd = _read_menu_cmd(d / "__init__.py")
+        if cmd is None:
             continue
-        main_py = d / "main.py"
-        if not main_py.exists():
-            continue
-        desc = read_docstring(main_py)
-        modules.append((d.name, desc))
+        desc = read_docstring(d / "main.py") if (d / "main.py").exists() else ""
+        modules.append((d.name, cmd, desc))
     return modules
 
 
-def run_module(name: str) -> int:
-    result = subprocess.run([sys.executable, "-m", name], check=False, cwd=SCRIPTS_FOLDER)
+def run_module(cmd: tuple[str, ...]) -> int:
+    scripthub_exe = shutil.which("scripthub") or "scripthub"
+    result = subprocess.run([scripthub_exe, *cmd], check=False)
     return result.returncode
 
 
@@ -75,12 +88,12 @@ def main() -> None:
     print()
 
     modules = discover_modules(SCRIPTS_FOLDER)
-    max_len = max((len(name) for name, _ in modules), default=0)
+    max_len = max((len(name) for name, _, _ in modules), default=0)
     choices = []
-    for name, desc in modules:
+    for name, cmd, desc in modules:
         bracketed = f"[{name}]"
         title = f"{bracketed:<{max_len + 2}}  {desc}" if desc else bracketed
-        choices.append(questionary.Choice(title=title, value=name))
+        choices.append(questionary.Choice(title=title, value=(name, cmd)))
     choices.append(questionary.Separator())
     choices.append(questionary.Choice(title="[ sair ]", value=_QUIT))
 
@@ -94,18 +107,20 @@ def main() -> None:
         print("Isso não é um adeus, é um até logo 👋")
         return
 
+    name, cmd = selected
+
     print()
     print("=" * 80)
-    print(f"▶ Executando: {selected}")
+    print(f"▶ Executando: {name}")
     print("=" * 80)
     print()
 
-    returncode = run_module(selected)
+    returncode = run_module(cmd)
 
     print()
     print("=" * 80)
     if returncode == 0:
-        print(f"✔ {selected} finalizado com sucesso.")
+        print(f"✔ {name} finalizado com sucesso.")
     else:
-        print(f"❌ {selected} finalizado com erro (código {returncode}).")
+        print(f"❌ {name} finalizado com erro (código {returncode}).")
     print("=" * 80)
