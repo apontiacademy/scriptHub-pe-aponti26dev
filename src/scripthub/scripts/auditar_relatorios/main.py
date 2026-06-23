@@ -11,4 +11,7 @@ ESCOPOS = [
     integracao_google_sheets.main,
     backup.main,
 ]
-CONFIG = Config.load()
+
+
+def get_config() -> Config:
+    return Config.load()

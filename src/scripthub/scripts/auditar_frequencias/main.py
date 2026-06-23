@@ -4,4 +4,7 @@ import scripthub.scripts.auditar_frequencias.integracao_google_sheets as integra
 from .config import Config
 
 ESCOPOS = [exportar_frequencias.main, integracao_google_sheets.main]
-CONFIG = Config.load()
+
+
+def get_config() -> Config:
+    return Config.load()
