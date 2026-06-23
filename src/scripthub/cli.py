@@ -18,7 +18,37 @@ from .scripts import (
 from .services.config import config as config_service, limpar as limpar_config, visualizar as visualizar_config
 from .services.menu import menu as _menu
 
-app = typer.Typer(help="Hub de automações para operações do bootcamp Aponti PE.")
+app = typer.Typer(
+    help="Hub de automações para operações do bootcamp Aponti PE.",
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
+
+
+@app.callback(invoke_without_command=True)
+def _callback(
+    ctx: typer.Context,
+    aliases: Annotated[
+        bool,
+        typer.Option("--aliases", "-a", help="Exibir aliases de cada comando."),
+    ] = False,
+):
+    if aliases:
+        _ALIASES = [
+            ("scripthub frequencias",         "f"),
+            ("scripthub relatorios auditar",  "r auditar, ra"),
+            ("scripthub relatorios compilar", "r compilar, rc"),
+            ("scripthub softskills",          "s"),
+            ("scripthub torpedo",             "t"),
+            ("scripthub config",              "c"),
+            ("scripthub menu",                "m  [depreciado]"),
+        ]
+        typer.echo("Aliases disponíveis:\n")
+        for cmd, alias in _ALIASES:
+            typer.echo(f"  {cmd:<34}→  {alias}")
+        raise typer.Exit()
+    elif ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit()
 
 
 def run():

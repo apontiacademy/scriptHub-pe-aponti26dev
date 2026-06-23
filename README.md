@@ -29,22 +29,29 @@ scripthub config
 ## Uso
 
 ```bash
-# Menu interativo (lista todos os scripts disponíveis)
-uv run scripthub menu
-
 # Invocar um script diretamente
 uv run scripthub frequencias
 uv run scripthub relatorios auditar
 uv run scripthub relatorios compilar
 uv run scripthub softskills
 uv run scripthub torpedo
+
+# Menu interativo (depreciado — prefira os comandos acima)
+uv run scripthub menu
+```
+
+Para ver a ajuda e os aliases disponíveis:
+
+```bash
+uv run scripthub --help      # ou: scripthub -h
+uv run scripthub --aliases   # ou: scripthub -a
 ```
 
 ## Comandos
 
 | Comando | Alias | Descrição |
 |---|---|---|
-| `scripthub menu` | `m` | Abre o menu interativo para selecionar e executar um script |
+| `scripthub menu` | `m` | **Depreciado.** Menu interativo — prefira usar os comandos da CLI diretamente |
 | `scripthub frequencias [-p passo]` | `f` | Exporta frequências de presença do Moodle para o Google Sheets |
 | `scripthub relatorios auditar [-p passo]` | `r auditar` | Pipeline completo: download → análise → Google Sheets → backup |
 | `scripthub relatorios compilar` | `r compilar` | Compila relatórios em PDF |

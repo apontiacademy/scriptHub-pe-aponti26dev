@@ -20,11 +20,18 @@ src/scripthub/
     └── menu/               # Menu interativo (scripthub menu)
 ```
 
-Cada pacote de script contém:
-- `__init__.py` — declara `MENU_CMD` e exporta `main` ou `ESCOPOS + get_config`
-- `main.py` — orquestração do pipeline
-- `config.py` — dataclass de configuração
-- demais módulos de implementação
+Cada pacote de script segue um dos dois padrões:
+
+**Padrão A — pipeline por escopos** (`auditar_frequencias`, `auditar_relatorios`):
+- `__init__.py` — declara `MENU_CMD`, exporta `ESCOPOS` e `get_config`
+- `ESCOPOS`: lista de tuplas `(nome_do_passo: str, funcao: Callable[[Config], None])`
+- `get_config()`: retorna a dataclass de configuração (carrega `.env` + `settings.json`)
+- O CLI usa `executar_script()` para iterar os escopos com log por passo e captura de exceção
+
+**Padrão B — função main** (`auditar_softskills`, `compilacao_de_relatorios`, `torpedo_de_forum`) — **DEPRECIADO**:
+- `__init__.py` — declara `MENU_CMD`, exporta apenas `main`
+- `main()` carrega configuração internamente e executa o pipeline diretamente
+- Não crie novos scripts com este padrão. Os existentes devem ser migrados para o Padrão A o quanto antes.
 
 ## Padrão de output dos scripts
 
@@ -69,10 +76,73 @@ def main(config: Config):
 
 1. Criar pasta em `src/scripthub/scripts/<nome>/`
 2. Arquivos obrigatórios: `__init__.py`, `main.py`, `config.py`
-3. Declarar `MENU_CMD = ("comando",)` no `__init__.py` (o menu usa isso para invocar o script via CLI)
-4. Seguir o padrão de output (log helpers) e o contrato de erros acima
-5. Registrar o comando em `src/scripthub/cli.py`
-6. O menu detecta automaticamente novos scripts que tenham `MENU_CMD` no `__init__.py`
+3. No `__init__.py`, declarar `MENU_CMD` e exportar `ESCOPOS` + `get_config` (Padrão A):
+
+```python
+MENU_CMD = ("meu_script",)
+from .main import ESCOPOS
+from .config import get_config
+```
+
+4. Em `main.py`, definir `ESCOPOS` como lista de tuplas `(nome, função)`:
+
+```python
+ESCOPOS = [
+    ("Baixar dados", baixar_dados),
+    ("Processar", processar),
+]
+
+def baixar_dados(config: Config): ...
+def processar(config: Config): ...
+```
+
+5. Adicionar campos configuráveis em `services/config/esquemas.py` (ver seção "Sistema de configuração" abaixo)
+6. Seguir o padrão de output (log helpers) e o contrato de erros acima
+7. Registrar o comando em `src/scripthub/cli.py`
+8. O menu detecta automaticamente novos scripts que tenham `MENU_CMD` no `__init__.py`
+
+## Sistema de configuração
+
+Os campos configuráveis de cada script são declarados em `services/config/esquemas.py` como entradas do dict `ESQUEMAS`, usando a dataclass `Campo` de `services/config/campo.py`.
+
+```python
+# services/config/esquemas.py
+ESQUEMAS: dict[str, list[Campo]] = {
+    "nome_do_modulo": [
+        Campo(
+            chave="moodle_usuario",
+            rotulo="Usuário do Moodle",
+            tipo="texto",
+            origem="env",           # "env" → .env  |  "settings" → settings.json
+            env_var="MOODLE_USUARIO",
+        ),
+        Campo(
+            chave="moodle_url_login",
+            rotulo="URL de login",
+            tipo="url",
+            origem="settings",
+            json_chaves=["moodle", "urlLogin"],   # caminho de acesso no JSON
+            obrigatorio=True,
+        ),
+    ],
+}
+```
+
+Tipos de campo disponíveis:
+
+| Tipo | Descrição |
+|---|---|
+| `texto` | String simples |
+| `senha` | String mascarada na exibição |
+| `url` | URL validada por regex |
+| `caminho` | Caminho de arquivo ou diretório |
+| `bool` | Booleano (sim/não interativo) |
+| `int` | Inteiro |
+| `lista_url` | Lista de URLs |
+| `dict_str_url` | Dict `{str: url}` |
+| `dict_str_lista_url` | Dict `{str: [url, ...]}` |
+
+Use `depende_de="chave_outro_campo"` para tornar um campo condicional ao valor de outro campo booleano.
 
 ## Comandos úteis
 
