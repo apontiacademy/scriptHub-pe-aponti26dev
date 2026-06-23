@@ -13,12 +13,29 @@ def _find_project_root() -> Path:
 _log_dir = _find_project_root() / "logs"
 _log_dir.mkdir(exist_ok=True)
 
-_script_atual: str = "scripthub"
+_comando_atual: str = " ".join(sys.argv[1:]) or "scripthub"
+_LOG_FILE = Path(__file__).resolve()
+_PACKAGE_ROOT = _LOG_FILE.parent.parent  # src/scripthub/
 
 
 class _ScriptFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
-        record.script = _script_atual  # type: ignore[attr-defined]
+        record.comando = _comando_atual  # type: ignore[attr-defined]
+        frame = sys._getframe()
+        caller = "?"
+        while frame is not None:
+            fpath = Path(frame.f_code.co_filename).resolve()
+            mod = frame.f_globals.get("__name__", "")
+            if fpath != _LOG_FILE and mod != "logging":
+                try:
+                    rel = fpath.relative_to(_PACKAGE_ROOT)
+                    module_path = ".".join(rel.with_suffix("").parts)
+                    caller = f".{module_path}:{frame.f_code.co_name}"
+                except ValueError:
+                    caller = f"{fpath.name}:{frame.f_code.co_name}"
+                break
+            frame = frame.f_back
+        record.caller = caller  # type: ignore[attr-defined]
         return True
 
 
@@ -28,17 +45,12 @@ if not _logger.handlers:
     _handler = logging.FileHandler(_log_dir / "scripthub.log", encoding="utf-8")
     _handler.setFormatter(
         logging.Formatter(
-            "%(asctime)s  %(levelname)-7s  %(script)-24s  %(message)s",
+            "%(asctime)s  %(levelname)-7s  %(comando)-25s  %(caller)-65s  %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
     )
     _handler.addFilter(_ScriptFilter())
     _logger.addHandler(_handler)
-
-
-def set_script(nome: str) -> None:
-    global _script_atual
-    _script_atual = nome
 
 
 def secao(titulo: str) -> None:

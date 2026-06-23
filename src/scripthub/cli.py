@@ -33,7 +33,6 @@ def menu_cmd():
 
 
 def _carregar_config(fn, nome_script: str):
-    log.set_script(nome_script)
     try:
         return fn()
     except (FileNotFoundError, ValueError, KeyError) as e:
