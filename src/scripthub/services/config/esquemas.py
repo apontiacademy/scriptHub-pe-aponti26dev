@@ -100,6 +100,14 @@ ESQUEMAS: dict[str, list[Campo]] = {
             depende_de="moodle_exportar_analise",
         ),
         Campo(
+            chave="moodle_csv_residentes",
+            rotulo="CSV de residentes",
+            tipo="caminho",
+            origem="settings",
+            descricao="Caminho para o arquivo CSV com a lista de residentes",
+            json_chaves=["moodle", "csvResidentes"],
+        ),
+        Campo(
             chave="gsheets_id_planilha",
             rotulo="ID da planilha Google Sheets",
             tipo="texto",
