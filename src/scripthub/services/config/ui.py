@@ -189,8 +189,12 @@ def _input_caminho(campo: Campo, valor_atual: Any) -> str | None:
 
 def _input_bool(campo: Campo, valor_atual: Any) -> bool | None:
     padrao = bool(valor_atual) if valor_atual is not None else True
-    resultado = questionary.confirm(
+    resultado = questionary.select(
         f"{campo.rotulo}:",
+        choices=[
+            questionary.Choice(title="Sim", value=True),
+            questionary.Choice(title="Não", value=False),
+        ],
         default=padrao,
         style=STYLE,
     ).ask()

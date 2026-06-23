@@ -97,6 +97,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Diretório onde o CSV de análise será salvo (opcional)",
             obrigatorio=False,
             json_chaves=["moodle", "caminhoExportacaoAnalise"],
+            depende_de="moodle_exportar_analise",
         ),
         Campo(
             chave="gsheets_id_planilha",

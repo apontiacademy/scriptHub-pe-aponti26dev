@@ -70,6 +70,7 @@ def persistir(nome_script: str, campos: list[Campo], valores: dict[str, Any]) ->
                 try:
                     settings: dict = json.load(f)
                 except json.JSONDecodeError:
+                    print(f"  ⚠️  {settings_path} estava corrompido e será reescrito.")
                     settings = {}
         else:
             settings = {}

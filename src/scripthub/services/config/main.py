@@ -37,6 +37,9 @@ def config(nome_script: str | None = None) -> None:
 
     novos_valores = dict(valores)
     for campo in selecionados:
+        if campo.depende_de and not novos_valores.get(campo.depende_de):
+            novos_valores[campo.chave] = None
+            continue
         novo = obter_input(campo, valores.get(campo.chave))
         novos_valores[campo.chave] = novo
 
