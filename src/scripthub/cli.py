@@ -78,6 +78,24 @@ def relatorios(
             raise ValueError('Modo deve ser "auditar" ou "compilar".')
 
 
+@app.command("ra", hidden=True)
+def relatorios_auditar(
+    passo: Annotated[
+        int | None,
+        typer.Option("--passo", "-p", help="Executar somente o passo N do pipeline (começa em 1)."),
+    ] = None,
+):
+    """Alias para 'scripthub relatorios auditar'."""
+    config = _carregar_config(auditar_relatorios.get_config, "auditar_relatorios")
+    executar_script(config, auditar_relatorios.ESCOPOS, passo)
+
+
+@app.command("rc", hidden=True)
+def relatorios_compilar():
+    """Alias para 'scripthub relatorios compilar'."""
+    _carregar_config(compilacao_de_relatorios.main, "compilacao_de_relatorios")
+
+
 # TODO: reimplementar utilizando padrões dos scripts anteriores
 @app.command()
 @app.command("s", hidden=True)
