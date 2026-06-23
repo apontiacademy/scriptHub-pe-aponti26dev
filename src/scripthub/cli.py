@@ -15,7 +15,7 @@ from .scripts import (
     compilacao_de_relatorios,
     torpedo_de_forum,
 )
-from .services.config import config as config_service, visualizar as visualizar_config
+from .services.config import config as config_service, limpar as limpar_config, visualizar as visualizar_config
 from .services.menu import menu as _menu
 
 app = typer.Typer(help="Hub de automações para operações do bootcamp Aponti PE.")
@@ -124,9 +124,18 @@ def config(
         bool,
         typer.Option("--opcoes", "-o", help="Apenas visualizar as opções sem editar."),
     ] = False,
+    limpar: Annotated[
+        bool,
+        typer.Option("--limpar", "-l", help="Limpar a configuração do script."),
+    ] = False,
 ):
     """Configurar interativamente as opções de um script."""
-    if apenas_visualizar:
+    if apenas_visualizar and limpar:
+        log.erro("--opcoes e --limpar não podem ser usados juntos.")
+        raise typer.Exit(1)
+    if limpar:
+        limpar_config(script)
+    elif apenas_visualizar:
         visualizar_config(script)
     else:
         config_service(script)

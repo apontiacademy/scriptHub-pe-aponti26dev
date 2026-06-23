@@ -3,7 +3,7 @@ from pathlib import Path
 
 from ..menu.main import SCRIPTS_FOLDER, discover_modules
 from .esquemas import ESQUEMAS
-from .persistencia import carregar_valores, persistir
+from .persistencia import _script_dir, carregar_valores, persistir
 from .ui import exibir_campos, obter_input, selecionar_campos, selecionar_script
 
 
@@ -71,3 +71,44 @@ def visualizar(nome_script: str | None = None) -> None:
 
     print(f"  Configuração atual de {nome_script}:")
     exibir_campos(campos, valores)
+
+
+def limpar(nome_script: str | None = None) -> None:
+    if nome_script is not None:
+        if nome_script not in ESQUEMAS:
+            nomes = ", ".join(sorted(ESQUEMAS.keys()))
+            print(f"❌ Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}", file=sys.stderr)
+            return
+    else:
+        modulos = discover_modules(SCRIPTS_FOLDER)
+        modulos_com_esquema = [(nome, desc) for nome, _, desc in modulos if nome in ESQUEMAS]
+
+        if not modulos_com_esquema:
+            print("❌ Nenhum script com configuração disponível foi encontrado.", file=sys.stderr)
+            return
+
+        nome_script = selecionar_script(modulos_com_esquema)
+        if nome_script is None:
+            return
+
+    pasta = _script_dir(nome_script)
+    arquivos = [pasta / ".env", pasta / "settings.json"]
+    existentes = [a for a in arquivos if a.exists()]
+
+    if not existentes:
+        print(f"  ⚠️  Nenhuma configuração encontrada para '{nome_script}'.")
+        return
+
+    print(f"\n  Arquivos que serão removidos:")
+    for a in existentes:
+        print(f"    • {a}")
+
+    resposta = input("\nDeseja apagar esses arquivos? [s/N]: ").strip().lower()
+    if resposta not in ("s", "sim"):
+        print("  Operação cancelada.")
+        return
+
+    for a in existentes:
+        a.unlink()
+        print(f"  ✔ Removido: {a.name}")
+    print(f"✅ Configuração de {nome_script} limpa com sucesso!")
