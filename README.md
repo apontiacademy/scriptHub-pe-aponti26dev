@@ -2,36 +2,86 @@
 
 Hub de automações para operações do bootcamp Aponti PE. Cada módulo resolve um problema específico do dia a dia com o Moodle e o Google Workspace.
 
-## Módulos
+## Instalação
 
-- [automacao_de_relatorios](./automacao_de_relatorios/README.md) — Pipeline completo: download → análise → Google Sheets → backup.
-- [automacao_de_forum](./automacao_de_forum/README.md) — Posta tópicos em fóruns do Moodle a partir de arquivos Markdown.
-- [automacao_de_frequencias](./automacao_de_frequencias/README.md) — Extrai dados de frequência do Moodle e exporta para `.xlsx`.
-- [automacao_de_softskills](./automacao_de_softskills/README.md) — Baixa notas de soft skills do bootcamp e envia para o Google Drive.
-- [auditoria_de_relatorios](./auditoria_de_relatorios/README.md) — Pente fino de conformidade: identifica quem enviou ou não os relatórios.
-
-## Como usar
+Requer Python 3.12+ e [`uv`](https://docs.astral.sh/uv/). O projeto depende de um pacote privado da organização resolvido via `[tool.uv.sources]`, por isso `pip` não é suportado diretamente.
 
 ```bash
-# 1. Crie e ative o ambiente virtual
-python -m venv .venv
+git clone git@github.com:apontiacademy/scriptHub-pe-aponti26dev.git
+cd scriptHub-pe-aponti26dev
+uv sync
+
+# Configure as opções de cada script (veja a seção Configuração abaixo)
+uv run scripthub config
+```
+
+Após o `uv sync`, também é possível ativar o ambiente virtual e invocar os comandos sem o prefixo `uv run`:
+
+```bash
 source .venv/bin/activate   # Linux/Mac
 .venv\Scripts\activate      # Windows
-
-# 2. Instale as dependências
-pip install -r requirements.txt
-
-# 3. Configure as credenciais
-cp .env.example .env        # preencha com usuário e senha do Moodle
-# Módulos que integram com Google precisam de credentials.json na raiz
-
-# 4. Rode o menu principal
-python menu.py
+scripthub config
 ```
+
+## Uso
+
+```bash
+# Menu interativo (lista todos os scripts disponíveis)
+uv run scripthub
+
+# Invocar um script diretamente
+uv run scripthub frequencias
+uv run scripthub relatorios auditar
+uv run scripthub relatorios compilar
+uv run scripthub softskills
+uv run scripthub torpedo
+```
+
+## Scripts
+
+| Comando | Alias | Descrição |
+|---|---|---|
+| `scripthub frequencias [-p passo]` | `f` | Exporta frequências do Moodle e envia ao Google Sheets |
+| `scripthub relatorios auditar [-p passo]` | `r auditar` | Pipeline completo: download → análise → Google Sheets → backup |
+| `scripthub relatorios compilar` | `r compilar` | Compila relatórios em PDF |
+| `scripthub softskills` | `s` | Baixa notas de soft skills e envia ao Google Drive |
+| `scripthub torpedo` | `t` | Posta tópicos em fóruns do Moodle a partir de arquivos Markdown |
+
+A opção `-p passo` executa apenas o passo indicado (começando em 1) em vez do pipeline completo.
+
+## Configuração
+
+Cada script tem suas próprias opções configuráveis (URLs do Moodle, credenciais, IDs de planilhas, etc.). Use o comando `config` para inspecionar e editar essas opções interativamente:
+
+```bash
+# Selecionar script interativamente e editar opções
+uv run scripthub config
+
+# Ir direto para as opções de um script específico
+uv run scripthub config -s auditar_frequencias
+
+# Apenas visualizar o estado atual das opções (sem editar)
+uv run scripthub config --opcoes
+uv run scripthub config -o -s torpedo_de_forum
+```
+
+O comando exibe cada opção com um ícone de status:
+
+- ✅ Preenchida e válida — valor atual é exibido em resumo
+- ❌ Ausente ou inválida — motivo do erro é exibido
+- ⚪ Opcional e não preenchida
+
+No modo de edição, selecione quais opções modificar (estilo `gh` CLI) e preencha os valores. Inputs são adaptados ao tipo do campo: texto, senha (oculta), URL, caminho, booleano, inteiro, listas de URLs e dicionários (com sub-menus de adicionar/editar/remover).
+
+As configurações são persistidas em dois arquivos dentro de cada módulo:
+
+- `.env` — credenciais (`MOODLE_USUARIO`, `MOODLE_SENHA`)
+- `settings.json` — demais parâmetros
+
+Se um script for executado sem as opções obrigatórias preenchidas, a CLI indica o comando exato para corrigi-las.
 
 ## Colaboradores
 
 - **Leandro Carvalho** — [LinkedIn](https://www.linkedin.com/in/leandro-c-s/)
 - **Caio Tenório** — [LinkedIn](https://www.linkedin.com/in/caiomatenorio/)
 - **Ruan Rickelme Ramos** — [LinkedIn](https://www.linkedin.com/in/ruanrickelmeramos/?locale=pt)
-
