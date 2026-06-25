@@ -1,5 +1,6 @@
+from pathlib import Path
+from unittest.mock import MagicMock, call
 from contextlib import contextmanager
-from unittest.mock import MagicMock, call, patch
 
 from scripthub.scripts.auditar_frequencias.exportar_frequencias import (
     exportar_frequencia,
@@ -8,7 +9,6 @@ from scripthub.scripts.auditar_frequencias.exportar_frequencias import (
 
 
 def _make_page_mock(ghost_session=False):
-    """Retorna um mock de page configurado para o cenário indicado."""
     page = MagicMock()
 
     ghost_locator = MagicMock()
@@ -52,14 +52,12 @@ def test_realizar_login_com_sessao_fantasma():
 
     realizar_login(page, "https://example.com/login", "user", "pass")
 
-    # Deve ir à URL de login duas vezes (uma para limpar sessão, outra para logar)
     assert page.goto.call_count == 2
     assert page.goto.call_args_list[0] == call("https://example.com/login")
     assert page.goto.call_args_list[1] == call("https://example.com/login")
 
 
 def _make_page_com_download(url_atual="https://example.com/freq?id=1"):
-    """Retorna page mock configurado para fluxo de download."""
     page = MagicMock()
     page.url = url_atual
 
@@ -88,12 +86,9 @@ def test_exportar_frequencia_sucesso(tmp_path):
         "pass",
     )
 
-    # Checkbox foi marcado
     page.get_by_label.return_value.check.assert_called_once()
-    # Botão OK foi clicado
     page.get_by_role.assert_called_with("button", name="OK")
     page.get_by_role.return_value.click.assert_called_once()
-    # Arquivo salvo com nome da turma
     download_mock.value.save_as.assert_called_with(str(tmp_path / "Turma A.xlsx"))
 
 
@@ -114,18 +109,20 @@ def test_exportar_frequencia_ja_marcado_nao_marca_novamente(tmp_path):
     page.get_by_label.return_value.check.assert_not_called()
 
 
-def test_exportar_frequencia_redireciona_para_login(tmp_path):
+def test_exportar_frequencia_redireciona_para_login(tmp_path, mocker):
     page, download_mock = _make_page_com_download(url_atual="https://example.com/login")
+    mock_login = mocker.patch(
+        "scripthub.scripts.auditar_frequencias.exportar_frequencias.realizar_login"
+    )
 
-    with patch("automacao_de_frequencias.exportar_frequencias.realizar_login") as mock_login:
-        exportar_frequencia(
-            page,
-            "https://example.com/freq?id=1",
-            "Turma A",
-            tmp_path,
-            "https://example.com/login",
-            "user",
-            "pass",
-        )
+    exportar_frequencia(
+        page,
+        "https://example.com/freq?id=1",
+        "Turma A",
+        tmp_path,
+        "https://example.com/login",
+        "user",
+        "pass",
+    )
 
-        mock_login.assert_called_once_with(page, "https://example.com/login", "user", "pass")
+    mock_login.assert_called_once_with(page, "https://example.com/login", "user", "pass")
