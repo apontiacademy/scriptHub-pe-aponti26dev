@@ -124,6 +124,6 @@ def main() -> None:
 
     print()
     if returncode == 0:
-        log.ok(f"{name} finalizado com sucesso.")
+        log.ok(f"{name} finalizado com sucesso (código 0).")
     else:
         log.erro(f"{name} finalizado com erro (código {returncode}).")
