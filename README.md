@@ -4,7 +4,7 @@ Hub de automações para operações do bootcamp Aponti PE. Cada módulo resolve
 
 ## Instalação
 
-Requer Python 3.12+ e [`uv`](https://docs.astral.sh/uv/). O projeto depende de um pacote privado da organização resolvido via `[tool.uv.sources]`, por isso `pip` não é suportado diretamente.
+Requer Python 3.12+ e [uv](https://docs.astral.sh/uv/). O projeto depende de um pacote privado da organização resolvido via `[tool.uv.sources]`, por isso `pip` não é suportado diretamente.
 
 ```bash
 git clone git@github.com:apontiacademy/scriptHub-pe-aponti26dev.git
