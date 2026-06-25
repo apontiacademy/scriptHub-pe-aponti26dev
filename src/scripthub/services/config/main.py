@@ -9,7 +9,7 @@ from .ui import exibir_campos, obter_input, selecionar_campos, selecionar_script
 
 
 def config(nome_script: str | None = None) -> None:
-    os.system("clear")
+    os.system("cls" if os.name == "nt" else "clear")
     print(HEADER)
     print()
 
@@ -17,7 +17,7 @@ def config(nome_script: str | None = None) -> None:
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
             print(f"❌ Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}", file=sys.stderr)
-            return
+            sys.exit(1)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [(nome, desc) for nome, desc in modulos if nome in ESQUEMAS]
@@ -51,7 +51,7 @@ def config(nome_script: str | None = None) -> None:
 
 
 def visualizar(nome_script: str | None = None) -> None:
-    os.system("clear")
+    os.system("cls" if os.name == "nt" else "clear")
     print(HEADER)
     print()
 
@@ -59,7 +59,7 @@ def visualizar(nome_script: str | None = None) -> None:
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
             print(f"❌ Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}", file=sys.stderr)
-            return
+            sys.exit(1)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [(nome, desc) for nome, desc in modulos if nome in ESQUEMAS]

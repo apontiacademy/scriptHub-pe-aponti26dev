@@ -65,7 +65,7 @@ def relatorios(
         case "compilar":
             if passo:
                 raise ValueError('O modo compilar não aceita "passo".')
-            _carregar_config(compilacao_de_relatorios.main, "compilacao_de_relatorios")
+            compilacao_de_relatorios.main()
         case _:
             raise ValueError('Modo deve ser "auditar" ou "compilar".')
 
@@ -75,7 +75,7 @@ def relatorios(
 @app.command()
 @app.command("s", hidden=True)
 def softskills():
-    _carregar_config(auditar_softskills.main, "auditar_softskills")
+    auditar_softskills.main()
 
 
 # TODO: implementar help
@@ -83,7 +83,7 @@ def softskills():
 @app.command()
 @app.command("t", hidden=True)
 def torpedo():
-    _carregar_config(torpedo_de_forum.main, "torpedo_de_forum")
+    torpedo_de_forum.main()
 
 
 @app.command()
