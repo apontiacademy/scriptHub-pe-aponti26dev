@@ -95,11 +95,21 @@ ESQUEMAS: dict[str, list[Campo]] = {
             json_chaves=["moodle", "urlsRelatorios"],
         ),
         Campo(
+            chave="moodle_headless",
+            rotulo="Modo headless do navegador",
+            tipo="bool",
+            origem="settings",
+            descricao="Se verdadeiro, o navegador roda em segundo plano sem interface gráfica (padrão: sim)",
+            obrigatorio=False,
+            json_chaves=["moodle", "headless"],
+        ),
+        Campo(
             chave="moodle_exportar_analise",
             rotulo="Exportar análise dos relatórios",
             tipo="bool",
             origem="settings",
-            descricao="Se verdadeiro, exporta o resultado da análise para um arquivo local",
+            descricao="Se verdadeiro, exporta o resultado da análise para um arquivo local (padrão: não)",
+            obrigatorio=False,
             json_chaves=["moodle", "exportarAnaliseRelatorio"],
         ),
         Campo(
