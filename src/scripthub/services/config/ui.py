@@ -100,7 +100,7 @@ def obter_input(campo: Campo, valor_atual: Any) -> Any:
         case "texto":
             return _input_texto(campo, valor_atual)
         case "senha":
-            return _input_senha(campo)
+            return _input_senha(campo, valor_atual)
         case "url":
             return _input_url(campo, valor_atual)
         case "caminho":
@@ -136,14 +136,14 @@ def _input_texto(campo: Campo, valor_atual: Any) -> str | None:
         print(f"  ❌ {msg}")
 
 
-def _input_senha(campo: Campo) -> str | None:
+def _input_senha(campo: Campo, valor_atual: Any = None) -> str | None:
     while True:
         novo = questionary.password(
             f"{campo.rotulo}:",
             style=STYLE,
         ).ask()
         if novo is None:
-            return None
+            return valor_atual
         novo = novo.strip()
         ok, msg = validar_campo(campo, novo)
         if ok:
@@ -187,14 +187,14 @@ def _input_caminho(campo: Campo, valor_atual: Any) -> str | None:
         print(f"  ❌ {msg}")
 
 
-def _input_bool(campo: Campo, valor_atual: Any) -> bool:
+def _input_bool(campo: Campo, valor_atual: Any) -> bool | None:
     padrao = bool(valor_atual) if valor_atual is not None else True
     resultado = questionary.confirm(
         f"{campo.rotulo}:",
         default=padrao,
         style=STYLE,
     ).ask()
-    return resultado if resultado is not None else padrao
+    return resultado if resultado is not None else valor_atual
 
 
 def _input_int(campo: Campo, valor_atual: Any) -> int | None:
@@ -208,6 +208,8 @@ def _input_int(campo: Campo, valor_atual: Any) -> int | None:
         if novo is None:
             return valor_atual
         novo = novo.strip()
+        if not novo:
+            return valor_atual
         try:
             return int(novo)
         except ValueError:

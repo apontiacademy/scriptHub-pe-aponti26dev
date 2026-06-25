@@ -31,7 +31,8 @@ def carregar_valores(nome_script: str, campos: list[Campo]) -> dict[str, Any]:
     valores: dict[str, Any] = {}
     for campo in campos:
         if campo.origem == "env":
-            valores[campo.chave] = env.get(campo.env_var) or None
+            v = env.get(campo.env_var)
+            valores[campo.chave] = v if v is not None and v != "" else None
         else:
             node: Any = settings
             for chave in campo.json_chaves:
@@ -66,7 +67,10 @@ def persistir(nome_script: str, campos: list[Campo], valores: dict[str, Any]) ->
     if campos_settings:
         if settings_path.exists():
             with open(settings_path, encoding="utf-8") as f:
-                settings: dict = json.load(f)
+                try:
+                    settings: dict = json.load(f)
+                except json.JSONDecodeError:
+                    settings = {}
         else:
             settings = {}
 
