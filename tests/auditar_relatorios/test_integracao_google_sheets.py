@@ -1,9 +1,10 @@
+import gspread
 import pytest
 
 from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.scripts.auditar_relatorios.integracao_google_sheets import main
 
-_PATCH_BASE = "scripthub.scripts.auditar_relatorios.integracao_google_sheets"
+_PATCH = "scripthub.scripts.auditar_relatorios.integracao_google_sheets"
 
 
 @pytest.fixture
@@ -39,6 +40,15 @@ def _write_csv(config, conteudo="Col A,Col B,Col C,Situacao\nJoao,x,y,Aprovado\n
     csv.write_text(conteudo, encoding="utf-8")
 
 
+def _setup_mock(mocker):
+    mock_aba = mocker.MagicMock()
+    mock_planilha = mocker.MagicMock()
+    mock_planilha.worksheet.return_value = mock_aba
+    mock_client = mocker.patch(f"{_PATCH}.GoogleSheetsClient").return_value
+    mock_client.planilha.return_value = mock_planilha
+    return mock_client, mock_planilha, mock_aba
+
+
 def test_main_levanta_runtime_sem_csv(config):
     with pytest.raises(RuntimeError, match="não encontrado"):
         main(config)
@@ -69,12 +79,7 @@ def test_main_levanta_runtime_com_csv_de_menos_colunas(config):
 
 def test_main_atualiza_coluna_d_na_planilha(config, mocker):
     _write_csv(config)
-    mock_gc = mocker.MagicMock()
-    mock_aba = mocker.MagicMock()
-    mock_planilha = mocker.MagicMock()
-    mock_planilha.worksheet.return_value = mock_aba
-    mock_gc.open_by_key.return_value = mock_planilha
-    mocker.patch(f"{_PATCH_BASE}.gspread.service_account", return_value=mock_gc)
+    _, mock_planilha, mock_aba = _setup_mock(mocker)
 
     main(config)
 
@@ -84,14 +89,11 @@ def test_main_atualiza_coluna_d_na_planilha(config, mocker):
 
 
 def test_main_levanta_runtime_se_aba_nao_existir(config, mocker):
-    import gspread
-
     _write_csv(config)
-    mock_gc = mocker.MagicMock()
+    mock_client = mocker.patch(f"{_PATCH}.GoogleSheetsClient").return_value
     mock_planilha = mocker.MagicMock()
     mock_planilha.worksheet.side_effect = gspread.exceptions.WorksheetNotFound
-    mock_gc.open_by_key.return_value = mock_planilha
-    mocker.patch(f"{_PATCH_BASE}.gspread.service_account", return_value=mock_gc)
+    mock_client.planilha.return_value = mock_planilha
 
     with pytest.raises(RuntimeError, match="aba"):
         main(config)

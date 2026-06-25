@@ -149,6 +149,26 @@ Tipos de campo disponíveis:
 
 Use `depende_de="chave_outro_campo"` para tornar um campo condicional ao valor de outro campo booleano.
 
+## Ordem de desenvolvimento (TDD)
+
+Sempre escreva o teste antes da implementação:
+
+1. **Escreva o teste que falha** — defina a interface e o comportamento esperado
+2. **Implemente o mínimo para passar** — sem código especulativo
+3. **Refatore** — limpe duplicação, sem alterar comportamento
+4. **Repita** por função ou camada
+
+### Ordem de complexidade crescente
+
+1. Funções puras (sem I/O) — sem mocks
+2. Funções com arquivo/path — use `tmp_path`
+3. Funções com API externa — use `mocker.patch()`
+4. Orquestradores (ESCOPOS) — mocke os serviços que chamam
+
+### Regra: novo serviço = teste primeiro
+
+Antes de criar qualquer arquivo em `services/`, escreva `tests/services/test_<nome>.py` com pelo menos um teste que falha. Só então crie o serviço.
+
 ## Comandos úteis
 
 ```bash
