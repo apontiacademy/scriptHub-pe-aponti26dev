@@ -52,14 +52,26 @@ uv run scripthub --aliases   # ou: scripthub -a
 | Comando | Alias | Descrição |
 |---|---|---|
 | `scripthub menu` | `m` | **Depreciado.** Menu interativo — prefira usar os comandos da CLI diretamente |
-| `scripthub frequencias [-p passo]` | `f` | Exporta frequências de presença do Moodle para o Google Sheets |
-| `scripthub relatorios auditar [-p passo]` | `r auditar` | Pipeline completo: download → análise → Google Sheets → backup |
+| `scripthub frequencias [-p slug]` | `f` | Exporta frequências de presença do Moodle para o Google Sheets |
+| `scripthub relatorios auditar [-p slug]` | `r auditar` | Pipeline completo: download → análise → Google Sheets → backup |
 | `scripthub relatorios compilar` | `r compilar` | Compila relatórios em PDF |
 | `scripthub softskills` | `s` | Baixa notas de soft skills do Moodle e envia ao Google Drive |
 | `scripthub torpedo` | `t` | Posta tópicos em fóruns do Moodle a partir de arquivos Markdown |
 | `scripthub config` | `c` | Configura interativamente as opções de um script |
 
-A opção `-p N` executa apenas o passo N do pipeline (começando em 1) em vez do pipeline completo. Disponível nos comandos `frequencias` e `relatorios auditar`.
+A opção `--passo <slug>` (ou `-p`) executa apenas um passo do pipeline. Disponível nos comandos `frequencias` e `relatorios auditar`:
+
+| Comando | Passos disponíveis |
+|---|---|
+| `scripthub frequencias` | `exportar` (`e`), `integrar` (`i`) |
+| `scripthub relatorios auditar` | `extrair` (`e`), `analisar` (`a`), `integrar` (`i`), `salvar` (`s`) |
+
+```bash
+scripthub frequencias --passo exportar          # só baixa do Moodle
+scripthub frequencias -p e                      # idem, forma curta
+scripthub relatorios auditar --passo extrair    # só baixa relatórios
+scripthub relatorios auditar -p s               # só executa o backup
+```
 
 ## Configuração
 

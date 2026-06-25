@@ -24,9 +24,10 @@ Cada pacote de script segue um dos dois padrões:
 
 **Padrão A — pipeline por escopos** (`auditar_frequencias`, `auditar_relatorios`):
 - `__init__.py` — declara `MENU_CMD`, exporta `ESCOPOS` e `get_config`
-- `ESCOPOS`: lista de tuplas `(nome_do_passo: str, funcao: Callable[[Config], None])`
+- `ESCOPOS`: lista de `Escopo(slug, nome, func, aliases)` — ver `services/escopo.py`
 - `get_config()`: retorna a dataclass de configuração (carrega `.env` + `settings.json`)
 - O CLI usa `executar_script()` para iterar os escopos com log por passo e captura de exceção
+- O `--passo <slug>` (ou alias de uma letra) executa apenas o passo correspondente
 
 **Padrão B — função main** (`auditar_softskills`, `compilacao_de_relatorios`, `torpedo_de_forum`) — **DEPRECIADO**:
 - `__init__.py` — declara `MENU_CMD`, exporta apenas `main`
@@ -84,17 +85,21 @@ from .main import ESCOPOS
 from .config import get_config
 ```
 
-4. Em `main.py`, definir `ESCOPOS` como lista de tuplas `(nome, função)`:
+4. Em `main.py`, importar `Escopo` e definir `ESCOPOS` como lista de instâncias:
 
 ```python
+from scripthub.services.escopo import Escopo
+
 ESCOPOS = [
-    ("Baixar dados", baixar_dados),
-    ("Processar", processar),
+    Escopo("baixar",    "Baixar dados", baixar_dados,  ("b",)),
+    Escopo("processar", "Processar",    processar,     ("p",)),
 ]
 
 def baixar_dados(config: Config): ...
 def processar(config: Config): ...
 ```
+
+Slugs devem ser verbos no infinitivo. Aliases são letras únicas para uso rápido no terminal.
 
 5. Adicionar campos configuráveis em `services/config/esquemas.py` (ver seção "Sistema de configuração" abaixo)
 6. Seguir o padrão de output (log helpers) e o contrato de erros acima
