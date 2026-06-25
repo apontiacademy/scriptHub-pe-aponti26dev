@@ -1,10 +1,10 @@
-import sys
-from pathlib import Path
+import questionary
 
+from .. import log
 from ..menu.main import SCRIPTS_FOLDER, discover_modules
 from .esquemas import ALIASES_CLI, ESQUEMAS
 from .persistencia import _script_dir, carregar_valores, persistir
-from .ui import exibir_campos, obter_input, selecionar_campos, selecionar_script
+from .ui import STYLE, exibir_campos, obter_input, selecionar_campos, selecionar_script
 from .validacao import validar_campo
 
 
@@ -19,8 +19,8 @@ def config(nome_script: str | None = None) -> None:
         nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
-            print(f"❌ Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}", file=sys.stderr)
-            sys.exit(1)
+            log.erro(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
+            raise SystemExit(1)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
@@ -29,7 +29,7 @@ def config(nome_script: str | None = None) -> None:
         ]
 
         if not modulos_com_esquema:
-            print("❌ Nenhum script com configuração disponível foi encontrado.", file=sys.stderr)
+            log.erro("Nenhum script com configuração disponível foi encontrado.")
             return
 
         nome_script = selecionar_script(modulos_com_esquema)
@@ -43,7 +43,7 @@ def config(nome_script: str | None = None) -> None:
     selecionados = selecionar_campos(campos, valores)
 
     if not selecionados:
-        print("\nNenhum campo selecionado. Nada foi alterado.")
+        log.aviso("Nenhum campo selecionado. Nada foi alterado.")
         return
 
     novos_valores = dict(valores)
@@ -56,7 +56,7 @@ def config(nome_script: str | None = None) -> None:
 
     print()
     persistir(nome_script, campos, novos_valores)
-    print(f"✅ Configuração de {nome_script} salva com sucesso!")
+    log.ok(f"Configuração de {nome_script} salva com sucesso!")
 
 
 def visualizar(nome_script: str | None = None) -> None:
@@ -64,8 +64,8 @@ def visualizar(nome_script: str | None = None) -> None:
         nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
-            print(f"❌ Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}", file=sys.stderr)
-            sys.exit(1)
+            log.erro(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
+            raise SystemExit(1)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
@@ -74,7 +74,7 @@ def visualizar(nome_script: str | None = None) -> None:
         ]
 
         if not modulos_com_esquema:
-            print("❌ Nenhum script com configuração disponível foi encontrado.", file=sys.stderr)
+            log.erro("Nenhum script com configuração disponível foi encontrado.")
             return
 
         nome_script = selecionar_script(modulos_com_esquema)
@@ -84,7 +84,7 @@ def visualizar(nome_script: str | None = None) -> None:
     campos = ESQUEMAS[nome_script]
     valores = carregar_valores(nome_script, campos)
 
-    print(f"  Configuração atual de {nome_script}:")
+    log.passo(f"Configuração atual de {nome_script}:")
     exibir_campos(campos, valores)
 
 
@@ -93,7 +93,7 @@ def limpar(nome_script: str | None = None) -> None:
         nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
-            print(f"❌ Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}", file=sys.stderr)
+            log.erro(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
             return
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
@@ -103,7 +103,7 @@ def limpar(nome_script: str | None = None) -> None:
         ]
 
         if not modulos_com_esquema:
-            print("❌ Nenhum script com configuração disponível foi encontrado.", file=sys.stderr)
+            log.erro("Nenhum script com configuração disponível foi encontrado.")
             return
 
         nome_script = selecionar_script(modulos_com_esquema)
@@ -115,19 +115,18 @@ def limpar(nome_script: str | None = None) -> None:
     existentes = [a for a in arquivos if a.exists()]
 
     if not existentes:
-        print(f"  ⚠️  Nenhuma configuração encontrada para '{nome_script}'.")
+        log.aviso(f"Nenhuma configuração encontrada para '{nome_script}'.")
         return
 
-    print(f"\n  Arquivos que serão removidos:")
+    log.passo("Arquivos que serão removidos:")
     for a in existentes:
-        print(f"    • {a}")
+        log.passo(str(a))
 
-    resposta = input("\nDeseja apagar esses arquivos? [s/N]: ").strip().lower()
-    if resposta not in ("s", "sim"):
-        print("  Operação cancelada.")
+    if not questionary.confirm("Deseja apagar esses arquivos?", default=False, style=STYLE).ask():
+        log.aviso("Operação cancelada.")
         return
 
     for a in existentes:
         a.unlink()
-        print(f"  ✔ Removido: {a.name}")
-    print(f"✅ Configuração de {nome_script} limpa com sucesso!")
+        log.ok(f"Removido: {a.name}")
+    log.ok(f"Configuração de {nome_script} limpa com sucesso!")

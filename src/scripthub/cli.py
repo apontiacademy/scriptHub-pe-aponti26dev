@@ -124,7 +124,7 @@ def relatorios_auditar(
 @app.command("rc", hidden=True)
 def relatorios_compilar():
     """Alias para 'scripthub relatorios compilar'."""
-    _carregar_config(compilacao_de_relatorios.main, "compilacao_de_relatorios")
+    compilacao_de_relatorios.main()
 
 
 # TODO: reimplementar utilizando padrões dos scripts anteriores

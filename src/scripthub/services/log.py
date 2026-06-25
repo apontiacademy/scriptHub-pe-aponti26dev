@@ -11,7 +11,6 @@ def _find_project_root() -> Path:
 
 
 _log_dir = _find_project_root() / "logs"
-_log_dir.mkdir(exist_ok=True)
 
 _comando_atual: str = " ".join(sys.argv[1:]) or "scripthub"
 _LOG_FILE = Path(__file__).resolve()
@@ -41,6 +40,7 @@ class _ScriptFilter(logging.Filter):
 
 _logger = logging.getLogger("scripthub")
 if not _logger.handlers:
+    _log_dir.mkdir(exist_ok=True)
     _logger.setLevel(logging.DEBUG)
     _handler = logging.FileHandler(_log_dir / "scripthub.log", encoding="utf-8")
     _handler.setFormatter(

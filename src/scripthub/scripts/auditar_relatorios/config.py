@@ -48,7 +48,7 @@ class Config:
             senha=dados_env["moodle_senha"],
             caminho_download_relatorio=DIRETORIO_BASE / "dados" / "relatorios",
             headless=True,
-            csv_residentes=Path(moodle_json["csvResidentes"]),
+            csv_residentes=Path(moodle_json.get("csvResidentes", str(DIRETORIO_BASE / "dados" / "residentes.csv"))),
             csv_saida_analise=DIRETORIO_BASE / "dados" / "resultado_analise.csv",
             url_login=moodle_json["urlLogin"],
             urls_relatorios=[i.strip() for i in moodle_json["urlsRelatorios"]],
