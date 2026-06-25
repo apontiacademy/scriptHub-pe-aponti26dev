@@ -4,7 +4,7 @@ Hub de automações para operações do bootcamp Aponti PE. Cada módulo resolve
 
 ## Instalação
 
-Requer Python 3.12+ e [`uv`](https://docs.astral.sh/uv/). O projeto depende de um pacote privado da organização resolvido via `[tool.uv.sources]`, por isso `pip` não é suportado diretamente.
+Requer Python 3.12+ e [uv](https://docs.astral.sh/uv/). O projeto depende de um pacote privado da organização resolvido via `[tool.uv.sources]`, por isso `pip` não é suportado diretamente.
 
 ```bash
 git clone git@github.com:apontiacademy/scriptHub-pe-aponti26dev.git
@@ -13,6 +13,9 @@ uv sync
 
 # Configure as opções de cada script (veja a seção Configuração abaixo)
 uv run scripthub config
+
+# Para ver todos os comandos disponíveis:
+uv run scripthub --help
 ```
 
 Após o `uv sync`, também é possível ativar o ambiente virtual e invocar os comandos sem o prefixo `uv run`:
@@ -26,28 +29,37 @@ scripthub config
 ## Uso
 
 ```bash
-# Menu interativo (lista todos os scripts disponíveis)
-uv run scripthub
-
 # Invocar um script diretamente
 uv run scripthub frequencias
 uv run scripthub relatorios auditar
 uv run scripthub relatorios compilar
 uv run scripthub softskills
 uv run scripthub torpedo
+
+# Menu interativo (depreciado — prefira os comandos acima)
+uv run scripthub menu
 ```
 
-## Scripts
+Para ver a ajuda e os aliases disponíveis:
+
+```bash
+uv run scripthub --help      # ou: scripthub -h
+uv run scripthub --aliases   # ou: scripthub -a
+```
+
+## Comandos
 
 | Comando | Alias | Descrição |
 |---|---|---|
-| `scripthub frequencias [-p passo]` | `f` | Exporta frequências do Moodle e envia ao Google Sheets |
+| `scripthub menu` | `m` | **Depreciado.** Menu interativo — prefira usar os comandos da CLI diretamente |
+| `scripthub frequencias [-p passo]` | `f` | Exporta frequências de presença do Moodle para o Google Sheets |
 | `scripthub relatorios auditar [-p passo]` | `r auditar` | Pipeline completo: download → análise → Google Sheets → backup |
 | `scripthub relatorios compilar` | `r compilar` | Compila relatórios em PDF |
-| `scripthub softskills` | `s` | Baixa notas de soft skills e envia ao Google Drive |
+| `scripthub softskills` | `s` | Baixa notas de soft skills do Moodle e envia ao Google Drive |
 | `scripthub torpedo` | `t` | Posta tópicos em fóruns do Moodle a partir de arquivos Markdown |
+| `scripthub config` | `c` | Configura interativamente as opções de um script |
 
-A opção `-p passo` executa apenas o passo indicado (começando em 1) em vez do pipeline completo.
+A opção `-p N` executa apenas o passo N do pipeline (começando em 1) em vez do pipeline completo. Disponível nos comandos `frequencias` e `relatorios auditar`.
 
 ## Configuração
 

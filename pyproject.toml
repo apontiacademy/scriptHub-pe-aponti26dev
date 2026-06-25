@@ -11,6 +11,7 @@ dependencies = [
     "google-api-python-client>=2.197.0",
     "google-auth>=2.55.0",
     "gspread>=6.2.1",
+    "openpyxl>=3.1.5",
     "pandas>=3.0.3",
     "pentefinocli-pe-aponti26dev",
     "playwright>=1.60.0",

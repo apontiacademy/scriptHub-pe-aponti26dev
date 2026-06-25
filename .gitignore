@@ -1,5 +1,6 @@
 *.csv
 *.xlsx
+logs/
 __pycache__/
 *.pyc
 .env
@@ -8,5 +9,4 @@ credentials.json
 settings.json
 *.png
 post.md
-docs/superpowers/specs/2026-06-05-pente-fino-fullstack-design.md
-docs/superpowers/specs/2026-06-16-menu-hub-scripts-design.md
+docs/superpowers/*

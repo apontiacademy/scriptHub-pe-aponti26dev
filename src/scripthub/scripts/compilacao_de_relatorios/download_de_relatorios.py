@@ -5,6 +5,8 @@ from pathlib import Path
 import questionary
 from playwright.sync_api import sync_playwright
 
+from scripthub.services import log
+
 from .config import Config
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -37,14 +39,14 @@ def _perguntar_baixar_novamente() -> bool:
 
 
 def realizar_login(page, login_url, usuario, senha):
-    print("  • Iniciando processo de login...")
+    log.passo("Iniciando processo de login...")
     page.goto(login_url)
     page.wait_for_load_state("domcontentloaded")
 
     try:
         botao_sair = page.locator("#logininsidebaric, button:has-text('Sair'), button:has-text('Log out')").first
         botao_sair.wait_for(state="visible", timeout=2000)
-        print("  • Sessão fantasma detectada! Clicando em 'Sair' para limpar...")
+        log.passo("Sessão fantasma detectada! Clicando em 'Sair' para limpar...")
         botao_sair.click()
         page.wait_for_load_state("networkidle")
         page.goto(login_url)
@@ -52,7 +54,7 @@ def realizar_login(page, login_url, usuario, senha):
     except Exception:
         pass
 
-    print("  • Preenchendo credenciais...")
+    log.passo("Preenchendo credenciais...")
     page.locator("#username").fill(usuario)
 
     try:
@@ -68,18 +70,18 @@ def realizar_login(page, login_url, usuario, senha):
         page.locator("button[type='submit']").click()
         page.wait_for_load_state("networkidle")
 
-    print("  ✔ Login realizado com sucesso!")
+    log.ok("Login realizado com sucesso!")
 
 
 def baixar_relatorio(page, url, caminho_saida, login_url, usuario, senha):
-    print(f"  • Acessando relatório: {url}")
+    log.passo(f"Acessando relatório: {url}")
     page.goto(url)
     page.wait_for_load_state("networkidle")
 
     botao_download = page.get_by_role("button", name="Download")
 
     if "login" in page.url or not botao_download.is_visible():
-        print("  • Sessão expirada ou sem permissão. Reconectando...")
+        log.passo("Sessão expirada ou sem permissão. Reconectando...")
         realizar_login(page, login_url, usuario, senha)
         page.goto(url)
         page.wait_for_load_state("networkidle")
@@ -92,21 +94,16 @@ def baixar_relatorio(page, url, caminho_saida, login_url, usuario, senha):
 
             download = informacao_download.value
             download.save_as(str(caminho_saida))
-            print(f"  ✔ Sucesso! Salvo em: {caminho_saida}")
+            log.ok(f"Sucesso! Salvo em: {caminho_saida}")
         else:
-            print(
-                f"  ❌ ERRO: O botão de download não apareceu na página final: {url}",
-                file=sys.stderr,
-            )
+            log.erro(f"O botão de download não apareceu na página final: {url}")
 
     except Exception as e:
-        print(f"  ❌ ERRO: Falha ao baixar o relatório {url}: {e}", file=sys.stderr)
+        log.erro(f"Falha ao baixar o relatório {url}: {e}")
 
 
 def main(config: Config):
-    print("=" * 80)
-    print("▶ [ESCOPO 1] DOWNLOAD DE RELATÓRIOS POR MÊS (MOODLE)")
-    print("=" * 80)
+    log.secao("DOWNLOAD DE RELATÓRIOS POR MÊS (MOODLE)")
 
     meses = config.moodle.meses
     login_url = config.moodle.url_login
@@ -116,25 +113,19 @@ def main(config: Config):
     diretorio_download = config.moodle.caminho_download
 
     if not meses:
-        print(
-            "  ❌ ERRO: Nenhum mês configurado em settings.json (moodle.meses)",
-            file=sys.stderr,
-        )
-        print("=" * 80)
-        return
+        raise RuntimeError("Nenhum mês configurado em settings.json (moodle.meses)")
 
     diretorio_download.mkdir(parents=True, exist_ok=True)
 
     caminhos = _relatorios_existentes(meses, diretorio_download)
     if _todos_relatorios_existem(caminhos):
-        print("\n  • Relatórios CSV já existem em dados/relatorios:")
+        log.passo("Relatórios CSV já existem em dados/relatorios:")
         for nome_mes, caminhos_mes in caminhos.items():
             for caminho in caminhos_mes:
-                print(f"    - {nome_mes}: {caminho.name}")
+                log.passo(f"  - {nome_mes}: {caminho.name}")
 
         if not _perguntar_baixar_novamente():
-            print("\n  • Download ignorado. Usando arquivos existentes.")
-            print("=" * 80)
+            log.passo("Download ignorado. Usando arquivos existentes.")
             return
 
     try:
@@ -155,20 +146,22 @@ def main(config: Config):
             realizar_login(pagina, login_url, usuario, senha)
 
             for nome_mes, urls in meses.items():
-                print(f"\n  → Mês: {nome_mes}")
+                log.passo(f"Mês: {nome_mes}")
                 for indice, url in enumerate(urls, 1):
+                    log.passo(f"Relatório {indice}/{len(urls)}")
                     caminho_saida = _caminho_relatorio(nome_mes, diretorio_download, indice)
-                    print(f"    • Relatório {indice}/{len(urls)}")
                     baixar_relatorio(pagina, url, caminho_saida, login_url, usuario, senha)
                     time.sleep(1.5)
 
-        print("\n✔ Escopo 1 finalizado com sucesso!")
+        log.ok("Escopo 1 finalizado com sucesso!")
     except Exception as e:
-        print(f"\n⚠️ Escopo 1 terminou com falhas: {e}", file=sys.stderr)
-
-    print("=" * 80)
+        log.erro(f"Escopo 1 terminou com falhas: {e}")
 
 
 if __name__ == "__main__":
-    configuracao_carregada = Config.load()
-    main(configuracao_carregada)
+    try:
+        from .config import Config as _Config
+        main(_Config.load())
+    except Exception as e:
+        log.erro(str(e))
+        sys.exit(1)

@@ -4,6 +4,8 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
+from scripthub.services import log
+
 from .config import Config
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -11,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 def realizar_login(page, login_url, usuario, senha):
     """Realiza o login no Moodle de forma agnóstica a idioma e modo de execução."""
-    print("  • Iniciando processo de login...")
+    log.passo("Iniciando processo de login...")
     page.goto(login_url)
     page.wait_for_load_state("domcontentloaded")
 
@@ -19,7 +21,7 @@ def realizar_login(page, login_url, usuario, senha):
         # Trata possíveis sessões ativas sobrepostas
         botao_sair = page.locator("#logininsidebaric, button:has-text('Sair'), button:has-text('Log out')").first
         botao_sair.wait_for(state="visible", timeout=2000)
-        print("  • Sessão fantasma detectada! Clicando em 'Sair' para limpar...")
+        log.passo("Sessão fantasma detectada! Clicando em 'Sair' para limpar...")
         botao_sair.click()
         page.wait_for_load_state("networkidle")
         page.goto(login_url)
@@ -27,7 +29,7 @@ def realizar_login(page, login_url, usuario, senha):
     except Exception:
         pass
 
-    print("  • Preenchendo credenciais...")
+    log.passo("Preenchendo credenciais...")
     page.locator("#username").fill(usuario)
 
     try:
@@ -43,19 +45,19 @@ def realizar_login(page, login_url, usuario, senha):
         page.locator("button[type='submit']").click()
         page.wait_for_load_state("networkidle")
 
-    print("  ✔ Login realizado com sucesso!")
+    log.ok("Login realizado com sucesso!")
 
 
 def baixar_relatorio(page, url, caminho_saida, login_url, usuario, senha):
     """Acessa uma URL específica e gerencia o download de um único relatório."""
-    print(f"  • Acessando relatório: {url}")
+    log.passo(f"Acessando relatório: {url}")
     page.goto(url)
     page.wait_for_load_state("networkidle")
 
     botao_download = page.get_by_role("button", name="Download")
 
     if "login" in page.url or not botao_download.is_visible():
-        print("  • Sessão expirada ou sem permissão. Reconectando...")
+        log.passo("Sessão expirada ou sem permissão. Reconectando...")
         realizar_login(page, login_url, usuario, senha)
         page.goto(url)
         page.wait_for_load_state("networkidle")
@@ -69,24 +71,16 @@ def baixar_relatorio(page, url, caminho_saida, login_url, usuario, senha):
             download = informacao_download.value
             # Conversão explícita de Path para string para execução cross-platform robusta
             download.save_as(str(caminho_saida))
-            print(f"  ✔ Sucesso! Salvo em: {caminho_saida}")
+            log.ok(f"Sucesso! Salvo em: {caminho_saida}")
         else:
-            print(
-                f"  ❌ ERRO: O botão de download não apareceu na página final: {url}",
-                file=sys.stderr,
-            )
+            log.erro(f"O botão de download não apareceu na página final: {url}")
 
     except Exception as e:
-        print(f"  ❌ ERRO: Falha ao baixar o relatório {url}: {e}", file=sys.stderr)
+        log.erro(f"Falha ao baixar o relatório {url}: {e}")
 
 
 def main(config: Config):
     """Função principal que orquestra o Escopo 1."""
-    print("=" * 80)
-    print("▶ [ESCOPO 1] EXTRAÇÃO DE RELATÓRIOS (MOODLE)")
-    print("=" * 80)
-
-    # Atributos mapeados conforme a nova dataclass traduzida
     login_url = config.moodle.url_login
     usuario = config.moodle.usuario
     senha = config.moodle.senha
@@ -95,12 +89,7 @@ def main(config: Config):
     diretorio_download = config.moodle.caminho_download_relatorio
 
     if not urls_moodle:
-        print(
-            "  ❌ ERRO: Nenhuma URL de relatório encontrada no settings.json",
-            file=sys.stderr,
-        )
-        print("=" * 80)
-        return
+        raise RuntimeError("Nenhuma URL de relatório encontrada no settings.json")
 
     # Cria a estrutura de diretórios usando o objeto Path nativo vindo do Config
     diretorio_download.mkdir(parents=True, exist_ok=True)
@@ -127,14 +116,10 @@ def main(config: Config):
             # Itera sobre a lista limpa vinda do Config
             for indice, url in enumerate(urls_moodle, start=1):
                 nome_arquivo = f"relatorio{indice}.csv"
-
                 caminho_saida = diretorio_download / nome_arquivo
-
                 baixar_relatorio(pagina, url, caminho_saida, login_url, usuario, senha)
                 time.sleep(1.5)
 
-        print("\n✔ Escopo 1 finalizado com sucesso!")
+        log.ok("Escopo 1 finalizado com sucesso!")
     except Exception as e:
-        print(f"\n⚠️ Escopo 1 terminou com falhas: {e}", file=sys.stderr)
-
-    print("=" * 80)
+        log.erro(f"Escopo 1 terminou com falhas: {e}")

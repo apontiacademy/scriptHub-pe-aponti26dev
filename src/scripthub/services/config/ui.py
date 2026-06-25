@@ -24,12 +24,13 @@ STYLE = Style(
 _SEPARADOR = "─" * 50
 
 
-def selecionar_script(modulos: list[tuple[str, str]]) -> str | None:
-    max_len = max((len(nome) for nome, _ in modulos), default=0)
+def selecionar_script(modulos: list[tuple[str, tuple[str, ...], str, bool]]) -> str | None:
+    max_len = max((len(" ".join(cmd)) for _, cmd, _, _ in modulos), default=0)
     choices = []
-    for nome, desc in modulos:
-        bracketed = f"[{nome}]"
-        titulo = f"{bracketed:<{max_len + 2}}  {desc}" if desc else bracketed
+    for nome, cmd, desc, pendente in modulos:
+        icone = "⚠️ " if pendente else "✅"
+        cmd_str = " ".join(cmd).ljust(max_len)
+        titulo = f"{icone}  {cmd_str}  {desc}" if desc else f"{icone}  {cmd_str}"
         choices.append(questionary.Choice(title=titulo, value=nome))
 
     return questionary.select(
@@ -189,8 +190,12 @@ def _input_caminho(campo: Campo, valor_atual: Any) -> str | None:
 
 def _input_bool(campo: Campo, valor_atual: Any) -> bool | None:
     padrao = bool(valor_atual) if valor_atual is not None else True
-    resultado = questionary.confirm(
+    resultado = questionary.select(
         f"{campo.rotulo}:",
+        choices=[
+            questionary.Choice(title="Sim", value=True),
+            questionary.Choice(title="Não", value=False),
+        ],
         default=padrao,
         style=STYLE,
     ).ask()

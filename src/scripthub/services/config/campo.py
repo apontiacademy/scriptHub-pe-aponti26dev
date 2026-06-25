@@ -25,3 +25,4 @@ class Campo:
     obrigatorio: bool = True
     env_var: str | None = None
     json_chaves: list[str] = field(default_factory=list)
+    depende_de: str | None = None

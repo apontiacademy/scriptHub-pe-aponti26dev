@@ -4,6 +4,8 @@ import time
 
 from bs4 import BeautifulSoup
 
+from scripthub.services import log
+
 from .config import Config
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -50,7 +52,7 @@ def login(session, config: Config):
             "anchor": "",
         },
     )
-    print("✓ Login OK")
+    log.ok("Login OK")
 
 
 # ── Bootcamp helpers ──────────────────────────────────────────────────────────

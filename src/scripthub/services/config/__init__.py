@@ -1,3 +1,3 @@
-from .main import config, visualizar
+from .main import config, limpar, visualizar
 
-__all__ = ["config", "visualizar"]
+__all__ = ["config", "visualizar", "limpar"]

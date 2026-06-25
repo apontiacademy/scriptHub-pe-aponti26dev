@@ -6,10 +6,10 @@ import scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios as 
 from .config import Config
 
 ESCOPOS = [
-    download_de_relatorios.main,
-    middleware_analise_de_relatorios.main,
-    integracao_google_sheets.main,
-    backup.main,
+    ("EXTRAÇÃO DE RELATÓRIOS (MOODLE)", download_de_relatorios.main),
+    ("ANÁLISE PENTE-FINO (MIDDLEWARE)", middleware_analise_de_relatorios.main),
+    ("INTEGRAÇÃO (GOOGLE SHEETS)", integracao_google_sheets.main),
+    ("BACKUP AUTOMÁTICO (.XLSX)", backup.main),
 ]
 
 

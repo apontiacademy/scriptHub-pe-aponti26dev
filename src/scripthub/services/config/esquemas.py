@@ -1,5 +1,18 @@
 from .campo import Campo
 
+ALIASES_CLI: dict[str, str] = {
+    "frequencias": "auditar_frequencias",
+    "f": "auditar_frequencias",
+    "relatorios": "auditar_relatorios",
+    "r": "auditar_relatorios",
+    "ra": "auditar_relatorios",
+    "rc": "compilacao_de_relatorios",
+    "softskills": "auditar_softskills",
+    "s": "auditar_softskills",
+    "torpedo": "torpedo_de_forum",
+    "t": "torpedo_de_forum",
+}
+
 ESQUEMAS: dict[str, list[Campo]] = {
     "auditar_frequencias": [
         Campo(
@@ -97,6 +110,15 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Diretório onde o CSV de análise será salvo (opcional)",
             obrigatorio=False,
             json_chaves=["moodle", "caminhoExportacaoAnalise"],
+            depende_de="moodle_exportar_analise",
+        ),
+        Campo(
+            chave="moodle_csv_residentes",
+            rotulo="CSV de residentes",
+            tipo="caminho",
+            origem="settings",
+            descricao="Caminho para o arquivo CSV com a lista de residentes",
+            json_chaves=["moodle", "csvResidentes"],
         ),
         Campo(
             chave="gsheets_id_planilha",

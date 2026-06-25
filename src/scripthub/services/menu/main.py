@@ -1,7 +1,12 @@
+import ast
 import os
+import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+from scripthub.services import log
 
 import questionary
 from questionary import Style
@@ -46,67 +51,79 @@ def read_docstring(main_py: Path) -> str:
     return ""
 
 
-def discover_modules(scripts_folder: Path) -> list[tuple[str, str]]:
+def _read_menu_cmd(init_py: Path) -> tuple[str, ...] | None:
+    src = init_py.read_text(encoding="utf-8")
+    m = re.search(r"^MENU_CMD\s*=\s*(.+)$", src, re.MULTILINE)
+    if not m:
+        return None
+    try:
+        return tuple(ast.literal_eval(m.group(1).strip()))
+    except (ValueError, SyntaxError):
+        return None
+
+
+def discover_modules(scripts_folder: Path) -> list[tuple[str, tuple[str, ...], str]]:
     modules = []
     for d in sorted(scripts_folder.iterdir()):
-        if not d.is_dir():
+        if not d.is_dir() or not (d / "__init__.py").exists():
             continue
-        if not (d / "__init__.py").exists():
+        cmd = _read_menu_cmd(d / "__init__.py")
+        if cmd is None:
             continue
-        main_py = d / "main.py"
-        if not main_py.exists():
-            continue
-        desc = read_docstring(main_py)
-        modules.append((d.name, desc))
+        desc = read_docstring(d / "main.py") if (d / "main.py").exists() else ""
+        modules.append((d.name, cmd, desc))
     return modules
 
 
-def run_module(name: str) -> int:
-    result = subprocess.run([sys.executable, "-m", name], check=False, cwd=SCRIPTS_FOLDER)
+def run_module(cmd: tuple[str, ...]) -> int:
+    scripthub_exe = (
+        shutil.which("scripthub", path=str(Path(sys.executable).parent))
+        or shutil.which("scripthub")
+        or "scripthub"
+    )
+    result = subprocess.run([scripthub_exe, *cmd], check=False)
     return result.returncode
 
 
 _QUIT = object()
 
 
-# TODO: implementar modo verboso do menu
-def main(verboso: bool) -> None:
-    feedback: str | None = None
+def main() -> None:
+    os.system("clear")
+    print(HEADER)
+    print()
+    print("⚠️  Aviso: o menu interativo está deprecated.")
+    print("   Prefira usar os comandos do CLI diretamente (scripthub --help).")
+    print()
 
-    while True:
-        os.system("clear")
-        print(HEADER)
-        print()
+    modules = discover_modules(SCRIPTS_FOLDER)
+    max_len = max((len(" ".join(cmd)) for _, cmd, _ in modules), default=0)
+    choices = []
+    for name, cmd, desc in modules:
+        cmd_str = " ".join(cmd).ljust(max_len)
+        title = f"{cmd_str}  {desc}" if desc else cmd_str
+        choices.append(questionary.Choice(title=title, value=(name, cmd)))
+    choices.append(questionary.Separator())
+    choices.append(questionary.Choice(title="sair", value=_QUIT))
 
-        if feedback:
-            print(feedback)
-            print()
+    selected = questionary.select(
+        "Qual script rodar?",
+        choices=choices,
+        style=STYLE,
+    ).ask()
 
-        modules = discover_modules(SCRIPTS_FOLDER)
-        max_len = max((len(name) for name, _ in modules), default=0)
-        choices = []
-        for name, desc in modules:
-            bracketed = f"[{name}]"
-            if desc:
-                title = f"{bracketed:<{max_len + 2}}  {desc}"
-            else:
-                title = bracketed
-            choices.append(questionary.Choice(title=title, value=name))
-        choices.append(questionary.Separator())
-        choices.append(questionary.Choice(title="[ sair ]", value=_QUIT))
+    if selected is None or selected is _QUIT:
+        print("Isso não é um adeus, é um até logo 👋")
+        return
 
-        selected = questionary.select(
-            "Qual script rodar?",
-            choices=choices,
-            style=STYLE,
-        ).ask()
+    name, cmd = selected
 
-        if selected is None or selected is _QUIT:
-            print("Isso não é um adeus, é um até logo 👋")
-            break
+    log.secao(f"Executando: {name}")
 
-        returncode = run_module(selected)
-        if returncode == 0:
-            feedback = f"✅ {selected} finalizado com sucesso."
-        else:
-            feedback = f"❌ {selected} finalizado com erro (código {returncode})."
+    returncode = run_module(cmd)
+
+    print()
+    if returncode == 0:
+        log.ok(f"{name} finalizado com sucesso (código 0).")
+    else:
+        log.erro(f"{name} finalizado com erro (código {returncode}).")
