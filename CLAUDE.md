@@ -159,3 +159,76 @@ uv run scripthub frequencias --help
 # Logs de execução
 tail -f logs/scripthub.log
 ```
+
+## Testes
+
+### Estrutura
+
+```
+tests/
+├── conftest.py                          # Fixture compartilhada: moodle_env(tmp_path)
+├── menu/test_menu.py
+├── auditar_frequencias/
+│   ├── test_config.py
+│   └── test_exportar_frequencias.py
+├── auditar_relatorios/
+│   ├── test_config.py
+│   ├── test_backup.py
+│   └── test_middleware.py
+├── auditar_softskills/
+│   ├── test_config.py
+│   ├── test_download_softskills.py
+│   └── test_integracao_drive.py
+├── compilacao_de_relatorios/
+│   ├── test_config.py
+│   └── test_compilar_pdfs.py
+├── torpedo_de_forum/
+│   ├── test_config.py
+│   └── test_main.py
+└── services/
+    ├── test_validacao.py
+    └── test_persistencia.py
+```
+
+### Comandos
+
+```bash
+# Rodar todos com coverage
+uv run pytest
+
+# Rodar sem coverage (mais rápido para iteração)
+uv run pytest --no-cov
+
+# Rodar um módulo específico
+uv run pytest --no-cov tests/services/
+```
+
+### Padrões obrigatórios
+
+**Mocking de I/O externo** — usar `mocker` fixture do `pytest-mock`:
+```python
+def test_algo(mocker):
+    mocker.patch("scripthub.scripts.<modulo>.<arquivo>.<funcao>", return_value=...)
+```
+
+**Config loading** — substituir `DIRETORIO_BASE` via `monkeypatch`:
+```python
+def test_config(tmp_path, monkeypatch):
+    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
+    (tmp_path / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
+    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+```
+
+**Casos data-driven** — usar `@pytest.mark.parametrize`:
+```python
+@pytest.mark.parametrize("entrada,esperado", [...])
+def test_funcao(entrada, esperado):
+    assert funcao(entrada) == esperado
+```
+
+### O que NÃO testar
+
+- Playwright real (fazer_login, publicar_no_forum) — teste apenas funções puras como `carregar_conteudo`, `_md_para_html`
+- Geração de PDF com FPDF — instanciar `RelatorioPDF` requer fontes instaladas
+- Google API real — sempre mockar `build`, `Credentials.from_service_account_file`, `gspread.authorize`
+- pentefino Core real — mockar `executar_analise_core`

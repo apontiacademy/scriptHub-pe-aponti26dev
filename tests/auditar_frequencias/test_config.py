@@ -16,7 +16,10 @@ def settings_valido(tmp_path):
                 "Turma B": "https://example.com/freq?id=2",
             },
             "caminhoExportacao": str(tmp_path / "output"),
-        }
+        },
+        "gsheets": {
+            "idPlanilha": "planilha-id-123",
+        },
     }
 
 

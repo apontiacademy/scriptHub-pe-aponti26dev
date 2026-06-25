@@ -25,7 +25,35 @@ scripthub = "scripthub.cli:run"
 [dependency-groups]
 dev = [
     "pytest",
+    "pytest-cov",
+    "pytest-mock",
     "ruff",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short --strict-markers --cov=scripthub --cov-report=term-missing --cov-fail-under=80"
+markers = [
+    "unit: testes unitários sem I/O externo",
+    "integration: testes com I/O de arquivo real",
+]
+
+[tool.coverage.run]
+omit = [
+    # Automação Playwright — requer browser real
+    "src/scripthub/scripts/*/exportar_frequencias.py",
+    "src/scripthub/scripts/*/download_de_relatorios.py",
+    "src/scripthub/scripts/auditar_softskills/main.py",
+    "src/scripthub/scripts/torpedo_de_forum/main.py",
+    # FPDF — requer fontes e renderização
+    "src/scripthub/scripts/compilacao_de_relatorios/compilar_pdfs.py",
+    # Questionary UI interativa
+    "src/scripthub/services/config/ui.py",
+    "src/scripthub/services/config/main.py",
+    "src/scripthub/services/menu/main.py",
+    # CLI e i18n — patching de Typer/Click
+    "src/scripthub/cli.py",
+    "src/scripthub/_i18n.py",
 ]
 
 [build-system]
