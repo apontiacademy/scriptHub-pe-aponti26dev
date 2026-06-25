@@ -4,6 +4,7 @@ from typing import Any
 
 from dotenv import dotenv_values, set_key
 
+from .. import log
 from .campo import Campo
 
 _SCRIPTS_FOLDER = Path(__file__).resolve().parents[2] / "scripts"
@@ -70,7 +71,7 @@ def persistir(nome_script: str, campos: list[Campo], valores: dict[str, Any]) ->
                 try:
                     settings: dict = json.load(f)
                 except json.JSONDecodeError:
-                    print(f"  ⚠️  {settings_path} estava corrompido e será reescrito.")
+                    log.aviso(f"{settings_path} estava corrompido e será reescrito.")
                     settings = {}
         else:
             settings = {}

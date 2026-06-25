@@ -677,7 +677,7 @@ wheels = [
 [[package]]
 name = "pentefinocli-pe-aponti26dev"
 version = "0.1.0"
-source = { git = "ssh://git@github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git?rev=main#736557b5a42c64d61adf96e1def2e5edeea97af1" }
+source = { git = "https://github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git?rev=main#736557b5a42c64d61adf96e1def2e5edeea97af1" }
 dependencies = [
     { name = "pandas" },
 ]
@@ -1028,7 +1028,7 @@ requires-dist = [
     { name = "gspread", specifier = ">=6.2.1" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=3.0.3" },
-    { name = "pentefinocli-pe-aponti26dev", git = "ssh://git@github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git?rev=main" },
+    { name = "pentefinocli-pe-aponti26dev", git = "https://github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git?rev=main" },
     { name = "playwright", specifier = ">=1.60.0" },
     { name = "questionary", specifier = ">=2.1.1" },
     { name = "typer", specifier = ">=0.26.7" },

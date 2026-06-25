@@ -65,4 +65,5 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.uv.sources]
-pentefinocli-pe-aponti26dev = { git = "ssh://git@github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git", rev = "main" }
+pentefinocli-pe-aponti26dev = { git = "https://github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git", rev = "main" }
+

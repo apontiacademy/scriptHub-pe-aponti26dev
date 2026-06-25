@@ -18,7 +18,14 @@ def _pt_BR(msg: str) -> str:
     return TRADUCOES.get(msg, msg)
 
 
+_installed = False
+
+
 def instalar() -> None:
+    global _installed
+    if _installed:
+        return
+    _installed = True
     _patch_rich_utils()
     _patch_typer_core()
     _patch_vendored_click()

@@ -76,7 +76,11 @@ def discover_modules(scripts_folder: Path) -> list[tuple[str, tuple[str, ...], s
 
 
 def run_module(cmd: tuple[str, ...]) -> int:
-    scripthub_exe = shutil.which("scripthub") or "scripthub"
+    scripthub_exe = (
+        shutil.which("scripthub", path=str(Path(sys.executable).parent))
+        or shutil.which("scripthub")
+        or "scripthub"
+    )
     result = subprocess.run([scripthub_exe, *cmd], check=False)
     return result.returncode
 
@@ -120,6 +124,6 @@ def main() -> None:
 
     print()
     if returncode == 0:
-        log.ok(f"{name} finalizado com sucesso.")
+        log.ok(f"{name} finalizado com sucesso (código 0).")
     else:
         log.erro(f"{name} finalizado com erro (código {returncode}).")
