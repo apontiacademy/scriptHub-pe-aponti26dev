@@ -71,12 +71,20 @@ def _carregar_config(fn, nome_script: str):
         raise typer.Exit(1)
 
 
+def _help_passo(escopos) -> str:
+    partes = " | ".join(
+        f"{e.slug} ({', '.join(e.aliases)})" if e.aliases else e.slug
+        for e in escopos
+    )
+    return f"Executar somente um passo do pipeline. Passos: {partes}"
+
+
 @app.command()
 @app.command("f", hidden=True)
 def frequencias(
     passo: Annotated[
-        int | None,
-        typer.Option("--passo", "-p", help="Executar somente o passo N do pipeline (começa em 1)."),
+        str | None,
+        typer.Option("--passo", "-p", help=_help_passo(auditar_frequencias.ESCOPOS)),
     ] = None,
 ):
     """Exporta frequências de presença do Moodle para o Google Sheets."""
@@ -92,8 +100,8 @@ def relatorios(
         typer.Argument(help="Modo de execução: 'auditar' (pipeline completo) ou 'compilar' (gerar PDFs)."),
     ],
     passo: Annotated[
-        int | None,
-        typer.Option("--passo", "-p", help="Executar somente o passo N do pipeline (começa em 1; indisponível no modo 'compilar')."),
+        str | None,
+        typer.Option("--passo", "-p", help=_help_passo(auditar_relatorios.ESCOPOS) + " (apenas no modo 'auditar')"),
     ] = None,
 ):
     """Processa relatórios no modo 'auditar' (pipeline completo) ou 'compilar' (gerar PDFs)."""
@@ -112,8 +120,8 @@ def relatorios(
 @app.command("ra", hidden=True)
 def relatorios_auditar(
     passo: Annotated[
-        int | None,
-        typer.Option("--passo", "-p", help="Executar somente o passo N do pipeline (começa em 1)."),
+        str | None,
+        typer.Option("--passo", "-p", help=_help_passo(auditar_relatorios.ESCOPOS)),
     ] = None,
 ):
     """Alias para 'scripthub relatorios auditar'."""
@@ -171,26 +179,34 @@ def config(
         config_service(script)
 
 
-def executar_script(config, escopos, passo: int | None, titulo: str):
+def executar_script(config, escopos, passo: str | None, titulo: str):
     log.secao(titulo)
     total = len(escopos)
 
     try:
         if passo is None:
-            for i, (nome, func) in enumerate(escopos, 1):
-                log.secao(f"PASSO {i}/{total} — {nome}")
-                func(config)
-        elif passo <= 0 or passo > total:
-            log.erro(f"Passo inválido: deve ser entre 1 e {total}.")
-            raise typer.Exit(1)
+            for i, e in enumerate(escopos, 1):
+                log.secao(f"PASSO {i}/{total} — {e.nome}")
+                e.func(config)
         else:
-            nome, func = escopos[passo - 1]
-            log.secao(f"PASSO {passo}/{total} — {nome}")
-            func(config)
+            match = next(
+                ((i + 1, e) for i, e in enumerate(escopos) if passo in (e.slug, *e.aliases)),
+                None,
+            )
+            if match is None:
+                disponiveis = " | ".join(
+                    f"{e.slug} ({', '.join(e.aliases)})" if e.aliases else e.slug
+                    for e in escopos
+                )
+                log.erro(f"Passo '{passo}' inválido. Disponíveis: {disponiveis}")
+                raise typer.Exit(1)
+            i, e = match
+            log.secao(f"PASSO {i}/{total} — {e.nome}")
+            e.func(config)
     except (typer.Exit, SystemExit):
         raise
-    except Exception as e:
-        log.erro(f"Erro durante execução: {e}")
+    except Exception as exc:
+        log.erro(f"Erro durante execução: {exc}")
         raise typer.Exit(1)
 
     log.ok("PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")

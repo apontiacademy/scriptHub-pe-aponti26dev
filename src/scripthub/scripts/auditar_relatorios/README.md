@@ -5,13 +5,31 @@ Pipeline completo de automação de relatórios do Moodle: baixa as respostas do
 ## Pipeline
 
 ```
-Escopo 1 — Download de relatórios (Playwright)
+Passo 1 — extrair:  Extração de relatórios (Moodle/Playwright)
     ↓
-Escopo 2 — Análise pente-fino (auditoria_de_relatorios)
+Passo 2 — analisar: Análise pente-fino (middleware)
     ↓
-Escopo 3 — Sincronização com Google Sheets
+Passo 3 — integrar: Sincronização com Google Sheets
     ↓
-Escopo 4 — Backup local em .xlsx
+Passo 4 — salvar:   Backup local em .xlsx
+```
+
+## Execução parcial
+
+Use `--passo` (ou `-p`) para executar apenas um passo do pipeline:
+
+| Slug | Alias | Descrição |
+|---|---|---|
+| `extrair` | `e` | Baixa os relatórios do Moodle via Playwright |
+| `analisar` | `a` | Analisa quem enviou ou não (middleware) |
+| `integrar` | `i` | Envia os dados ao Google Sheets |
+| `salvar` | `s` | Gera backup local em `.xlsx` |
+
+```bash
+uv run scripthub relatorios auditar --passo extrair   # só baixa relatórios
+uv run scripthub relatorios auditar -p e              # idem, forma curta
+uv run scripthub relatorios auditar --passo analisar  # só analisa
+uv run scripthub relatorios auditar -p s              # só faz backup
 ```
 
 ## Como rodar
@@ -23,13 +41,7 @@ Escopo 4 — Backup local em .xlsx
 > ```
 
 ```bash
-python3 -m automacao_de_relatorios
-```
-
-Ou pelo menu interativo:
-
-```bash
-python3 menu.py
+uv run scripthub relatorios auditar
 ```
 
 ## Configuração

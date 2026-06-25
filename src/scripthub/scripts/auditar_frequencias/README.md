@@ -2,6 +2,29 @@
 
 Extrai dados de frequência do Moodle e exporta um arquivo `.xlsx` por turma.
 
+Pipeline:
+
+```
+Passo 1 — exportar: Exportação de frequências (Moodle)
+    ↓
+Passo 2 — integrar: Integração (Google Sheets)
+```
+
+## Execução parcial
+
+Use `--passo` (ou `-p`) para executar apenas um passo do pipeline:
+
+| Slug | Alias | Descrição |
+|---|---|---|
+| `exportar` | `e` | Baixa as frequências do Moodle e exporta `.xlsx` |
+| `integrar` | `i` | Envia os dados ao Google Sheets |
+
+```bash
+uv run scripthub frequencias --passo exportar   # só baixa do Moodle
+uv run scripthub frequencias -p e               # idem, forma curta
+uv run scripthub frequencias --passo integrar   # só integra com Sheets
+```
+
 ## Como rodar
 
 > Na primeira vez, instale o navegador do Playwright:
@@ -11,13 +34,7 @@ Extrai dados de frequência do Moodle e exporta um arquivo `.xlsx` por turma.
 > ```
 
 ```bash
-python3 -m automacao_de_frequencias
-```
-
-Ou pelo menu interativo:
-
-```bash
-python3 menu.py
+uv run scripthub frequencias
 ```
 
 ## Configuração
