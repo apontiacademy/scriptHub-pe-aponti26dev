@@ -17,7 +17,6 @@ def _make_config(tmp_path, id_planilha="planilha-id-123"):
             usuario="user",
             senha="pass",
             caminho_download_relatorio=tmp_path / "relatorios",
-            headless=True,
             csv_residentes=tmp_path / "residentes.csv",
             csv_saida_analise=tmp_path / "resultado.csv",
             url_login="https://example.com/login",

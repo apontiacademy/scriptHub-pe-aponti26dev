@@ -37,7 +37,6 @@ def _make_config(tmp_path):
             usuario="user",
             senha="pass",
             url_login="https://moodle.example.com/login/index.php",
-            headless=True,
             caminho_download=tmp_path / "relatorios",
             meses={"Janeiro": ["https://moodle.example.com/jan1"]},
         ),

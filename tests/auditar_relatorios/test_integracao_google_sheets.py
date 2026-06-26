@@ -17,7 +17,6 @@ def config(tmp_path):
             usuario="user",
             senha="pass",
             caminho_download_relatorio=tmp_path / "relatorios",
-            headless=True,
             csv_residentes=tmp_path / "residentes.csv",
             csv_saida_analise=csv_saida,
             url_login="https://example.com/login",

@@ -47,7 +47,6 @@ def _make_config(tmp_path):
             usuario="user",
             senha="pass",
             caminho_download_relatorio=tmp_path / "relatorios",
-            headless=True,
             csv_residentes=tmp_path / "residentes.csv",
             csv_saida_analise=tmp_path / "resultado.csv",
             url_login="https://moodle.example.com/login/index.php",
