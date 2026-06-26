@@ -41,9 +41,9 @@ SOFTSKILLS_KEYWORDS = ["soft skills", "softskills", "soft skill"]
 def login(session, config: Config):
     page = session.get(f"{config.moodle.url}/login/index.php")
     soup = BeautifulSoup(page.text, "html.parser")
-    tags = soup.find("input", {"name": "logintoken"})
-    token = tags["value"] if tags is not None else None
-    session.post(
+    token_input = soup.find("input", {"name": "logintoken"})
+    token = token_input["value"] if token_input is not None else ""
+    resp = session.post(
         f"{config.moodle.url}/login/index.php",
         data={
             "username": config.moodle.usuario,
@@ -52,6 +52,11 @@ def login(session, config: Config):
             "anchor": "",
         },
     )
+    if "/login/" in resp.url:
+        raise RuntimeError(
+            f"Login falhou — verifique MOODLE_USUARIO e MOODLE_SENHA no arquivo .env\n"
+            f"  URL retornada: {resp.url}"
+        )
     log.ok("Login OK")
 
 
@@ -74,7 +79,7 @@ def get_turmas(session, config: Config):
     return turmas
 
 
-def get_quiz_ids(session, course_url):
+def get_quiz_ids(session, course_url, config: Config, debug=False):
     resp = session.get(course_url)
     soup = BeautifulSoup(resp.text, "html.parser")
     ids = {"activities": {}, "avaliativa": None}
@@ -100,6 +105,30 @@ def get_quiz_ids(session, course_url):
                 if "software" not in text and "letramento" not in text:
                     ids["avaliativa"] = qid
                     seen.add(qid)
+
+    if debug and not ids["activities"]:
+        all_tags = soup.find_all("a", href=True)
+        all_hrefs = [str(a.get("href", "")) for a in all_tags]
+        all_texts = [a.text.strip() for a in all_tags]
+        quiz_links = [(h, t) for h, t in zip(all_hrefs, all_texts) if "quiz" in h.lower()]
+        course_links = [(h, t) for h, t in zip(all_hrefs, all_texts) if "course/view.php" in h]
+        title = soup.find("title")
+
+        log.aviso(f"[DEBUG] URL curso: {course_url}")
+        log.aviso(f"[DEBUG] Título: {title.text.strip() if title else '(sem título)'}")
+        log.aviso(f"[DEBUG] {len(all_hrefs)} links | {len(quiz_links)} com 'quiz' | {len(course_links)} sub-cursos")
+        if quiz_links:
+            log.aviso("[DEBUG] Links quiz:")
+            for h, t in quiz_links[:10]:
+                log.aviso(f"[DEBUG]   {h!r} → {t!r}")
+        if course_links:
+            log.aviso("[DEBUG] Sub-cursos na página:")
+            for h, t in course_links[:5]:
+                log.aviso(f"[DEBUG]   {h!r} → {t!r}")
+        if not quiz_links and not course_links:
+            log.aviso("[DEBUG] Primeiros 15 hrefs:")
+            for h, t in zip(all_hrefs[:15], all_texts[:15]):
+                log.aviso(f"[DEBUG]   {h!r} → {t!r}")
 
     return ids
 
@@ -209,11 +238,17 @@ def turmas_do_disco(config: Config) -> list:
     return sorted(d.name for d in output_dir.iterdir() if d.is_dir() and d.name.isdigit())
 
 
+_ARQUIVOS_NAO_CACHE = {"softskills_resultado.csv", "aprovados_bootcamp_fap2026.csv"}
+
+
 def aprovados_ja_baixados(config: Config) -> bool:
     aprovados_dir = config.aprovados_dir
     if not aprovados_dir.is_dir():
         return False
-    return any(f.suffix == ".csv" for f in aprovados_dir.iterdir())
+    return any(
+        f.suffix == ".csv" and f.name not in _ARQUIVOS_NAO_CACHE
+        for f in aprovados_dir.iterdir()
+    )
 
 
 def aprovados_do_disco(config: Config) -> dict:

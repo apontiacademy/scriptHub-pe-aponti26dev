@@ -38,10 +38,10 @@ def main():
         log.passo(f"{len(turmas_nums)} turmas: {turmas_nums}")
 
         log.passo("Baixando atividades...")
-        for turma_num in turmas_nums:
+        for i, turma_num in enumerate(turmas_nums):
             turma_dir = config.output_dir / turma_num
             turma_dir.mkdir(parents=True, exist_ok=True)
-            quiz_ids = download_softskills.get_quiz_ids(session, turmas[turma_num])
+            quiz_ids = download_softskills.get_quiz_ids(session, turmas[turma_num], config, debug=(i == 0))
             log.passo(f"Turma {turma_num}:")
 
             for label, fname in download_softskills.ACTIVITIES:
@@ -138,41 +138,64 @@ def main():
         log.aviso(f"Turmas sem notas: {sem_notas} (alunos ainda não responderam)")
 
     # ── 3. Build aprovados_bootcamp_fap2026.csv ───────────────────────────────
-    if download_softskills.aprovados_ja_baixados(config):
-        log.passo("[CACHE] Dados dos aprovados já existem em disco — pulando download.")
-        approved = download_softskills.aprovados_do_disco(config)
-        log.passo(f"{len(approved)} aprovados carregados do disco.")
-    else:
-        if session is None:
-            session = requests.Session()
-            session.headers.update({"User-Agent": "Mozilla/5.0"})
-            download_softskills.login(session, config)
+    ap_path = _Path(__file__).resolve().parent / "aprovados_bootcamp_fap2026.csv"
+    approved = {}
 
-        log.passo("Coletando aprovados...")
-        approved_courses = download_softskills.get_approved_courses(session, config)
-        log.passo(f"{len(approved_courses)} cursos encontrados")
+    if ap_path.exists():
+        with open(ap_path, encoding="utf-8-sig") as f:
+            for row in csv.DictReader(f):
+                email = row.get("E-mail", "").strip().lower()
+                if not email or email in approved:
+                    continue
+                trilha = row.get("Trilha", "").strip()
+                turma_str = row.get("Turma Trilha", "").strip()
+                try:
+                    turma_num = str(int(float(turma_str))).zfill(2) if turma_str else ""
+                except ValueError:
+                    turma_num = turma_str
+                approved[email] = {
+                    "nome": row.get("Nome Completo", "").strip(),
+                    "email": email,
+                    "trilha_raw": f"{trilha} - Turma {turma_num}" if trilha and turma_num else trilha,
+                }
+        if approved:
+            log.passo(f"{len(approved)} aprovados carregados do backup local.")
 
-        config.aprovados_dir.mkdir(parents=True, exist_ok=True)
-        ap_part_fieldnames = ["nome", "email", "trilha_raw"]
+    if not approved:
+        if download_softskills.aprovados_ja_baixados(config):
+            log.passo("[CACHE] Dados dos aprovados já existem em disco — pulando download.")
+            approved = download_softskills.aprovados_do_disco(config)
+            log.passo(f"{len(approved)} aprovados carregados do disco.")
+        else:
+            if session is None:
+                session = requests.Session()
+                session.headers.update({"User-Agent": "Mozilla/5.0"})
+                download_softskills.login(session, config)
 
-        approved = {}
-        for cid, name in approved_courses.items():
-            parts = download_softskills.get_course_participants(session, cid, name, config)
-            new = 0
-            for p in parts:
-                if p["email"] not in approved:
-                    approved[p["email"]] = p
-                    new += 1
-            log.passo(f"{name}: {len(parts)} participantes ({new} novos)")
+            log.passo("Coletando aprovados...")
+            approved_courses = download_softskills.get_approved_courses(session, config)
+            log.passo(f"{len(approved_courses)} cursos encontrados")
 
-            safe_name = re.sub(r"[^\w\s-]", "", name).strip().replace(" ", "_")
-            ap_course_path = config.aprovados_dir / f"{safe_name}.csv"
-            with open(ap_course_path, "w", newline="", encoding="utf-8-sig") as f:
-                writer = csv.DictWriter(f, fieldnames=ap_part_fieldnames)
-                writer.writeheader()
-                writer.writerows(parts)
+            config.aprovados_dir.mkdir(parents=True, exist_ok=True)
+            ap_part_fieldnames = ["nome", "email", "trilha_raw"]
 
-            time.sleep(0.2)
+            for cid, name in approved_courses.items():
+                parts = download_softskills.get_course_participants(session, cid, name, config)
+                new = 0
+                for p in parts:
+                    if p["email"] not in approved:
+                        approved[p["email"]] = p
+                        new += 1
+                log.passo(f"{name}: {len(parts)} participantes ({new} novos)")
+
+                safe_name = re.sub(r"[^\w\s-]", "", name).strip().replace(" ", "_")
+                ap_course_path = config.aprovados_dir / f"{safe_name}.csv"
+                with open(ap_course_path, "w", newline="", encoding="utf-8-sig") as f:
+                    writer = csv.DictWriter(f, fieldnames=ap_part_fieldnames)
+                    writer.writeheader()
+                    writer.writerows(parts)
+
+                time.sleep(0.2)
 
     ap_fieldnames = [
         "Nome Completo",
@@ -211,13 +234,12 @@ def main():
             }
         )
 
-    ap_path = _Path(__file__).resolve().parent / "aprovados_bootcamp_fap2026.csv"
     with open(ap_path, "w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=ap_fieldnames)
         writer.writeheader()
         writer.writerows(ap_rows)
 
-    sem_ss = sum(1 for r in ap_rows if not r["Nota Gestão de Tempo"])
+    sem_ss = sum(1 for r in ap_rows if r["Nota Gestão de Tempo"] == "0")
     log.passo("Construindo aprovados_bootcamp_fap2026.csv...")
     log.ok(f"{ap_path} — {len(ap_rows)} aprovados ({len(ap_rows) - sem_ss} com notas soft skills)")
 

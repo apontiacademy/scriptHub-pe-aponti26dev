@@ -41,7 +41,7 @@ class Config:
         credentials_raw = drive_json.get("credentialsPath", "credentials.json")
         credentials_path = Path(credentials_raw)
         if not credentials_path.is_absolute():
-            credentials_path = (DIRETORIO_BASE.parent / credentials_path).resolve()
+            credentials_path = (DIRETORIO_BASE / credentials_path).resolve()
 
         output_dir_raw = dados_settings.get("outputDir", "bootcamps")
         aprovados_dir_raw = dados_settings.get("aprovadosDir", "aprovados")
@@ -49,7 +49,7 @@ class Config:
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
-            url=moodle_json["url"],
+            url=moodle_json["urlBase"].rstrip("/"),
             bootcamp_cat_id=moodle_json["bootcampCatId"],
             aprovados_cat_id=moodle_json["aprovadosCatId"],
         )

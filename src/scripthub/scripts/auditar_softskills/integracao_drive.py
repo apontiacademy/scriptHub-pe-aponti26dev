@@ -85,7 +85,8 @@ def upload_to_drive(file_path: str, config: Config) -> None:
         num_cols = {i for i, col in enumerate(header) if col.startswith("Nota") or col == "Turma Trilha"}
         data = [[_parse(cell) if i in num_cols else cell for i, cell in enumerate(row)] for row in reader]
 
-    ws.clear()
+    # Limpa apenas as colunas de dados (A:L), preservando M em diante (ex: Lista Filtrada)
+    ws.batch_clear(["A:L"])
     ws.update([header] + data)
 
     # Aplica formato 0.00 nas colunas numéricas
