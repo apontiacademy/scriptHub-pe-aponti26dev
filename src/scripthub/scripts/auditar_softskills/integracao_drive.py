@@ -46,7 +46,7 @@ def upload_to_drive(file_path: str, config: Config) -> None:
         )
         log.passo("Nova planilha criada no Drive.")
 
-    gc = GoogleSheetsClient(config.drive.credentials_path)
+    gc = GoogleSheetsClient(config.drive.credentials_path, _SCOPES)
     sh = gc.planilha(sheet_id)
     ws = gc.obter_ou_criar_aba(sh, "Dados", linhas=10000, colunas=20)
 

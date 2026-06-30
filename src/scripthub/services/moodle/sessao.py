@@ -54,14 +54,24 @@ class MoodleSessao:
         )
         if "/login/" in post_resp.url:
             raise RuntimeError(
-                "Login falhou: credenciais inválidas ou redirecionado para a tela de login"
+                "Login falhou: redirecionado para a tela de login"
             )
+        post_soup = BeautifulSoup(post_resp.text, "html.parser")
+        if post_soup.find("input", {"name": "logintoken"}):
+            raise RuntimeError("Login falhou: credenciais inválidas")
         log.ok("Login OK")
 
     # ── requisições genéricas ─────────────────────────────────────────────────
 
+    @property
+    def cookies(self) -> requests.cookies.RequestsCookieJar:
+        return self._session.cookies
+
     def get(self, url: str, **kwargs) -> requests.Response:
-        return self._session.get(url, **kwargs)
+        resp = self._session.get(url, **kwargs)
+        if "/login/" in resp.url:
+            raise RuntimeError(f"Sessão expirada ao acessar: {url}")
+        return resp
 
     def post(self, url: str, **kwargs) -> requests.Response:
         return self._session.post(url, **kwargs)

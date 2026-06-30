@@ -8,8 +8,11 @@ import gspread
 class GoogleSheetsClient:
     """Wrapper de autenticação e operações comuns do Google Sheets via gspread."""
 
-    def __init__(self, creds_path: Path) -> None:
-        self._gc = gspread.service_account(filename=str(creds_path))
+    def __init__(self, creds_path: Path, scopes: list[str] | None = None) -> None:
+        kwargs: dict = {"filename": str(creds_path)}
+        if scopes:
+            kwargs["scopes"] = scopes
+        self._gc = gspread.service_account(**kwargs)
 
     def planilha(self, spreadsheet_id: str):
         """Abre e retorna uma planilha pelo ID. Lança RuntimeError se não existir."""

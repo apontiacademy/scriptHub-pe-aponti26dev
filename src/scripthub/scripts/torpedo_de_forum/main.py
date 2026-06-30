@@ -92,7 +92,7 @@ def _injetar_cookies(contexto, sessao: MoodleSessao) -> None:
     base_url = f"{parsed.scheme}://{parsed.netloc}"
     cookies = [
         {"name": c.name, "value": c.value, "url": base_url, "path": c.path or "/"}
-        for c in sessao._session.cookies
+        for c in sessao.cookies
     ]
     if cookies:
         contexto.add_cookies(cookies)
@@ -318,6 +318,7 @@ def publicar_no_forum(
         if _sessao_expirada(page):
             log.passo("Sessão expirada — refazendo login...")
             sessao.login()
+            page.context.clear_cookies()
             _injetar_cookies(page.context, sessao)
             page.goto(forum_url, timeout=30_000)
         log.passo("Clicando em 'Novo tópico'...")
