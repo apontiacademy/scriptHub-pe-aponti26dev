@@ -16,18 +16,28 @@ def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho
     resp = sessao.get(url)
     soup = BeautifulSoup(resp.text, "html.parser")
 
-    form = soup.find("form")
+    form = next(
+        (f for f in soup.find_all("form") if "/login/" not in f.get("action", "")),
+        None,
+    )
     if not form:
         raise RuntimeError(f"Formulário de exportação não encontrado em {url}")
 
-    # Coleta campos ocultos
+    # Coleta campos hidden/checkbox e o primeiro submit
     data = {}
+    submit_adicionado = False
     for inp in form.find_all("input"):
         tipo = inp.get("type", "text").lower()
         name = inp.get("name")
-        if not name or tipo in ("submit", "button"):
+        if not name:
             continue
-        if tipo == "checkbox":
+        if tipo == "submit":
+            if not submit_adicionado:
+                data[name] = inp.get("value", "")
+                submit_adicionado = True
+        elif tipo == "button":
+            continue
+        elif tipo == "checkbox":
             if inp.get("checked"):
                 data[name] = inp.get("value", "1")
         else:
