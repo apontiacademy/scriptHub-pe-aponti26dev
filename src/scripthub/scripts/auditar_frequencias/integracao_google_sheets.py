@@ -1,18 +1,14 @@
-import sys
-from pathlib import Path
-
 import gspread
 import pandas as pd
 
 from scripthub.services import log
+from scripthub.services.google.sheets import GoogleSheetsClient
 
 from .config import Config
 
-DIRETORIO_BASE = Path(__file__).resolve().parent
 
-
-def main(config: Config):
-    """Função principal que orquestra o Escopo 2 (Integração com Google Sheets)."""
+def main(config: Config) -> None:
+    """Integra os arquivos XLSX de frequência com o Google Sheets."""
     caminho_exportacao = config.moodle.caminho_exportacao
     caminho_credenciais = config.gsheets.caminho_json_credenciais
     id_planilha = config.gsheets.id_planilha
@@ -27,64 +23,40 @@ def main(config: Config):
         raise RuntimeError("id_planilha não configurado no arquivo de configurações.")
 
     arquivos_xlsx = list(caminho_exportacao.glob("*.xlsx"))
-
     if not arquivos_xlsx:
         raise RuntimeError(
             "Nenhum arquivo XLSX encontrado no diretório de exportação. "
             "Certifique-se de rodar o Escopo 1 antes."
         )
 
-    try:
-        log.passo("Autenticando com a API do Google...")
-        gc = gspread.service_account(filename=str(caminho_credenciais))
+    log.passo("Autenticando com a API do Google...")
+    client = GoogleSheetsClient(caminho_credenciais)
 
-        log.passo("Abrindo a planilha por ID...")
-        planilha = gc.open_by_key(id_planilha)
+    log.passo("Abrindo a planilha por ID...")
+    planilha = client.planilha(id_planilha)
 
-        falhas = []
-        for arquivo_xlsx in arquivos_xlsx:
-            nome_arquivo = arquivo_xlsx.stem
-            log.passo(f"Processando arquivo: {arquivo_xlsx.name}")
+    falhas = []
+    for arquivo_xlsx in arquivos_xlsx:
+        nome_arquivo = arquivo_xlsx.stem
+        log.passo(f"Processando arquivo: {arquivo_xlsx.name}")
 
-            try:
-                df = pd.read_excel(arquivo_xlsx)
-                df = df.fillna("")
-                df.columns = df.columns.str.replace(r"^Unnamed: \d+$", "", regex=True)
-                dados_para_upload = [df.columns.tolist()] + df.values.tolist()
-            except Exception as e:
-                log.erro(f"Falha ao ler o arquivo {arquivo_xlsx.name}: {e}")
-                falhas.append(arquivo_xlsx.name)
-                continue
+        try:
+            df = pd.read_excel(arquivo_xlsx)
+            df = df.fillna("")
+            df.columns = df.columns.str.replace(r"^Unnamed: \d+$", "", regex=True)
+            dados_para_upload = [df.columns.tolist()] + df.values.tolist()
+        except Exception as e:
+            log.erro(f"Falha ao ler o arquivo {arquivo_xlsx.name}: {e}")
+            falhas.append(arquivo_xlsx.name)
+            continue
 
-            try:
-                worksheet = planilha.worksheet(nome_arquivo)
-                log.passo(f"Página '{nome_arquivo}' já existe, atualizando...")
-            except gspread.exceptions.WorksheetNotFound:
-                log.passo(f"Criando nova página: '{nome_arquivo}'")
-                worksheet = planilha.add_worksheet(title=nome_arquivo, rows=100, cols=20)
+        aba = client.obter_ou_criar_aba(planilha, nome_arquivo)
+        log.passo(f"Atualizando dados na página '{nome_arquivo}'...")
+        aba.clear()
+        aba.update(range_name="A1", values=dados_para_upload)
+        log.ok(f"Página '{nome_arquivo}' atualizada com sucesso!")
 
-            log.passo(f"Atualizando dados na página '{nome_arquivo}'...")
-            worksheet.clear()
-            worksheet.update(range_name="A1", values=dados_para_upload)
-            log.ok(f"Página '{nome_arquivo}' atualizada com sucesso!")
+    if falhas:
+        raise RuntimeError(f"{len(falhas)} arquivo(s) falharam: {', '.join(falhas)}")
 
-        if falhas:
-            raise RuntimeError(f"{len(falhas)} arquivo(s) falharam: {', '.join(falhas)}")
-
-        log.ok("Escopo 2 finalizado com sucesso!")
-
-    except gspread.exceptions.SpreadsheetNotFound:
-        raise RuntimeError(f"A planilha com ID '{id_planilha}' não foi encontrada.")
-    except RuntimeError:
-        raise
-    except Exception as e:
-        log.erro(f"Erro inesperado durante a integração com o Google Sheets: {e}")
-        raise
-
-
-if __name__ == "__main__":
-    try:
-        main(Config.load())
-    except Exception as e:
-        log.erro(str(e))
-        sys.exit(1)
+    log.ok("Escopo 2 finalizado com sucesso!")

@@ -5,7 +5,7 @@ import pytest
 from scripthub.scripts.auditar_relatorios.backup import main, realizar_backup_xlsx_local
 from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
 
-_PATCH_BASE = "scripthub.scripts.auditar_relatorios.backup"
+_PATCH = "scripthub.scripts.auditar_relatorios.backup"
 
 
 def _make_config(tmp_path, id_planilha="planilha-id-123"):
@@ -17,7 +17,6 @@ def _make_config(tmp_path, id_planilha="planilha-id-123"):
             usuario="user",
             senha="pass",
             caminho_download_relatorio=tmp_path / "relatorios",
-            headless=True,
             csv_residentes=tmp_path / "residentes.csv",
             csv_saida_analise=tmp_path / "resultado.csv",
             url_login="https://example.com/login",
@@ -35,11 +34,10 @@ def _make_config(tmp_path, id_planilha="planilha-id-123"):
 
 
 def _setup_drive_mock(mocker, sheet_name="Planilha Teste", xlsx_content=b"xlsx-content"):
-    mocker.patch(f"{_PATCH_BASE}.Credentials.from_service_account_file")
-    mock_service = mocker.patch(f"{_PATCH_BASE}.build").return_value
-    mock_service.files.return_value.get.return_value.execute.return_value = {"name": sheet_name}
-    mock_service.files.return_value.export_media.return_value.execute.return_value = xlsx_content
-    return mock_service
+    mock_drive = mocker.patch(f"{_PATCH}.GoogleDriveClient").return_value
+    mock_drive.metadados.return_value = {"name": sheet_name}
+    mock_drive.exportar_xlsx.return_value = xlsx_content
+    return mock_drive
 
 
 def test_backup_salva_arquivo_xlsx_no_diretorio(tmp_path, mocker):
@@ -70,8 +68,8 @@ def test_backup_nome_arquivo_contem_marcador_de_backup(tmp_path, mocker):
 
 
 def test_backup_falha_api_retorna_none(tmp_path, mocker):
-    mocker.patch(f"{_PATCH_BASE}.Credentials.from_service_account_file")
-    mocker.patch(f"{_PATCH_BASE}.build").side_effect = RuntimeError("API Error")
+    mock_drive = mocker.patch(f"{_PATCH}.GoogleDriveClient")
+    mock_drive.side_effect = RuntimeError("API Error")
     backup_dir = tmp_path / "backups"
     backup_dir.mkdir()
     creds = tmp_path / "credentials.json"

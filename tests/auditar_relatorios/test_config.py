@@ -15,7 +15,6 @@ def settings_valido(tmp_path):
                 "https://example.com/relatorio1",
                 "https://example.com/relatorio2",
             ],
-            "headless": True,
             "csvResidentes": str(tmp_path / "residentes.csv"),
             "exportarAnaliseRelatorio": False,
         },
@@ -38,7 +37,6 @@ def test_load_retorna_config_completa(tmp_path, monkeypatch, settings_valido):
     assert config.moodle.senha == "pass"
     assert config.moodle.url_login == "https://example.com/login"
     assert len(config.moodle.urls_relatorios) == 2
-    assert config.moodle.headless is True
     assert config.gsheets.id_planilha == "planilha-id-123"
     assert config.gsheets.nome_aba == "Resultados"
 
