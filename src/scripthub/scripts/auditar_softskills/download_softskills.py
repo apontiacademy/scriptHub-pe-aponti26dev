@@ -8,7 +8,7 @@ from scripthub.services import log
 
 from .config import Config
 
-# ── Constants (public) ────────────────────────────────────────────────────────
+# ── Constants ─────────────────────────────────────────────────────────────────
 
 ACTIVITIES = [
     ("Gestão de Tempo", "gestao_de_tempo"),
@@ -34,6 +34,26 @@ ACTIVITY_KEYWORDS = {
 }
 
 SOFTSKILLS_KEYWORDS = ["soft skills", "softskills", "soft skill"]
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+
+
+def login(session, config: Config):
+    page = session.get(f"{config.moodle.url}/login/index.php")
+    soup = BeautifulSoup(page.text, "html.parser")
+    tags = soup.find("input", {"name": "logintoken"})
+    token = tags["value"] if tags is not None else None
+    session.post(
+        f"{config.moodle.url}/login/index.php",
+        data={
+            "username": config.moodle.usuario,
+            "password": config.moodle.senha,
+            "logintoken": token,
+            "anchor": "",
+        },
+    )
+    log.ok("Login OK")
+
 
 # ── Bootcamp helpers ──────────────────────────────────────────────────────────
 

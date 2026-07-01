@@ -1,13 +1,11 @@
 import re
 import sys
 from pathlib import Path
-from urllib.parse import urlparse
 
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 from scripthub.services import log
-from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
 
@@ -86,16 +84,15 @@ def _md_para_html(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _injetar_cookies(contexto, sessao: MoodleSessao) -> None:
-    """Transfere cookies da sessão HTTP para o contexto do Playwright."""
-    parsed = urlparse(sessao.url_login)
-    base_url = f"{parsed.scheme}://{parsed.netloc}"
-    cookies = [
-        {"name": c.name, "value": c.value, "url": base_url, "path": c.path or "/"}
-        for c in sessao.cookies
-    ]
-    if cookies:
-        contexto.add_cookies(cookies)
+def fazer_login(page, login_url: str, username: str, password: str) -> None:
+    page.goto(login_url, timeout=30_000)
+    page.fill("#username", username)
+    page.fill("#password", password)
+    page.click("[type=submit]")
+    page.wait_for_function(
+        "() => !window.location.href.includes('/login')",
+        timeout=30_000,
+    )
 
 
 def _sessao_expirada(page) -> bool:
@@ -311,15 +308,15 @@ def publicar_no_forum(
     title: str,
     html_content: str,
     image_path: str | None,
-    sessao: MoodleSessao,
+    login_url: str,
+    username: str,
+    password: str,
 ) -> bool:
     try:
         page.goto(forum_url, timeout=30_000)
         if _sessao_expirada(page):
             log.passo("Sessão expirada — refazendo login...")
-            sessao.login()
-            page.context.clear_cookies()
-            _injetar_cookies(page.context, sessao)
+            fazer_login(page, login_url, username, password)
             page.goto(forum_url, timeout=30_000)
         log.passo("Clicando em 'Novo tópico'...")
         _clicar_novo_topico(page)
@@ -406,16 +403,13 @@ def main() -> None:
 
     resultados: dict[str, bool] = {}
 
-    log.passo(f"Fazendo login em {login_url}...")
-    sessao = MoodleSessao(login_url, username, password)
-    sessao.login()
-    log.ok("Login realizado com sucesso.")
-
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=headless)
-        context = browser.new_context()
-        _injetar_cookies(context, sessao)
-        page = context.new_page()
+        page = browser.new_page()
+
+        log.passo(f"Fazendo login em {login_url}...")
+        fazer_login(page, login_url, username, password)
+        log.ok("Login realizado com sucesso.")
 
         for i, url in enumerate(forum_urls, 1):
             log.passo(f"[{i}/{len(forum_urls)}] {url}")
@@ -425,7 +419,9 @@ def main() -> None:
                 title,
                 html_content,
                 image_path,
-                sessao,
+                login_url,
+                username,
+                password,
             )
             resultados[url] = sucesso
             if sucesso:

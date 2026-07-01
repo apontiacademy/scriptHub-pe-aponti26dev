@@ -41,6 +41,9 @@ markers = [
 [tool.coverage.run]
 omit = [
     # Automação Playwright — requer browser real
+    "src/scripthub/scripts/*/exportar_frequencias.py",
+    "src/scripthub/scripts/*/download_de_relatorios.py",
+    "src/scripthub/scripts/auditar_softskills/main.py",
     "src/scripthub/scripts/torpedo_de_forum/main.py",
     # FPDF — requer fontes e renderização
     "src/scripthub/scripts/compilacao_de_relatorios/compilar_pdfs.py",

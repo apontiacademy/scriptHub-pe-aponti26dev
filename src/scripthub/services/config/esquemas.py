@@ -95,6 +95,15 @@ ESQUEMAS: dict[str, list[Campo]] = {
             json_chaves=["moodle", "urlsRelatorios"],
         ),
         Campo(
+            chave="moodle_headless",
+            rotulo="Modo headless do navegador",
+            tipo="bool",
+            origem="settings",
+            descricao="Se verdadeiro, o navegador roda em segundo plano sem interface gráfica (padrão: sim)",
+            obrigatorio=False,
+            json_chaves=["moodle", "headless"],
+        ),
+        Campo(
             chave="moodle_exportar_analise",
             rotulo="Exportar análise dos relatórios",
             tipo="bool",
@@ -245,6 +254,14 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Mapeamento de nome do mês → lista de URLs semanais de feedback",
             json_chaves=["moodle", "meses"],
+        ),
+        Campo(
+            chave="headless",
+            rotulo="Modo headless do navegador",
+            tipo="bool",
+            origem="settings",
+            descricao="Se verdadeiro, o navegador roda em segundo plano sem interface gráfica",
+            json_chaves=["headless"],
         ),
         Campo(
             chave="pdf_caminho_saida",
