@@ -1,4 +1,4 @@
-# automacao_de_softskills
+# auditar_softskills
 
 Baixa as notas de soft skills do bootcamp no Moodle, cruza com a lista de aprovados e envia a planilha consolidada para o Google Drive.
 
@@ -20,16 +20,18 @@ Etapa 4 — Gera aprovados_bootcamp_fap2026.csv → envia ao Google Drive
 ## Como rodar
 
 ```bash
-python3 -m automacao_de_softskills
+uv run scripthub softskills
 ```
 
-Ou pelo menu interativo:
+Ou pelo menu interativo (depreciado — prefira o comando acima):
 
 ```bash
-python3 menu.py
+uv run scripthub menu
 ```
 
 ## Configuração
+
+> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config -s auditar_softskills` configura essas mesmas opções interativamente.
 
 ### 1. Variáveis de ambiente
 
@@ -54,13 +56,13 @@ cp settings.example.json settings.json
 | `moodle.bootcampCatId` | ID da categoria das turmas do bootcamp |
 | `moodle.aprovadosCatId` | ID da categoria dos cursos de aprovados por trilha |
 | `drive.folderId` | ID da pasta no Google Drive onde a planilha será enviada |
-| `drive.credentialsPath` | Caminho do `credentials.json` (relativo à raiz do projeto) |
+| `drive.credentialsPath` | Caminho do `credentials.json` (use um caminho absoluto; se relativo, resolve a partir de `src/scripthub/scripts/`) |
 | `outputDir` | Pasta local para salvar os dados do bootcamp (padrão: `bootcamps`) |
 | `aprovadosDir` | Pasta local para salvar os dados dos aprovados (padrão: `aprovados`) |
 
 ### 3. credentials.json
 
-Credenciais de conta de serviço do Google. Coloque o arquivo na raiz do projeto e compartilhe a pasta do Drive com o e-mail da conta de serviço.
+Credenciais de conta de serviço do Google. O caminho é definido por `drive.credentialsPath` (padrão: `credentials.json`) e pode ficar em qualquer lugar — use um caminho **absoluto** para evitar ambiguidade. Se for relativo, é resolvido a partir de `src/scripthub/scripts/` (não da raiz do projeto). Compartilhe a pasta do Drive com o e-mail da conta de serviço.
 
 > A pasta de destino pode ser um Shared Drive (Drive compartilhado do Google Workspace) — o módulo suporta isso via `supportsAllDrives`.
 
@@ -74,15 +76,16 @@ Credenciais de conta de serviço do Google. Coloque o arquivo na raiz do projeto
 | Resolução de Problemas | `resolucao_de_problemas.csv` |
 | Comunicação | `comunicacao.csv` |
 | Liderança Pessoal | `lideranca_pessoal.csv` |
-| Atividade Avaliativa | `atividade_avaliativa.csv` |
+| Atividade Avaliativa | `atividade_avaliativa_softskills.csv` |
 
 ## Estrutura de saída
 
 ```
-automacao_de_softskills/
+auditar_softskills/
 ├── bootcamps/
 │   ├── turma_01/
 │   │   ├── gestao_de_tempo.csv
+│   │   ├── atividade_avaliativa_softskills.csv
 │   │   └── ...
 │   └── softskills_resultado.csv
 ├── aprovados/

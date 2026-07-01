@@ -1,4 +1,4 @@
-# automacao_de_frequencias
+# auditar_frequencias
 
 Extrai dados de frequência do Moodle e exporta um arquivo `.xlsx` por turma.
 
@@ -27,17 +27,13 @@ uv run scripthub frequencias --passo integrar   # só integra com Sheets
 
 ## Como rodar
 
-> Na primeira vez, instale o navegador do Playwright:
->
-> ```bash
-> playwright install chromium
-> ```
-
 ```bash
 uv run scripthub frequencias
 ```
 
 ## Configuração
+
+> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config -s auditar_frequencias` configura essas mesmas opções interativamente.
 
 ### 1. Variáveis de ambiente
 
@@ -61,6 +57,7 @@ cp settings.example.json settings.json
 | `moodle.urlLogin` | URL de login do Moodle |
 | `moodle.urlsFrequencias` | Dicionário `{ "Nome da Turma": "URL do módulo de presença" }` |
 | `moodle.caminhoExportacao` | Pasta onde os `.xlsx` serão salvos |
+| `gsheets.idPlanilha` | ID da planilha do Google Sheets |
 
 Exemplo de `urlsFrequencias`:
 
@@ -70,6 +67,12 @@ Exemplo de `urlsFrequencias`:
   "Turma 02": "https://moodle.aponti.org.br/mod/attendance/view.php?id=5678"
 }
 ```
+
+### 3. credentials.json
+
+Necessário para a integração com Google Sheets. O caminho é fixo em `src/scripthub/scripts/auditar_frequencias/credentials.json` (dentro da pasta deste módulo) — hoje não é configurável via `settings.json` nem `scripthub config`.
+
+> A planilha deve ser compartilhada com o e-mail da conta de serviço.
 
 ## Estrutura de saída
 
@@ -84,5 +87,6 @@ caminho_exportacao/
 
 | Pacote | Uso |
 |---|---|
-| `playwright` | Automação do navegador para login e download das frequências |
+| `requests` + `beautifulsoup4` | Login e download das frequências via HTTP (sem navegador) |
+| `gspread` + `pandas` | Leitura dos `.xlsx` e escrita no Google Sheets |
 | `python-dotenv` | Leitura do `.env` |
