@@ -1,86 +1,72 @@
 import re
-import time
 from pathlib import Path
+from urllib.parse import urljoin
 
-from playwright.sync_api import sync_playwright
+from bs4 import BeautifulSoup
 
 from scripthub.services import log
+from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
 
-BASE_DIR = Path(__file__).resolve().parent
 
-
-def realizar_login(page, url_login, usuario, senha):
-    """Realiza o login no Moodle de forma agnóstica a idioma e modo de execução."""
-    log.passo("Iniciando processo de login...")
-    page.goto(url_login)
-    page.wait_for_load_state("domcontentloaded")
-
-    try:
-        # Trata possíveis sessões ativas sobrepostas
-        botao_sair = page.locator("#logininsidebaric, button:has-text('Sair'), button:has-text('Log out')").first
-        botao_sair.wait_for(state="visible", timeout=2000)
-        log.passo("Sessão fantasma detectada! Clicando em 'Sair' para limpar...")
-        botao_sair.click()
-        page.wait_for_load_state("networkidle")
-        page.goto(url_login)
-        page.wait_for_load_state("domcontentloaded")
-    except Exception:
-        pass
-
-    log.passo("Preenchendo credenciais...")
-    page.locator("#username").fill(usuario)
-
-    try:
-        page.locator("#password").fill(senha)
-    except Exception:
-        page.locator("input[name='password']").fill(senha)
-
-    try:
-        page.locator("#loginbtn").click(timeout=5000)
-        page.wait_for_load_state("networkidle")
-    except Exception:
-        page.screenshot(path=str(BASE_DIR / "debug_falha_login.png"))
-        page.locator("button[type='submit']").click()
-        page.wait_for_load_state("networkidle")
-
-    log.ok("Login realizado com sucesso!")
-
-
-def exportar_frequencia(page, url, nome_turma, caminho_saida, url_login, usuario, senha):
-    """Exporta a frequência de uma turma específica."""
+def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho_saida: Path) -> None:
+    """Baixa o XLSX de frequência de uma turma via requisição HTTP."""
     log.passo(f"Exportando frequência: {nome_turma}")
-    page.goto(url)
-    page.wait_for_load_state("networkidle")
+    resp = sessao.get(url)
+    soup = BeautifulSoup(resp.text, "html.parser")
 
-    if "login" in page.url:
-        log.passo("Sessão expirada. Reconectando...")
-        realizar_login(page, url_login, usuario, senha)
-        page.goto(url)
-        page.wait_for_load_state("networkidle")
+    form = next(
+        (f for f in soup.find_all("form") if "/login/" not in f.get("action", "")),
+        None,
+    )
+    if not form:
+        raise RuntimeError(f"Formulário de exportação não encontrado em {url}")
 
-    try:
-        checkbox = page.get_by_label(re.compile(r"observa", re.IGNORECASE))
-        if not checkbox.is_checked():
-            checkbox.check()
+    # Coleta campos hidden/checkbox e o primeiro submit
+    data = {}
+    submit_adicionado = False
+    for inp in form.find_all("input"):
+        tipo = inp.get("type", "text").lower()
+        name = inp.get("name")
+        if not name:
+            continue
+        if tipo == "submit":
+            if not submit_adicionado:
+                data[name] = inp.get("value", "")
+                submit_adicionado = True
+        elif tipo == "button":
+            continue
+        elif tipo == "checkbox":
+            if inp.get("checked"):
+                data[name] = inp.get("value", "1")
+        else:
+            data[name] = inp.get("value", "")
 
-        caminho_arquivo = caminho_saida / f"{nome_turma}.xlsx"
-        with page.expect_download(timeout=15000) as download_info:
-            page.get_by_role("button", name="OK").click()
+    # Marca o checkbox "Observa" explicitamente
+    label = form.find("label", string=re.compile(r"observa", re.IGNORECASE))
+    if label and label.get("for"):
+        inp = form.find("input", {"id": label["for"]})
+        if inp and inp.get("name"):
+            data[inp["name"]] = inp.get("value", "1")
+    else:
+        for inp in form.find_all("input", {"type": "checkbox"}):
+            if re.search(r"observa", inp.get("id", "") + inp.get("name", ""), re.IGNORECASE):
+                if inp.get("name"):
+                    data[inp["name"]] = inp.get("value", "1")
+                break
 
-        download_info.value.save_as(str(caminho_arquivo))
-        log.ok(f"Salvo em: {caminho_arquivo}")
+    action = form.get("action", url)
+    if not action.startswith("http"):
+        action = urljoin(url, action)
 
-    except Exception as e:
-        log.erro(f"ERRO ao exportar {nome_turma}: {e}")
+    arquivo = caminho_saida / f"{nome_turma}.xlsx"
+    sessao.baixar(action, arquivo, method="post", data=data)
+    log.ok(f"Salvo em: {arquivo}")
 
 
-def main(config: Config):
-    """Função principal que orquestra o pipeline de exportação de frequências."""
-    url_login = config.moodle.url_login
-    usuario = config.moodle.usuario
-    senha = config.moodle.senha
+def main(config: Config) -> None:
+    """Exporta frequências de todas as turmas via HTTP."""
     urls_frequencias = config.moodle.urls_frequencias
     caminho_saida = config.moodle.caminho_exportacao
 
@@ -89,23 +75,14 @@ def main(config: Config):
 
     caminho_saida.mkdir(parents=True, exist_ok=True)
 
-    try:
-        with sync_playwright() as p:
-            chrome_args = ["--disable-blink-features=AutomationControlled"]
-            navegador = p.chromium.launch(headless=True, args=chrome_args)
-            contexto = navegador.new_context(
-                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 "
-                "Safari/537.36",
-                viewport={"width": 1366, "height": 768},
-            )
-            pagina = contexto.new_page()
+    sessao = MoodleSessao(
+        url_login=config.moodle.url_login,
+        usuario=config.moodle.usuario,
+        senha=config.moodle.senha,
+    )
+    sessao.login()
 
-            realizar_login(pagina, url_login, usuario, senha)
+    for nome_turma, url in urls_frequencias.items():
+        exportar_frequencia(sessao, url, nome_turma, caminho_saida)
 
-            for nome_turma, url in urls_frequencias.items():
-                exportar_frequencia(pagina, url, nome_turma, caminho_saida, url_login, usuario, senha)
-                time.sleep(1.5)
-
-        log.ok("Escopo 1 finalizado com sucesso!")
-    except Exception as e:
-        log.erro(f"Escopo 1 terminou com falhas: {e}")
+    log.ok("Escopo 1 finalizado com sucesso!")

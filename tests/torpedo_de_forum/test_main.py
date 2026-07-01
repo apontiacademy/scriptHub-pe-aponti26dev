@@ -1,10 +1,12 @@
 import pytest
 
 from scripthub.scripts.torpedo_de_forum.main import (
+    _injetar_cookies,
     _md_para_html,
     carregar_conteudo,
     encontrar_imagem,
 )
+from scripthub.services.moodle import MoodleSessao
 
 
 # ── carregar_conteudo ─────────────────────────────────────────────────────────
@@ -110,3 +112,38 @@ def test_encontrar_imagem_sem_imagens_retorna_none(tmp_path):
     resultado = encontrar_imagem(tmp_path, override=None)
 
     assert resultado is None
+
+
+# ── _injetar_cookies ──────────────────────────────────────────────────────────
+
+
+def test_injetar_cookies_injeta_cookies_no_contexto(mocker):
+    mock_session = mocker.MagicMock()
+    mock_cookie = mocker.MagicMock()
+    mock_cookie.name = "MoodleSession"
+    mock_cookie.value = "abc123"
+    mock_cookie.path = "/"
+    mock_session.cookies = [mock_cookie]
+    sessao = MoodleSessao(
+        "https://moodle.example.com/login/index.php", "u", "p", _session=mock_session
+    )
+    mock_contexto = mocker.MagicMock()
+
+    _injetar_cookies(mock_contexto, sessao)
+
+    mock_contexto.add_cookies.assert_called_once_with(
+        [{"name": "MoodleSession", "value": "abc123", "url": "https://moodle.example.com", "path": "/"}]
+    )
+
+
+def test_injetar_cookies_sem_cookies_nao_chama_add_cookies(mocker):
+    mock_session = mocker.MagicMock()
+    mock_session.cookies = []
+    sessao = MoodleSessao(
+        "https://moodle.example.com/login/index.php", "u", "p", _session=mock_session
+    )
+    mock_contexto = mocker.MagicMock()
+
+    _injetar_cookies(mock_contexto, sessao)
+
+    mock_contexto.add_cookies.assert_not_called()

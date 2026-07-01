@@ -3,7 +3,7 @@ import pytest
 from scripthub.scripts.auditar_frequencias.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.scripts.auditar_frequencias.integracao_google_sheets import main
 
-_PATCH_BASE = "scripthub.scripts.auditar_frequencias.integracao_google_sheets"
+_PATCH = "scripthub.scripts.auditar_frequencias.integracao_google_sheets"
 
 
 @pytest.fixture
@@ -39,6 +39,15 @@ def _add_xlsx(config, nome="Turma A"):
     return path
 
 
+def _setup_mock(mocker, config):
+    mock_ws = mocker.MagicMock()
+    mock_planilha = mocker.MagicMock()
+    mock_client = mocker.patch(f"{_PATCH}.GoogleSheetsClient").return_value
+    mock_client.planilha.return_value = mock_planilha
+    mock_client.obter_ou_criar_aba.return_value = mock_ws
+    return mock_client, mock_planilha, mock_ws
+
+
 def test_main_levanta_runtime_sem_diretorio_exportacao(config):
     config.moodle.caminho_exportacao.rmdir()
 
@@ -60,19 +69,16 @@ def test_main_levanta_runtime_sem_id_planilha(config):
         main(config)
 
 
-def test_main_levanta_runtime_sem_arquivos_xlsx(config):
+def test_main_levanta_runtime_sem_arquivos_xlsx(config, mocker):
+    mocker.patch(f"{_PATCH}.GoogleSheetsClient")
+
     with pytest.raises(RuntimeError, match="XLSX"):
         main(config)
 
 
 def test_main_atualiza_planilha_com_xlsx(config, mocker):
     _add_xlsx(config)
-    mock_gc = mocker.MagicMock()
-    mock_ws = mocker.MagicMock()
-    mock_planilha = mocker.MagicMock()
-    mock_planilha.worksheet.return_value = mock_ws
-    mock_gc.open_by_key.return_value = mock_planilha
-    mocker.patch(f"{_PATCH_BASE}.gspread.service_account", return_value=mock_gc)
+    _, _, mock_ws = _setup_mock(mocker, config)
 
     main(config)
 
@@ -81,18 +87,19 @@ def test_main_atualiza_planilha_com_xlsx(config, mocker):
 
 
 def test_main_cria_aba_se_nao_existir(config, mocker):
-    import gspread
-
     _add_xlsx(config)
-    mock_gc = mocker.MagicMock()
-    mock_ws = mocker.MagicMock()
-    mock_planilha = mocker.MagicMock()
-    mock_planilha.worksheet.side_effect = gspread.exceptions.WorksheetNotFound
-    mock_planilha.add_worksheet.return_value = mock_ws
-    mock_gc.open_by_key.return_value = mock_planilha
-    mocker.patch(f"{_PATCH_BASE}.gspread.service_account", return_value=mock_gc)
+    mock_client, mock_planilha, mock_ws = _setup_mock(mocker, config)
 
     main(config)
 
-    mock_planilha.add_worksheet.assert_called_once()
+    mock_client.obter_ou_criar_aba.assert_called_once()
     mock_ws.update.assert_called_once()
+
+
+def test_main_abre_planilha_pelo_id(config, mocker):
+    _add_xlsx(config)
+    mock_client, _, _ = _setup_mock(mocker, config)
+
+    main(config)
+
+    mock_client.planilha.assert_called_once_with("planilha-id-123")

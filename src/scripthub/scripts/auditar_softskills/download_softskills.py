@@ -8,7 +8,7 @@ from scripthub.services import log
 
 from .config import Config
 
-# ── Constants ─────────────────────────────────────────────────────────────────
+# ── Constants (public) ────────────────────────────────────────────────────────
 
 ACTIVITIES = [
     ("Gestão de Tempo", "gestao_de_tempo"),
@@ -34,31 +34,6 @@ ACTIVITY_KEYWORDS = {
 }
 
 SOFTSKILLS_KEYWORDS = ["soft skills", "softskills", "soft skill"]
-
-# ── Auth ──────────────────────────────────────────────────────────────────────
-
-
-def login(session, config: Config):
-    page = session.get(f"{config.moodle.url}/login/index.php")
-    soup = BeautifulSoup(page.text, "html.parser")
-    token_input = soup.find("input", {"name": "logintoken"})
-    token = token_input["value"] if token_input is not None else ""
-    resp = session.post(
-        f"{config.moodle.url}/login/index.php",
-        data={
-            "username": config.moodle.usuario,
-            "password": config.moodle.senha,
-            "logintoken": token,
-            "anchor": "",
-        },
-    )
-    if "/login/" in resp.url:
-        raise RuntimeError(
-            f"Login falhou — verifique MOODLE_USUARIO e MOODLE_SENHA no arquivo .env\n"
-            f"  URL retornada: {resp.url}"
-        )
-    log.ok("Login OK")
-
 
 # ── Bootcamp helpers ──────────────────────────────────────────────────────────
 

@@ -5,12 +5,11 @@ import time
 from collections import defaultdict
 from pathlib import Path as _Path
 
-import requests
-
 import scripthub.scripts.auditar_softskills.download_softskills as download_softskills
 import scripthub.scripts.auditar_softskills.integracao_drive as integracao_drive
 
 from scripthub.services import log
+from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
 
@@ -20,7 +19,7 @@ def main():
 
     log.secao("PIPELINE DE SOFT SKILLS")
 
-    session = None
+    sessao = None
 
     # ── 1. Download bootcamp ──────────────────────────────────────────────────
     if download_softskills.bootcamp_ja_baixado(config):
@@ -28,12 +27,15 @@ def main():
         turmas_nums = download_softskills.turmas_do_disco(config)
         log.passo(f"{len(turmas_nums)} turmas encontradas: {turmas_nums}")
     else:
-        session = requests.Session()
-        session.headers.update({"User-Agent": "Mozilla/5.0"})
-        download_softskills.login(session, config)
+        sessao = MoodleSessao(
+            url_login=f"{config.moodle.url}/login/index.php",
+            usuario=config.moodle.usuario,
+            senha=config.moodle.senha,
+        )
+        sessao.login()
 
         log.passo("Buscando turmas do bootcamp...")
-        turmas = download_softskills.get_turmas(session, config)
+        turmas = download_softskills.get_turmas(sessao, config)
         turmas_nums = sorted(turmas.keys())
         log.passo(f"{len(turmas_nums)} turmas: {turmas_nums}")
 
@@ -41,7 +43,7 @@ def main():
         for i, turma_num in enumerate(turmas_nums):
             turma_dir = config.output_dir / turma_num
             turma_dir.mkdir(parents=True, exist_ok=True)
-            quiz_ids = download_softskills.get_quiz_ids(session, turmas[turma_num], debug=(i == 0))
+            quiz_ids = download_softskills.get_quiz_ids(sessao, turmas[turma_num], debug=(i == 0))
             log.passo(f"Turma {turma_num}:")
 
             for label, fname in download_softskills.ACTIVITIES:
@@ -49,7 +51,7 @@ def main():
                 if not qid:
                     log.aviso(f"[NOT FOUND] {label}")
                     continue
-                content = download_softskills.download_csv(session, qid, config)
+                content = download_softskills.download_csv(sessao, qid, config)
                 if content:
                     (turma_dir / f"{fname}.csv").write_bytes(content)
                     rows = list(csv.DictReader(io.StringIO(content.decode("utf-8-sig"))))
@@ -61,7 +63,7 @@ def main():
 
             qid = quiz_ids["avaliativa"]
             if qid:
-                content = download_softskills.download_csv(session, qid, config)
+                content = download_softskills.download_csv(sessao, qid, config)
                 if content:
                     (turma_dir / "atividade_avaliativa_softskills.csv").write_bytes(content)
                     rows = list(csv.DictReader(io.StringIO(content.decode("utf-8-sig"))))
@@ -167,20 +169,24 @@ def main():
             approved = download_softskills.aprovados_do_disco(config)
             log.passo(f"{len(approved)} aprovados carregados do disco.")
         else:
-            if session is None:
-                session = requests.Session()
-                session.headers.update({"User-Agent": "Mozilla/5.0"})
-                download_softskills.login(session, config)
+            if sessao is None:
+                sessao = MoodleSessao(
+                    url_login=f"{config.moodle.url}/login/index.php",
+                    usuario=config.moodle.usuario,
+                    senha=config.moodle.senha,
+                )
+                sessao.login()
 
             log.passo("Coletando aprovados...")
-            approved_courses = download_softskills.get_approved_courses(session, config)
+            approved_courses = download_softskills.get_approved_courses(sessao, config)
             log.passo(f"{len(approved_courses)} cursos encontrados")
 
             config.aprovados_dir.mkdir(parents=True, exist_ok=True)
             ap_part_fieldnames = ["nome", "email", "trilha_raw"]
 
+            approved = {}
             for cid, name in approved_courses.items():
-                parts = download_softskills.get_course_participants(session, cid, name, config)
+                parts = download_softskills.get_course_participants(sessao, cid, name, config)
                 new = 0
                 for p in parts:
                     if p["email"] not in approved:

@@ -67,10 +67,10 @@ def test_load_sem_settings_levanta_excecao(tmp_path, monkeypatch):
         Config.load()
 
 
-def test_credentials_path_relativo_resolve_para_parent(tmp_path, monkeypatch, settings_valido):
+def test_credentials_path_relativo_resolve_para_diretorio_base(tmp_path, monkeypatch, settings_valido):
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
     config = Config.load()
-    assert config.drive.credentials_path == (tmp_path.parent / "credentials.json").resolve()
+    assert config.drive.credentials_path == (tmp_path / "credentials.json").resolve()

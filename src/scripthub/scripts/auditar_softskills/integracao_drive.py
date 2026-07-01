@@ -1,77 +1,54 @@
 import csv
 from pathlib import Path
 
-import gspread
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-
 from scripthub.services import log
+from scripthub.services.google.drive import GoogleDriveClient
+from scripthub.services.google.sheets import GoogleSheetsClient
 
 from .config import Config
 
+_SCOPES = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/spreadsheets",
+]
+
 
 def upload_to_drive(file_path: str, config: Config) -> None:
-    scopes = [
-        "https://www.googleapis.com/auth/drive",
-        "https://www.googleapis.com/auth/spreadsheets",
-    ]
-    creds = service_account.Credentials.from_service_account_file(str(config.drive.credentials_path), scopes=scopes)
-    drive_service = build("drive", "v3", credentials=creds)
-
+    """Faz upload do CSV de resultados para uma planilha Google no Drive."""
+    drive = GoogleDriveClient(config.drive.credentials_path, _SCOPES)
     folder_id = config.drive.folder_id
 
-    # Verifica se a pasta está acessível (suporta Shared Drives)
     try:
-        folder_info = drive_service.files().get(fileId=folder_id, fields="id,name", supportsAllDrives=True).execute()
+        folder_info = drive.metadados(folder_id, fields="id,name")
         log.passo(f"Pasta acessível: {folder_info['name']}")
     except Exception as e:
         log.erro(f"Pasta não acessível (verifique o compartilhamento): {e}")
         return
 
-    sheet_name = Path(file_path).stem  # nome sem extensão
+    sheet_name = Path(file_path).stem
 
-    existing = (
-        drive_service.files()
-        .list(
-            q=(
-                f"name='{sheet_name}' and '{folder_id}' in parents"
-                " and trashed=false"
-                " and mimeType='application/vnd.google-apps.spreadsheet'"
-            ),
-            fields="files(id)",
-            supportsAllDrives=True,
-            includeItemsFromAllDrives=True,
-        )
-        .execute()
-        .get("files", [])
+    existing = drive.listar_arquivos(
+        f"name='{sheet_name}' and '{folder_id}' in parents"
+        " and trashed=false"
+        " and mimeType='application/vnd.google-apps.spreadsheet'"
     )
 
     if existing:
         sheet_id = existing[0]["id"]
         log.passo("Planilha existente encontrada.")
     else:
-        sheet_id = (
-            drive_service.files()
-            .create(
-                body={
-                    "name": sheet_name,
-                    "parents": [folder_id],
-                    "mimeType": "application/vnd.google-apps.spreadsheet",
-                },
-                fields="id",
-                supportsAllDrives=True,
-            )
-            .execute()["id"]
+        sheet_id = drive.criar_arquivo(
+            {
+                "name": sheet_name,
+                "parents": [folder_id],
+                "mimeType": "application/vnd.google-apps.spreadsheet",
+            }
         )
         log.passo("Nova planilha criada no Drive.")
 
-    gc = gspread.authorize(creds)
-    sh = gc.open_by_key(sheet_id)
-
-    try:
-        ws = sh.worksheet("Dados")
-    except gspread.WorksheetNotFound:
-        ws = sh.add_worksheet(title="Dados", rows=10000, cols=20)
+    gc = GoogleSheetsClient(config.drive.credentials_path, _SCOPES)
+    sh = gc.planilha(sheet_id)
+    ws = gc.obter_ou_criar_aba(sh, "Dados", linhas=10000, colunas=20)
 
     def _parse(value):
         try:
@@ -89,7 +66,6 @@ def upload_to_drive(file_path: str, config: Config) -> None:
     ws.batch_clear(["A:L"])
     ws.update([header] + data)
 
-    # Aplica formato 0.00 nas colunas numéricas
     num_col_letters = [chr(ord("A") + i) for i in sorted(num_cols)]
     for col_letter in num_col_letters:
         ws.format(
