@@ -73,7 +73,7 @@ def test_upload_to_drive_atualiza_aba_dados(tmp_path, mocker):
 
     upload_to_drive(str(csv_file), _make_config(tmp_path))
 
-    mock_ws.batch_clear.assert_called_once_with(["A:L"])
+    mock_ws.batch_clear.assert_called_once_with(["A:B"])
     mock_ws.update.assert_called_once()
 
 
@@ -85,8 +85,31 @@ def test_upload_to_drive_cria_aba_dados_se_nao_existir(tmp_path, mocker):
 
     mock_sheets.obter_ou_criar_aba.assert_called_once()
     assert mock_sheets.obter_ou_criar_aba.call_args[0][1] == "Dados"
-    mock_ws.batch_clear.assert_called_once_with(["A:L"])
+    mock_ws.batch_clear.assert_called_once_with(["A:B"])
     mock_ws.update.assert_called_once()
+
+
+def test_upload_to_drive_batch_clear_cobre_todas_as_colunas_do_csv_real(tmp_path, mocker):
+    csv_file = tmp_path / "aprovados_bootcamp_fap2026.csv"
+    header = [
+        "Nome Completo",
+        "E-mail",
+        "Trilha",
+        "Turma Trilha",
+        "Nota Gestão de Tempo",
+        "Nota Inteligência Emocional",
+        "Nota Trabalho em Equipe",
+        "Nota Resolução de Problemas",
+        "Nota Comunicação",
+        "Nota Liderança Pessoal",
+        "Nota Geral Soft Skills",
+    ]
+    csv_file.write_text(",".join(header) + "\n", encoding="utf-8")
+    _, _, _, mock_ws = _setup_mock(mocker, existing_files=[{"id": "abc"}])
+
+    upload_to_drive(str(csv_file), _make_config(tmp_path))
+
+    mock_ws.batch_clear.assert_called_once_with(["A:K"])
 
 
 def test_upload_to_drive_retorna_sem_erro_quando_pasta_inacessivel(tmp_path, mocker):

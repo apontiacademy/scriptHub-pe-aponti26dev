@@ -1,3 +1,4 @@
+import csv
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -5,6 +6,7 @@ from bs4 import BeautifulSoup
 
 from scripthub.scripts.auditar_softskills.config import Config, DriveConfig, MoodleConfig
 from scripthub.scripts.auditar_softskills.download_softskills import (
+    carregar_aprovados_do_backup,
     download_csv,
     extract_participant_name,
     get_approved_courses,
@@ -222,6 +224,74 @@ def test_get_quiz_ids_nao_duplica_mesmo_id():
     assert len(ids["activities"]) == 1
 
 
+def test_get_quiz_ids_debug_false_nao_loga(mocker):
+    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    session = _mock_session_get('<html><body><a href="/outro">link</a></body></html>')
+
+    get_quiz_ids(session, "/course/view.php?id=10", debug=False)
+
+    mock_log.aviso.assert_not_called()
+
+
+def test_get_quiz_ids_debug_true_com_atividades_nao_loga(mocker):
+    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    html = '<html><body><a href="/mod/quiz/view.php?id=1">Gestão de Tempo</a></body></html>'
+    session = _mock_session_get(html)
+
+    get_quiz_ids(session, "/course/view.php?id=10", debug=True)
+
+    mock_log.aviso.assert_not_called()
+
+
+def test_get_quiz_ids_debug_true_sem_atividades_loga_links_quiz(mocker):
+    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    html = (
+        '<html><head><title>Curso X</title></head><body><a href="/mod/quiz/view.php?id=99">Outro Quiz</a></body></html>'
+    )
+    session = _mock_session_get(html)
+
+    get_quiz_ids(session, "/course/view.php?id=10", debug=True)
+
+    mensagens = [call.args[0] for call in mock_log.aviso.call_args_list]
+    assert any("Links quiz" in m for m in mensagens)
+    assert any("/mod/quiz/view.php?id=99" in m for m in mensagens)
+
+
+def test_get_quiz_ids_debug_true_loga_sub_cursos(mocker):
+    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    html = '<html><body><a href="/course/view.php?id=5">Sub-curso</a></body></html>'
+    session = _mock_session_get(html)
+
+    get_quiz_ids(session, "/course/view.php?id=10", debug=True)
+
+    mensagens = [call.args[0] for call in mock_log.aviso.call_args_list]
+    assert any("Sub-cursos na página" in m for m in mensagens)
+    assert any("/course/view.php?id=5" in m for m in mensagens)
+
+
+def test_get_quiz_ids_debug_true_sem_titulo_nao_lanca_excecao(mocker):
+    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    html = '<html><body><a href="/mod/quiz/view.php?id=99">Outro Quiz</a></body></html>'
+    session = _mock_session_get(html)
+
+    get_quiz_ids(session, "/course/view.php?id=10", debug=True)
+
+    mensagens = [call.args[0] for call in mock_log.aviso.call_args_list]
+    assert any("(sem título)" in m for m in mensagens)
+
+
+def test_get_quiz_ids_debug_true_fallback_primeiros_hrefs(mocker):
+    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    html = '<html><body><a href="/outro/link">Nada relevante</a></body></html>'
+    session = _mock_session_get(html)
+
+    get_quiz_ids(session, "/course/view.php?id=10", debug=True)
+
+    mensagens = [call.args[0] for call in mock_log.aviso.call_args_list]
+    assert any("Primeiros 15 hrefs" in m for m in mensagens)
+    assert any("/outro/link" in m for m in mensagens)
+
+
 # ── download_csv ──────────────────────────────────────────────────────────────
 
 
@@ -393,3 +463,110 @@ def test_get_course_participants_email_normalizado_para_minusculo():
     parts = get_course_participants(session, "5", "Trilha Y", config=_make_config())
 
     assert parts[0]["email"] == "ana@example.com"
+
+
+# ── carregar_aprovados_do_backup ────────────────────────────────────────────────
+
+
+def _write_backup_csv(path, rows):
+    fieldnames = ["Nome Completo", "E-mail", "Trilha", "Turma Trilha"]
+    with open(path, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def test_carregar_aprovados_do_backup_arquivo_inexistente_retorna_vazio(tmp_path):
+    ap_path = tmp_path / "nao_existe.csv"
+    assert carregar_aprovados_do_backup(ap_path) == {}
+
+
+def test_carregar_aprovados_do_backup_linha_valida(tmp_path):
+    ap_path = tmp_path / "aprovados.csv"
+    _write_backup_csv(
+        ap_path,
+        [{"Nome Completo": "João Silva", "E-mail": "Joao@Example.com", "Trilha": "Backend", "Turma Trilha": "3"}],
+    )
+
+    approved = carregar_aprovados_do_backup(ap_path)
+
+    assert "joao@example.com" in approved
+    info = approved["joao@example.com"]
+    assert info["nome"] == "João Silva"
+    assert info["trilha_raw"] == "Backend - Turma 03"
+
+
+def test_carregar_aprovados_do_backup_turma_trilha_numerica_com_zero_padding(tmp_path):
+    ap_path = tmp_path / "aprovados.csv"
+    _write_backup_csv(
+        ap_path,
+        [{"Nome Completo": "Ana", "E-mail": "ana@example.com", "Trilha": "Frontend", "Turma Trilha": "3.0"}],
+    )
+
+    approved = carregar_aprovados_do_backup(ap_path)
+
+    assert approved["ana@example.com"]["trilha_raw"] == "Frontend - Turma 03"
+
+
+def test_carregar_aprovados_do_backup_turma_trilha_nao_numerica_mantem_string(tmp_path):
+    ap_path = tmp_path / "aprovados.csv"
+    _write_backup_csv(
+        ap_path,
+        [{"Nome Completo": "Bia", "E-mail": "bia@example.com", "Trilha": "Dados", "Turma Trilha": "3A"}],
+    )
+
+    approved = carregar_aprovados_do_backup(ap_path)
+
+    assert approved["bia@example.com"]["trilha_raw"] == "Dados - Turma 3A"
+
+
+def test_carregar_aprovados_do_backup_sem_turma_trilha_nao_adiciona_sufixo(tmp_path):
+    ap_path = tmp_path / "aprovados.csv"
+    _write_backup_csv(
+        ap_path,
+        [{"Nome Completo": "Caio", "E-mail": "caio@example.com", "Trilha": "Backend", "Turma Trilha": ""}],
+    )
+
+    approved = carregar_aprovados_do_backup(ap_path)
+
+    assert approved["caio@example.com"]["trilha_raw"] == "Backend"
+
+
+def test_carregar_aprovados_do_backup_email_duplicado_mantem_primeiro(tmp_path):
+    ap_path = tmp_path / "aprovados.csv"
+    _write_backup_csv(
+        ap_path,
+        [
+            {"Nome Completo": "Duda 1", "E-mail": "duda@example.com", "Trilha": "Backend", "Turma Trilha": "1"},
+            {"Nome Completo": "Duda 2", "E-mail": "DUDA@example.com", "Trilha": "Frontend", "Turma Trilha": "2"},
+        ],
+    )
+
+    approved = carregar_aprovados_do_backup(ap_path)
+
+    assert len(approved) == 1
+    assert approved["duda@example.com"]["nome"] == "Duda 1"
+
+
+def test_carregar_aprovados_do_backup_turma_trilha_infinito_mantem_string(tmp_path):
+    ap_path = tmp_path / "aprovados.csv"
+    _write_backup_csv(
+        ap_path,
+        [{"Nome Completo": "Rui", "E-mail": "rui@example.com", "Trilha": "Backend", "Turma Trilha": "inf"}],
+    )
+
+    approved = carregar_aprovados_do_backup(ap_path)
+
+    assert approved["rui@example.com"]["trilha_raw"] == "Backend - Turma inf"
+
+
+def test_carregar_aprovados_do_backup_email_vazio_ignora_linha(tmp_path):
+    ap_path = tmp_path / "aprovados.csv"
+    _write_backup_csv(
+        ap_path,
+        [{"Nome Completo": "Sem Email", "E-mail": "", "Trilha": "Backend", "Turma Trilha": "1"}],
+    )
+
+    approved = carregar_aprovados_do_backup(ap_path)
+
+    assert approved == {}

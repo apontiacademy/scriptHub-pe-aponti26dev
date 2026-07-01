@@ -8,6 +8,13 @@ from dotenv import load_dotenv
 DIRETORIO_BASE = Path(__file__).resolve().parent
 
 
+def _obrigatorio(dados: dict, chave: str, caminho: str) -> str:
+    valor = dados.get(chave)
+    if not valor:
+        raise RuntimeError(f"settings.json deve conter a chave '{caminho}'")
+    return valor
+
+
 @dataclass
 class MoodleConfig:
     usuario: str
@@ -46,16 +53,22 @@ class Config:
         output_dir_raw = dados_settings.get("outputDir", "bootcamps")
         aprovados_dir_raw = dados_settings.get("aprovadosDir", "aprovados")
 
+        url_raw = moodle_json.get("urlBase") or moodle_json.get("url")
+        if not url_raw:
+            raise RuntimeError(
+                "settings.json deve conter a chave 'moodle.urlBase' (ou 'moodle.url' por compatibilidade)"
+            )
+
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
-            url=(moodle_json.get("urlBase") or moodle_json["url"]).rstrip("/"),
-            bootcamp_cat_id=moodle_json["bootcampCatId"],
-            aprovados_cat_id=moodle_json["aprovadosCatId"],
+            url=url_raw.rstrip("/"),
+            bootcamp_cat_id=_obrigatorio(moodle_json, "bootcampCatId", "moodle.bootcampCatId"),
+            aprovados_cat_id=_obrigatorio(moodle_json, "aprovadosCatId", "moodle.aprovadosCatId"),
         )
 
         drive_config = DriveConfig(
-            folder_id=drive_json["folderId"],
+            folder_id=_obrigatorio(drive_json, "folderId", "drive.folderId"),
             credentials_path=credentials_path,
         )
 

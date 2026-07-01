@@ -141,27 +141,9 @@ def main():
 
     # ── 3. Build aprovados_bootcamp_fap2026.csv ───────────────────────────────
     ap_path = _Path(__file__).resolve().parent / "aprovados_bootcamp_fap2026.csv"
-    approved = {}
-
-    if ap_path.exists():
-        with open(ap_path, encoding="utf-8-sig") as f:
-            for row in csv.DictReader(f):
-                email = row.get("E-mail", "").strip().lower()
-                if not email or email in approved:
-                    continue
-                trilha = row.get("Trilha", "").strip()
-                turma_str = row.get("Turma Trilha", "").strip()
-                try:
-                    turma_num = str(int(float(turma_str))).zfill(2) if turma_str else ""
-                except ValueError:
-                    turma_num = turma_str
-                approved[email] = {
-                    "nome": row.get("Nome Completo", "").strip(),
-                    "email": email,
-                    "trilha_raw": f"{trilha} - Turma {turma_num}" if trilha and turma_num else trilha,
-                }
-        if approved:
-            log.passo(f"{len(approved)} aprovados carregados do backup local.")
+    approved = download_softskills.carregar_aprovados_do_backup(ap_path)
+    if approved:
+        log.passo(f"{len(approved)} aprovados carregados do backup local.")
 
     if not approved:
         if download_softskills.aprovados_ja_baixados(config):

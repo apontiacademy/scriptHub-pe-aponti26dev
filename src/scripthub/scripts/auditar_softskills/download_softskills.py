@@ -1,6 +1,7 @@
 import csv
 import re
 import time
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 
@@ -234,4 +235,28 @@ def aprovados_do_disco(config: Config) -> dict:
                         "email": email,
                         "trilha_raw": row.get("trilha_raw", ""),
                     }
+    return approved
+
+
+def carregar_aprovados_do_backup(ap_path: Path) -> dict:
+    approved = {}
+    if not ap_path.exists():
+        return approved
+
+    with open(ap_path, encoding="utf-8-sig") as f:
+        for row in csv.DictReader(f):
+            email = row.get("E-mail", "").strip().lower()
+            if not email or email in approved:
+                continue
+            trilha = row.get("Trilha", "").strip()
+            turma_str = row.get("Turma Trilha", "").strip()
+            try:
+                turma_num = str(int(float(turma_str))).zfill(2) if turma_str else ""
+            except (ValueError, OverflowError):
+                turma_num = turma_str
+            approved[email] = {
+                "nome": row.get("Nome Completo", "").strip(),
+                "email": email,
+                "trilha_raw": f"{trilha} - Turma {turma_num}" if trilha and turma_num else trilha,
+            }
     return approved
