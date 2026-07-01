@@ -1,6 +1,7 @@
 import csv
 import re
 import time
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 
@@ -54,7 +55,7 @@ def get_turmas(session, config: Config):
     return turmas
 
 
-def get_quiz_ids(session, course_url):
+def get_quiz_ids(session, course_url, debug=False):
     resp = session.get(course_url)
     soup = BeautifulSoup(resp.text, "html.parser")
     ids = {"activities": {}, "avaliativa": None}
@@ -80,6 +81,30 @@ def get_quiz_ids(session, course_url):
                 if "software" not in text and "letramento" not in text:
                     ids["avaliativa"] = qid
                     seen.add(qid)
+
+    if debug and not ids["activities"]:
+        all_tags = soup.find_all("a", href=True)
+        all_hrefs = [str(a.get("href", "")) for a in all_tags]
+        all_texts = [a.text.strip() for a in all_tags]
+        quiz_links = [(h, t) for h, t in zip(all_hrefs, all_texts) if "quiz" in h.lower()]
+        course_links = [(h, t) for h, t in zip(all_hrefs, all_texts) if "course/view.php" in h]
+        title = soup.find("title")
+
+        log.aviso(f"[DEBUG] URL curso: {course_url}")
+        log.aviso(f"[DEBUG] Título: {title.text.strip() if title else '(sem título)'}")
+        log.aviso(f"[DEBUG] {len(all_hrefs)} links | {len(quiz_links)} com 'quiz' | {len(course_links)} sub-cursos")
+        if quiz_links:
+            log.aviso("[DEBUG] Links quiz:")
+            for h, t in quiz_links[:10]:
+                log.aviso(f"[DEBUG]   {h!r} → {t!r}")
+        if course_links:
+            log.aviso("[DEBUG] Sub-cursos na página:")
+            for h, t in course_links[:5]:
+                log.aviso(f"[DEBUG]   {h!r} → {t!r}")
+        if not quiz_links and not course_links:
+            log.aviso("[DEBUG] Primeiros 15 hrefs:")
+            for h, t in zip(all_hrefs[:15], all_texts[:15]):
+                log.aviso(f"[DEBUG]   {h!r} → {t!r}")
 
     return ids
 
@@ -210,4 +235,28 @@ def aprovados_do_disco(config: Config) -> dict:
                         "email": email,
                         "trilha_raw": row.get("trilha_raw", ""),
                     }
+    return approved
+
+
+def carregar_aprovados_do_backup(ap_path: Path) -> dict:
+    approved = {}
+    if not ap_path.exists():
+        return approved
+
+    with open(ap_path, encoding="utf-8-sig") as f:
+        for row in csv.DictReader(f):
+            email = row.get("E-mail", "").strip().lower()
+            if not email or email in approved:
+                continue
+            trilha = row.get("Trilha", "").strip()
+            turma_str = row.get("Turma Trilha", "").strip()
+            try:
+                turma_num = str(int(float(turma_str))).zfill(2) if turma_str else ""
+            except (ValueError, OverflowError):
+                turma_num = turma_str
+            approved[email] = {
+                "nome": row.get("Nome Completo", "").strip(),
+                "email": email,
+                "trilha_raw": f"{trilha} - Turma {turma_num}" if trilha and turma_num else trilha,
+            }
     return approved

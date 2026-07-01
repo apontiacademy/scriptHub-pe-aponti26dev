@@ -42,6 +42,8 @@ markers = [
 omit = [
     # Automação Playwright — requer browser real
     "src/scripthub/scripts/torpedo_de_forum/main.py",
+    # Padrão B (depreciado) — orquestração não testada diretamente, só helpers
+    "src/scripthub/scripts/auditar_softskills/main.py",
     # FPDF — requer fontes e renderização
     "src/scripthub/scripts/compilacao_de_relatorios/compilar_pdfs.py",
     # Questionary UI interativa
