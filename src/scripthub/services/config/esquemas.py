@@ -174,7 +174,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="url",
             origem="settings",
             descricao="URL raiz do Moodle sem path (ex: https://moodle.inst.edu)",
-            json_chaves=["moodle", "url"],
+            json_chaves=["moodle", "urlBase"],
         ),
         Campo(
             chave="moodle_bootcamp_cat_id",

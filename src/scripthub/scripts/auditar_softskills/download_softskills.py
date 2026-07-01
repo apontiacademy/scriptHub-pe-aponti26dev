@@ -79,7 +79,7 @@ def get_turmas(session, config: Config):
     return turmas
 
 
-def get_quiz_ids(session, course_url, config: Config, debug=False):
+def get_quiz_ids(session, course_url, debug=False):
     resp = session.get(course_url)
     soup = BeautifulSoup(resp.text, "html.parser")
     ids = {"activities": {}, "avaliativa": None}
@@ -238,17 +238,11 @@ def turmas_do_disco(config: Config) -> list:
     return sorted(d.name for d in output_dir.iterdir() if d.is_dir() and d.name.isdigit())
 
 
-_ARQUIVOS_NAO_CACHE = {"softskills_resultado.csv", "aprovados_bootcamp_fap2026.csv"}
-
-
 def aprovados_ja_baixados(config: Config) -> bool:
     aprovados_dir = config.aprovados_dir
     if not aprovados_dir.is_dir():
         return False
-    return any(
-        f.suffix == ".csv" and f.name not in _ARQUIVOS_NAO_CACHE
-        for f in aprovados_dir.iterdir()
-    )
+    return any(f.suffix == ".csv" for f in aprovados_dir.iterdir())
 
 
 def aprovados_do_disco(config: Config) -> dict:

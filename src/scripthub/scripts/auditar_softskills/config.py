@@ -49,7 +49,7 @@ class Config:
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
-            url=moodle_json["urlBase"].rstrip("/"),
+            url=(moodle_json.get("urlBase") or moodle_json["url"]).rstrip("/"),
             bootcamp_cat_id=moodle_json["bootcampCatId"],
             aprovados_cat_id=moodle_json["aprovadosCatId"],
         )

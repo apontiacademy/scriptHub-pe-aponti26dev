@@ -41,7 +41,7 @@ def main():
         for i, turma_num in enumerate(turmas_nums):
             turma_dir = config.output_dir / turma_num
             turma_dir.mkdir(parents=True, exist_ok=True)
-            quiz_ids = download_softskills.get_quiz_ids(session, turmas[turma_num], config, debug=(i == 0))
+            quiz_ids = download_softskills.get_quiz_ids(session, turmas[turma_num], debug=(i == 0))
             log.passo(f"Turma {turma_num}:")
 
             for label, fname in download_softskills.ACTIVITIES:
