@@ -57,7 +57,7 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-PRs são abertos contra `dev`, nunca contra `nightly` ou `main`. Depois de aberto, o PR é revisado e mergeado via GitHub.
+PRs são abertos contra `dev`, nunca contra `nightly` ou `main`. `dev` usa merge queue com squash — cada PR vira um único commit linear em `dev`, sem commit de merge.
 
 O fluxo de branches tem 4 estágios:
 
@@ -65,20 +65,29 @@ O fluxo de branches tem 4 estágios:
 branch de feature → dev → nightly → main
 ```
 
-- **`dev`** — branch de integração contínua, recebe os PRs. Cada merge de PR ou commit direto gera uma entrada cumulativa em `SNAPSHOTS.md`.
+- **`dev`** — branch de integração contínua, recebe os PRs via merge queue (squash). Cada commit em `dev` gera uma entrada cumulativa em `SNAPSHOTS.md` — squash elimina a distinção entre "merge de PR" e "commit direto", todo commit em `dev` é um PR fechado.
 - **`nightly`** — branch de release candidate, cortada a partir de `main` (não de `dev`). Quando um conjunto de snapshots em `dev` é considerado pronto, é promovido (merge) para `nightly` — é o que aparece na seção `[Unreleased]` de `CHANGELOG.md`.
 - **`main`** — branch de release. Só recebe merge de `nightly` quando uma versão é oficialmente publicada.
 
 ## Versionamento e changelog
 
 - **`CHANGELOG.md`** — histórico de versões já lançadas em `main`, no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) (`0.x.y`: `x` sobe em mudança expressiva, `y` em mudança pontual). Versões retiradas por bug grave ou falha de segurança levam a tag `[YANKED]`.
-- **`SNAPSHOTS.md`** — trabalho em andamento em `dev`, ainda não consolidado. Cada merge/commit em `dev` vira uma entrada `x.y.z-Ns` (`x.y.z` = versão sendo construída, `N` = snapshot sequencial), e `pyproject.toml` em `dev` é atualizado junto (`version = "x.y.z-Ns"`).
+- **`SNAPSHOTS.md`** — trabalho em andamento em `dev`, ainda não consolidado. Cada commit em `dev` vira uma entrada `x.y.z-Ns` (`x.y.z` = versão sendo construída, `N` = snapshot sequencial), e `pyproject.toml` em `dev` é atualizado junto (`version = "x.y.z-Ns"`).
 
 Ciclo de vida de uma mudança:
 
-1. Mergeada em `dev` → entra em `SNAPSHOTS.md` como snapshot
+1. Mergeada em `dev` (squash) → entra em `SNAPSHOTS.md` como snapshot
 2. Promovida (merge) de `dev` para `nightly` → sai de `SNAPSHOTS.md`, entra em `[Unreleased]` no `CHANGELOG.md`
 3. `nightly` mergeada em `main` (release) → `[Unreleased]` vira `## [x.y.z] - data`, e `pyproject.toml` em `main`/`nightly`/`docs/geral` reflete essa versão
+
+### Commits de changelog/release
+
+Commits cujo único propósito é atualizar `CHANGELOG.md`, `SNAPSHOTS.md` ou a versão em `pyproject.toml` como parte de uma promoção ou release **não geram uma nova entrada própria** — eles são o mecanismo de registro, não o conteúdo registrado (senão todo update exigiria um update para documentá-lo, indefinidamente). Use os prefixos:
+
+```
+chore(changelog): promover snapshots para nightly    # dev → nightly
+chore(release): 0.20.0                                 # nightly → main
+```
 
 ## Estrutura do projeto
 
