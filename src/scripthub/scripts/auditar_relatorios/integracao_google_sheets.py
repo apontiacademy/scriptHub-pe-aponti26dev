@@ -60,4 +60,3 @@ def main(config: Config) -> None:
     aba.update(range_name="D1", values=dados_para_upload)
 
     log.ok("Google Sheets atualizado com sucesso!")
-    log.ok("Escopo 3 finalizado com sucesso!")

@@ -1,11 +1,42 @@
 import pytest
 
 from scripthub.scripts.compilacao_de_relatorios.compilar_pdfs import (
+    DadosAluno,
     _para_latin1,
+    main,
     normalizar_nome,
     parsear_grupos,
     sanitizar_caminho,
 )
+from scripthub.scripts.compilacao_de_relatorios.config import Config, MoodleConfig, PdfConfig
+
+_PATCH = "scripthub.scripts.compilacao_de_relatorios.compilar_pdfs"
+
+
+def _make_config(tmp_path):
+    return Config(
+        moodle=MoodleConfig(
+            usuario="user",
+            senha="pass",
+            url_login="https://example.com/login",
+            meses={"Janeiro": ["https://example.com/r1"]},
+            caminho_download=tmp_path / "relatorios",
+        ),
+        pdf=PdfConfig(
+            caminho_saida=tmp_path / "pdfs",
+            csv_residentes=tmp_path / "residentes.csv",
+        ),
+    )
+
+
+def test_main_levanta_runtime_error_quando_ha_pdfs_com_erro(tmp_path, mocker):
+    aluno = DadosAluno(nome="Aluno Teste", email="a@a.com", estado="SP", empresa="Empresa", cnpj="123")
+    mocker.patch(f"{_PATCH}._carregar_relatorios", return_value={"aluno teste": aluno})
+    mocker.patch(f"{_PATCH}._carregar_cpfs", return_value={})
+    mocker.patch(f"{_PATCH}._gerar_pdf", side_effect=Exception("falha ao gerar"))
+
+    with pytest.raises(RuntimeError, match="PDF"):
+        main(_make_config(tmp_path))
 
 
 @pytest.mark.parametrize(

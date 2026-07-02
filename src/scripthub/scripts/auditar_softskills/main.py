@@ -229,5 +229,3 @@ def main():
     # ── 4. Upload para Google Drive ───────────────────────────────────────────
     log.passo("Enviando para o Google Drive...")
     integracao_drive.upload_to_drive(str(ap_path), config)
-
-    log.ok("PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")

@@ -84,5 +84,3 @@ def main(config: Config) -> None:
 
     for nome_turma, url in urls_frequencias.items():
         exportar_frequencia(sessao, url, nome_turma, caminho_saida)
-
-    log.ok("Escopo 1 finalizado com sucesso!")

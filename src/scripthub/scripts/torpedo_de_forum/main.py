@@ -448,5 +448,3 @@ def main() -> None:
             if not sucesso:
                 log.passo(f"  - {url}")
         raise RuntimeError(f"{falhou} fórum(s) falharam ao publicar.")
-
-    log.ok("AUTOMAÇÃO DE FÓRUNS CONCLUÍDA COM SUCESSO!")

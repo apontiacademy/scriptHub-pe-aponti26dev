@@ -112,7 +112,7 @@ def relatorios(
         case "compilar":
             if passo:
                 raise ValueError('O modo compilar não aceita "passo".')
-            compilacao_de_relatorios.main()
+            _executar_pipeline_simples(compilacao_de_relatorios.main)
         case _:
             raise ValueError('Modo deve ser "auditar" ou "compilar".')
 
@@ -132,7 +132,7 @@ def relatorios_auditar(
 @app.command("rc", hidden=True)
 def relatorios_compilar():
     """Alias para 'scripthub relatorios compilar'."""
-    compilacao_de_relatorios.main()
+    _executar_pipeline_simples(compilacao_de_relatorios.main)
 
 
 # TODO: reimplementar utilizando padrões dos scripts anteriores
@@ -140,7 +140,7 @@ def relatorios_compilar():
 @app.command("s", hidden=True)
 def softskills():
     """Baixa as notas de soft skills do Moodle e envia ao Google Drive."""
-    auditar_softskills.main()
+    _executar_pipeline_simples(auditar_softskills.main)
 
 
 # TODO: reimplementar utilizando padrões dos scripts anteriores
@@ -148,7 +148,7 @@ def softskills():
 @app.command("t", hidden=True)
 def torpedo():
     """Posta tópicos em fóruns do Moodle a partir de arquivos Markdown."""
-    torpedo_de_forum.main()
+    _executar_pipeline_simples(torpedo_de_forum.main)
 
 
 @app.command()
@@ -204,9 +204,25 @@ def executar_script(config, escopos, passo: str | None, titulo: str):
             log.secao(f"PASSO {i}/{total} — {e.nome}")
             e.func(config)
     except (typer.Exit, SystemExit):
+        log.erro("Script finalizado com erro. Código de saída: 1")
         raise
     except Exception as exc:
         log.erro(f"Erro durante execução: {exc}")
+        log.erro("Script finalizado com erro. Código de saída: 1")
         raise typer.Exit(1)
 
-    log.ok("PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")
+    log.ok("Script finalizado com sucesso. Código de saída: 0")
+
+
+def _executar_pipeline_simples(fn) -> None:
+    try:
+        fn()
+    except (typer.Exit, SystemExit):
+        log.erro("Script finalizado com erro. Código de saída: 1")
+        raise
+    except Exception as exc:
+        log.erro(f"Erro durante execução: {exc}")
+        log.erro("Script finalizado com erro. Código de saída: 1")
+        raise typer.Exit(1)
+
+    log.ok("Script finalizado com sucesso. Código de saída: 0")

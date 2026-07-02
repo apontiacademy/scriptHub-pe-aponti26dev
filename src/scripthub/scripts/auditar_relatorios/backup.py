@@ -54,7 +54,5 @@ def main(config: Config) -> None:
 
     arquivo_gerado = realizar_backup_xlsx_local(caminho_credenciais, id_planilha, diretorio_backup)
 
-    if arquivo_gerado:
-        log.ok("Escopo 4 finalizado com sucesso!")
-    else:
-        log.aviso("Escopo 4 terminou com falhas (veja os logs acima).")
+    if not arquivo_gerado:
+        raise RuntimeError("Falha no processo de backup local.")

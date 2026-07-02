@@ -58,5 +58,3 @@ def main(config: Config) -> None:
 
     if falhas:
         raise RuntimeError(f"{len(falhas)} arquivo(s) falharam: {', '.join(falhas)}")
-
-    log.ok("Escopo 2 finalizado com sucesso!")

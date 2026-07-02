@@ -80,8 +80,8 @@ def test_main_cria_diretorio_pai_do_csv_saida(config, mocker):
     assert config.moodle.csv_saida_analise.parent.exists()
 
 
-def test_main_nao_propaga_excecao_do_core(config, mocker):
+def test_main_propaga_excecao_do_core(config, mocker):
     mocker.patch(_PATCH_CORE, side_effect=RuntimeError("falha no core"))
 
-    # O código atual captura a exceção e faz log.erro — não deve propagar
-    main(config)
+    with pytest.raises(RuntimeError, match="falha no core"):
+        main(config)

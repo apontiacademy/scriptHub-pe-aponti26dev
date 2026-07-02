@@ -35,9 +35,5 @@ def main(config: Config):
 
     log.passo(f"Injetando argumentos no Core: {' '.join(argumentos_cli)}")
 
-    try:
-        # Executa a análise do core enviando a lista limpa de strings
-        executar_analise_core(argumentos_cli)
-        log.ok("Escopo 2 finalizado com sucesso!")
-    except Exception as e:
-        log.erro(f"Escopo 2 terminou com falhas: {e}")
+    # Executa a análise do core enviando a lista limpa de strings
+    executar_analise_core(argumentos_cli)

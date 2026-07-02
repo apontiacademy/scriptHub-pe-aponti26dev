@@ -361,7 +361,8 @@ def main(config: Config):
             log.erro(f"Falha ao gerar PDF para {aluno.nome}: {e}")
             erros += 1
 
-    log.ok(f"Escopo 2 finalizado: {gerados} PDF(s) gerado(s), {erros} erro(s).")
+    if erros:
+        raise RuntimeError(f"{erros} PDF(s) falharam ao gerar de {len(alunos)} aluno(s).")
 
 
 if __name__ == "__main__":

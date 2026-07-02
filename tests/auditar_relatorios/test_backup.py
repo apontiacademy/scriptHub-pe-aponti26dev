@@ -103,3 +103,11 @@ def test_main_cria_diretorio_de_backup_automaticamente(tmp_path, mocker):
     main(config)
 
     assert config.gsheets.caminho_backup_local.exists()
+
+
+def test_main_levanta_runtime_error_quando_backup_local_falha(tmp_path, mocker):
+    mocker.patch(f"{_PATCH}.realizar_backup_xlsx_local", return_value=None)
+    config = _make_config(tmp_path)
+
+    with pytest.raises(RuntimeError, match="backup"):
+        main(config)

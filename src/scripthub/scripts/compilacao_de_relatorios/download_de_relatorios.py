@@ -66,5 +66,3 @@ def main(config: Config) -> None:
             log.passo(f"Relatório {indice}/{len(urls)}")
             caminho_saida = _caminho_relatorio(nome_mes, diretorio_download, indice)
             baixar_relatorio(sessao, url, caminho_saida)
-
-    log.ok("Escopo 1 finalizado com sucesso!")

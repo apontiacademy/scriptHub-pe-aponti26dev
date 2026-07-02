@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from scripthub.services import log
 from scripthub.services.moodle import MoodleSessao, baixar_relatorio
 
 from .config import Config
@@ -26,5 +25,3 @@ def main(config: Config) -> None:
     for indice, url in enumerate(urls_relatorios, start=1):
         caminho_saida = diretorio_download / f"relatorio{indice}.csv"
         baixar_relatorio(sessao, url, caminho_saida)
-
-    log.ok("Escopo 1 finalizado com sucesso!")
