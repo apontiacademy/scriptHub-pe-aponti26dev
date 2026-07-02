@@ -72,7 +72,7 @@ branch de feature → dev → nightly → main
 ## Versionamento e changelog
 
 - **`CHANGELOG.md`** — histórico de versões já lançadas em `main`, no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) (`0.x.y`: `x` sobe em mudança expressiva, `y` em mudança pontual). Versões retiradas por bug grave ou falha de segurança levam a tag `[YANKED]`.
-- **`SNAPSHOTS.md`** — trabalho em andamento em `dev`, ainda não consolidado. Cada commit em `dev` vira uma entrada `x.y.z-Ns` (`x.y.z` = versão sendo construída, `N` = snapshot sequencial), e `pyproject.toml` em `dev` é atualizado junto (`version = "x.y.z-Ns"`).
+- **`SNAPSHOTS.md`** — trabalho em andamento em `dev`, ainda não consolidado. Cada commit em `dev` vira uma entrada `x.y.z.devN` (`x.y.z` = versão sendo construída, `N` = snapshot sequencial), e `pyproject.toml` em `dev` é atualizado junto (`version = "x.y.z.devN"`) — usa o sufixo `.devN` do PEP 440 para permanecer uma versão válida (`x.y.z-Ns` quebraria `uv lock`/`uv sync`).
 
 Ciclo de vida de uma mudança:
 
@@ -93,8 +93,8 @@ chore(release): 0.20.0                                 # nightly → main
 
 `dev`, `nightly` e `main` são protegidas por ruleset — só aceitam mudança via PR, nunca commit direto. Isso também vale para esses commits, mas o mecanismo muda dependendo do caso:
 
-- **Snapshot de cada PR** (entrada em `SNAPSHOTS.md` + versão `x.y.z-Ns` em `pyproject.toml`) — não é um evento separado. O autor já inclui essa atualização na própria branch de feature, como parte do PR normal contra `dev`. Não existe branch/PR dedicada para isso.
-- **Promoção `dev → nightly`** — branch dedicada a partir de `dev`, levando as mudanças de código da versão + o commit `chore(changelog)`, que consolida `[Unreleased]` em `CHANGELOG.md` e troca a versão em `pyproject.toml` do formato de snapshot para a versão plana (`x.y.z-Ns` → `x.y.z`). PR contra `nightly`. Essa branch **não** limpa `SNAPSHOTS.md`.
+- **Snapshot de cada PR** (entrada em `SNAPSHOTS.md` + versão `x.y.z.devN` em `pyproject.toml`) — não é um evento separado. O autor já inclui essa atualização na própria branch de feature, como parte do PR normal contra `dev`. Não existe branch/PR dedicada para isso.
+- **Promoção `dev → nightly`** — branch dedicada a partir de `dev`, levando as mudanças de código da versão + o commit `chore(changelog)`, que consolida `[Unreleased]` em `CHANGELOG.md` e troca a versão em `pyproject.toml` do formato de snapshot para a versão plana (`x.y.z.devN` → `x.y.z`). PR contra `nightly`. Essa branch **não** limpa `SNAPSHOTS.md`.
 - **Limpeza de `SNAPSHOTS.md`** — branch separada, também a partir de `dev`, com PR de volta contra o próprio `dev`, removendo as entradas já consolidadas em `[Unreleased]`. `SNAPSHOTS.md` é bookkeeping exclusivo de `dev`: essa limpeza nunca chega em `nightly` nem em `main`.
 - **Promoção `nightly → main`** — branch dedicada a partir de `nightly`, com o commit `chore(release)`, que fecha `[Unreleased]` em `## [x.y.z] - data`. A versão em `pyproject.toml` já está correta desde a promoção anterior, não muda de novo aqui. PR contra `main`.
 
