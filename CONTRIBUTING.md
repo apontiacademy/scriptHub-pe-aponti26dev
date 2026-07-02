@@ -80,6 +80,8 @@ Ciclo de vida de uma mudança:
 2. Promovida (merge) de `dev` para `nightly` → sai de `SNAPSHOTS.md`, entra em `[Unreleased]` no `CHANGELOG.md`
 3. `nightly` mergeada em `main` (release) → `[Unreleased]` vira `## [x.y.z] - data`, e `pyproject.toml` em `main`/`nightly`/`docs/geral` reflete essa versão
 
+Toda vez que a versão em `pyproject.toml` muda (novo snapshot, promoção `dev → nightly` ou release `nightly → main`), rode `uv sync` (ou `uv lock`) e commite o `uv.lock` atualizado junto — ele fixa a própria versão do pacote (`scripthub-pe-aponti26dev`) e fica desatualizado silenciosamente se o lock não for regenerado.
+
 ### Commits de changelog/release
 
 Commits cujo único propósito é atualizar `CHANGELOG.md`, `SNAPSHOTS.md` ou a versão em `pyproject.toml` como parte de uma promoção ou release **não geram uma nova entrada própria** — eles são o mecanismo de registro, não o conteúdo registrado (senão todo update exigiria um update para documentá-lo, indefinidamente). Use os prefixos:
