@@ -45,6 +45,7 @@ Para ver a ajuda e os aliases disponíveis:
 ```bash
 uv run scripthub --help      # ou: scripthub -h
 uv run scripthub --aliases   # ou: scripthub -a
+uv run scripthub --version   # ou: scripthub -V
 ```
 
 ## Comandos

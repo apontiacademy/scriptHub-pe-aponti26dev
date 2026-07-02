@@ -1,4 +1,5 @@
 import sys
+from importlib.metadata import version as _pkg_version
 from typing import Annotated
 
 import typer
@@ -27,12 +28,19 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 def _callback(
     ctx: typer.Context,
+    versao: Annotated[
+        bool,
+        typer.Option("--version", "-V", help="Exibir a versão instalada.", is_eager=True),
+    ] = False,
     aliases: Annotated[
         bool,
         typer.Option("--aliases", "-a", help="Exibir aliases de cada comando."),
     ] = False,
 ):
-    if aliases:
+    if versao:
+        typer.echo(f"scripthub {_pkg_version('scriptHub-pe-aponti26dev')}")
+        raise typer.Exit()
+    elif aliases:
         _ALIASES = [
             ("scripthub frequencias",         "f"),
             ("scripthub relatorios auditar",  "r auditar, ra"),
