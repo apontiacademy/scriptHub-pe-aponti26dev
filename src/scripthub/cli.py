@@ -1,5 +1,4 @@
-import sys
-from importlib.metadata import version as _pkg_version
+from importlib.metadata import PackageNotFoundError, version as _pkg_version
 from typing import Annotated
 
 import typer
@@ -8,6 +7,11 @@ from ._i18n import instalar as _instalar_i18n
 from .services import log
 
 _instalar_i18n()
+
+try:
+    _VERSAO = _pkg_version("scriptHub-pe-aponti26dev")
+except PackageNotFoundError:
+    _VERSAO = "(versão desconhecida)"
 
 from .scripts import (
     auditar_frequencias,
@@ -38,7 +42,7 @@ def _callback(
     ] = False,
 ):
     if versao:
-        typer.echo(f"scripthub {_pkg_version('scriptHub-pe-aponti26dev')}")
+        typer.echo(f"scripthub {_VERSAO}")
         raise typer.Exit()
     elif aliases:
         _ALIASES = [
