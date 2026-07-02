@@ -57,7 +57,28 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-PRs são abertos contra `dev`, nunca contra `main`. `main` é o branch de release: só recebe merge de `dev` quando uma versão é publicada. Depois de aberto, o PR é revisado e mergeado via GitHub.
+PRs são abertos contra `dev`, nunca contra `nightly` ou `main`. Depois de aberto, o PR é revisado e mergeado via GitHub.
+
+O fluxo de branches tem 4 estágios:
+
+```
+branch de feature → dev → nightly → main
+```
+
+- **`dev`** — branch de integração contínua, recebe os PRs. Cada merge de PR ou commit direto gera uma entrada cumulativa em `SNAPSHOTS.md`.
+- **`nightly`** — branch de release candidate, cortada a partir de `main` (não de `dev`). Quando um conjunto de snapshots em `dev` é considerado pronto, é promovido (merge) para `nightly` — é o que aparece na seção `[Unreleased]` de `CHANGELOG.md`.
+- **`main`** — branch de release. Só recebe merge de `nightly` quando uma versão é oficialmente publicada.
+
+## Versionamento e changelog
+
+- **`CHANGELOG.md`** — histórico de versões já lançadas em `main`, no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) (`0.x.y`: `x` sobe em mudança expressiva, `y` em mudança pontual). Versões retiradas por bug grave ou falha de segurança levam a tag `[YANKED]`.
+- **`SNAPSHOTS.md`** — trabalho em andamento em `dev`, ainda não consolidado. Cada merge/commit em `dev` vira uma entrada `x.y.z-Ns` (`x.y.z` = versão sendo construída, `N` = snapshot sequencial), e `pyproject.toml` em `dev` é atualizado junto (`version = "x.y.z-Ns"`).
+
+Ciclo de vida de uma mudança:
+
+1. Mergeada em `dev` → entra em `SNAPSHOTS.md` como snapshot
+2. Promovida (merge) de `dev` para `nightly` → sai de `SNAPSHOTS.md`, entra em `[Unreleased]` no `CHANGELOG.md`
+3. `nightly` mergeada em `main` (release) → `[Unreleased]` vira `## [x.y.z] - data`, e `pyproject.toml` em `main`/`nightly`/`docs/geral` reflete essa versão
 
 ## Estrutura do projeto
 

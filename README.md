@@ -104,6 +104,10 @@ As configurações são persistidas em dois arquivos dentro de cada módulo:
 
 Se um script for executado sem as opções obrigatórias preenchidas, a CLI indica o comando exato para corrigi-las.
 
+## Changelog
+
+Histórico de versões em [CHANGELOG.md](CHANGELOG.md). Fluxo de contribuição e versionamento (branches, commits, PRs) documentado em [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Colaboradores
 
 - **Leandro Carvalho** — [LinkedIn](https://www.linkedin.com/in/leandro-c-s/)
