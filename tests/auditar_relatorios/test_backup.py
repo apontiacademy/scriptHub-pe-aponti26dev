@@ -22,7 +22,6 @@ def _make_config(tmp_path, id_planilha="planilha-id-123"):
             url_login="https://example.com/login",
             urls_relatorios=["https://example.com/r1"],
             exportar_analise_relatorio=False,
-            caminho_exportacao_analise=None,
         ),
         gsheets=GsheetsConfig(
             id_planilha=id_planilha,
