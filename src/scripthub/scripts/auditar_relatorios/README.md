@@ -73,7 +73,7 @@ cp settings.example.json settings.json
 | `moodle.urlsRelatorios` | Lista de URLs dos formulários de relatório |
 | `moodle.headless` | `true` para rodar o navegador sem interface gráfica (use `false` para debug) |
 | `moodle.exportarAnaliseRelatorio` | `true` para exportar análise em CSV |
-| `moodle.caminhoExportacaoAnalise` | Caminho de saída da análise |
+| `moodle.caminhoExportacaoAnalise` | Caminho de saída da análise (obrigatório quando `exportarAnaliseRelatorio=true`) |
 | `gsheets.idPlanilha` | ID da planilha do Google Sheets |
 | `gsheets.nomeAba` | Nome da aba a ser atualizada |
 | `gsheets.caminhoBackupLocal` | Pasta onde o backup `.xlsx` será salvo |

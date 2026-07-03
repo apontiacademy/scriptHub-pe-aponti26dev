@@ -41,19 +41,26 @@ class Config:
         moodle_json = dados_settings.get("moodle", {})
         gsheets_json = dados_settings.get("gsheets", {})
 
+        exportar_analise = moodle_json.get("exportarAnaliseRelatorio", False)
+        caminho_exportacao = moodle_json.get("caminhoExportacaoAnalise")
+
+        if exportar_analise and not caminho_exportacao:
+            raise ValueError(
+                "caminhoExportacaoAnalise deve ser definido em settings.json quando "
+                "exportarAnaliseRelatorio=true. Configure com `scripthub config -s ra`."
+            )
+
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
             caminho_download_relatorio=DIRETORIO_BASE / "dados" / "relatorios",
             csv_residentes=Path(moodle_json.get("csvResidentes", str(DIRETORIO_BASE / "dados" / "residentes.csv"))),
             csv_saida_analise=(
-                Path(moodle_json["caminhoExportacaoAnalise"])
-                if moodle_json.get("exportarAnaliseRelatorio") and moodle_json.get("caminhoExportacaoAnalise")
-                else DIRETORIO_BASE / "dados" / "resultado_analise.csv"
+                Path(caminho_exportacao) if exportar_analise else DIRETORIO_BASE / "dados" / "resultado_analise.csv"
             ),
             url_login=moodle_json["urlLogin"],
             urls_relatorios=[i.strip() for i in moodle_json["urlsRelatorios"]],
-            exportar_analise_relatorio=moodle_json.get("exportarAnaliseRelatorio", False),
+            exportar_analise_relatorio=exportar_analise,
         )
 
         gsheets_config = GsheetsConfig(
