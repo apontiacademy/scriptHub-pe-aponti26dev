@@ -45,6 +45,7 @@ Para ver a ajuda e os aliases disponíveis:
 ```bash
 uv run scripthub --help      # ou: scripthub -h
 uv run scripthub --aliases   # ou: scripthub -a
+uv run scripthub --version   # ou: scripthub -V
 ```
 
 ## Comandos
@@ -103,6 +104,10 @@ As configurações são persistidas em dois arquivos dentro de cada módulo:
 - `settings.json` — demais parâmetros
 
 Se um script for executado sem as opções obrigatórias preenchidas, a CLI indica o comando exato para corrigi-las.
+
+## Changelog
+
+Histórico de versões em [CHANGELOG.md](CHANGELOG.md). Fluxo de contribuição e versionamento (branches, commits, PRs) documentado em [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Colaboradores
 
