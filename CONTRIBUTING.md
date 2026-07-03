@@ -66,7 +66,7 @@ branch de feature → dev → nightly → main
 ```
 
 - **`dev`** — branch de integração contínua, recebe os PRs via merge queue (squash). Cada commit em `dev` gera uma entrada cumulativa em `SNAPSHOTS.md` — squash elimina a distinção entre "merge de PR" e "commit direto", todo commit em `dev` é um PR fechado.
-- **`nightly`** — branch de release candidate, cortada a partir de `main` (não de `dev`). Quando um conjunto de snapshots em `dev` é considerado pronto, é promovido (merge) para `nightly` — é o que aparece na seção `[Unreleased]` de `CHANGELOG.md`.
+- **`nightly`** — branch de release candidate. Quando um conjunto de snapshots em `dev` é considerado pronto, é promovido (merge) para `nightly` — é o que aparece na seção `[Unreleased]` de `CHANGELOG.md`.
 - **`main`** — branch de release. Só recebe merge de `nightly` quando uma versão é oficialmente publicada.
 
 ## Versionamento e changelog
