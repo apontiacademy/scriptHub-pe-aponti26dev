@@ -1,4 +1,4 @@
-# automacao_de_forum
+# torpedo_de_forum
 
 Posta tópicos em fóruns do Moodle a partir de um arquivo Markdown. Suporta múltiplos fóruns e upload de imagem opcional.
 
@@ -11,16 +11,14 @@ Posta tópicos em fóruns do Moodle a partir de um arquivo Markdown. Suporta mú
 > ```
 
 ```bash
-python3 -m automacao_de_forum
+uv run scripthub torpedo
 ```
 
-Ou com argumentos:
-
-```bash
-python3 -m automacao_de_forum --content post.md --image imagem.png
-```
+O arquivo de conteúdo e a imagem (opcional) são lidos do `settings.json` (`moodle.caminhoPostFile` e `moodle.caminhoImagem`), não de argumentos de linha de comando.
 
 ## Configuração
+
+> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config -s torpedo_de_forum` configura essas mesmas opções interativamente.
 
 ### 1. Variáveis de ambiente
 
@@ -65,5 +63,6 @@ Texto do post com **negrito**, *itálico* e [links](https://exemplo.com).
 
 | Pacote | Uso |
 |---|---|
-| `playwright` | Automação do navegador (login, preenchimento de formulário, upload) |
+| `requests` + `beautifulsoup4` | Login via HTTP, cujo cookie de sessão é injetado no navegador |
+| `playwright` | Automação do navegador (preenchimento de formulário, upload) |
 | `python-dotenv` | Leitura do `.env` |
