@@ -160,3 +160,10 @@ def test_persistir_valor_none_remove_chave_opcional_existente(tmp_path):
     dados = json.loads((d / "settings.json").read_text(encoding="utf-8"))
     assert "url" not in dados["moodle"]
     assert dados["moodle"]["outraChave"] == "mantida"
+
+
+def test_persistir_valor_none_com_json_chaves_vazio_nao_gera_indexerror(tmp_path):
+    _script_dir(tmp_path, "meu_script")
+    campo = _campo_settings("campo_sem_caminho", obrigatorio=False)
+
+    persistir("meu_script", [campo], {"campo_sem_caminho": None})

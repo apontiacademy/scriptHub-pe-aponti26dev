@@ -15,6 +15,8 @@ def _script_dir(nome_script: str) -> Path:
 
 
 def _remover_chave_json(settings: dict, json_chaves: list[str]) -> None:
+    if not json_chaves:
+        return
     node = settings
     for chave in json_chaves[:-1]:
         node = node.get(chave, {})
