@@ -25,3 +25,9 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 
 - **Added**: `CHANGELOG.md`, `SNAPSHOTS.md` e `CONTRIBUTING.md`, documentando o fluxo `dev` → `nightly` → `main` e o protocolo de versionamento/changelog; flag `--version`/`-V` no CLI
 - **Changed**: `CLAUDE.md` reduzido para referenciar `CONTRIBUTING.md` como fonte canônica; READMEs internos dos scripts atualizados para refletir a migração HTTP e o CLI atual
+
+### 0.20.0.dev3 - 2026-07-03 - (PR#52)
+
+- **Fixed**: `auditar_softskills` deixa de reprocessar aprovados já baixados, carregando-os do backup local (`carregar_aprovados_do_backup`); corrige detecção de "sem notas de soft skills" (comparação com `"0"` em vez de string falsy); corrige resolução de `credentials_path` (apontava para fora da pasta do módulo)
+- **Changed**: `integracao_drive.py` usa `batch_clear` restrito às colunas do próprio CSV em vez de limpar a planilha inteira, preservando colunas adicionadas manualmente; mensagens de erro de configuração mais claras (`_obrigatorio`) e suporte a `moodle.urlBase` com fallback para `moodle.url` (legado)
+- **Added**: logging de debug opcional em `get_quiz_ids` para diagnosticar turmas sem atividades encontradas
