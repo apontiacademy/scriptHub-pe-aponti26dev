@@ -1,3 +1,4 @@
+import dataclasses
 from pathlib import Path
 
 import pytest
@@ -19,7 +20,7 @@ def config(tmp_path):
             csv_saida_analise=tmp_path / "dados" / "resultado.csv",
             url_login="https://example.com/login",
             urls_relatorios=["https://example.com/r1"],
-            exportar_analise_relatorio=False,
+            exportar_analise_relatorio=True,
         ),
         gsheets=GsheetsConfig(
             id_planilha="planilha-id",
@@ -68,6 +69,16 @@ def test_main_injeta_flag_csv_saida(config, mocker):
     args = mock_core.call_args[0][0]
     assert "-o" in args
     assert str(config.moodle.csv_saida_analise) in args
+
+
+def test_main_nao_injeta_flag_csv_saida_quando_exportacao_desativada(config, mocker):
+    config = dataclasses.replace(config, moodle=dataclasses.replace(config.moodle, exportar_analise_relatorio=False))
+    mock_core = mocker.patch(_PATCH_CORE)
+
+    main(config)
+
+    args = mock_core.call_args[0][0]
+    assert "-o" not in args
 
 
 def test_main_cria_diretorio_pai_do_csv_saida(config, mocker):

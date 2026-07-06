@@ -30,7 +30,7 @@ def main(config: Config):
         argumentos_cli.extend(["-p", str(csv_residentes)])
     if modo_analise:
         argumentos_cli.extend(["-m", modo_analise])
-    if csv_saida:
+    if config.moodle.exportar_analise_relatorio:
         argumentos_cli.extend(["-o", str(csv_saida)])
 
     log.passo(f"Injetando argumentos no Core: {' '.join(argumentos_cli)}")
