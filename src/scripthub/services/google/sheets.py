@@ -19,7 +19,7 @@ class GoogleSheetsClient:
         try:
             return self._gc.open_by_key(spreadsheet_id)
         except gspread.exceptions.SpreadsheetNotFound:
-            raise RuntimeError(f"Planilha não encontrada: {spreadsheet_id}")
+            raise RuntimeError(f"Planilha não encontrada: {spreadsheet_id}") from None
 
     def obter_ou_criar_aba(self, planilha, nome: str, *, linhas: int = 1000, colunas: int = 20):
         """Retorna a aba existente ou cria uma nova com o nome fornecido."""

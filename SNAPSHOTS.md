@@ -31,3 +31,7 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 - **Fixed**: `auditar_softskills` deixa de reprocessar aprovados já baixados, carregando-os do backup local (`carregar_aprovados_do_backup`); corrige detecção de "sem notas de soft skills" (comparação com `"0"` em vez de string falsy); corrige resolução de `credentials_path` (apontava para fora da pasta do módulo)
 - **Changed**: `integracao_drive.py` usa `batch_clear` restrito às colunas do próprio CSV em vez de limpar a planilha inteira, preservando colunas adicionadas manualmente; mensagens de erro de configuração mais claras (`_obrigatorio`) e suporte a `moodle.urlBase` com fallback para `moodle.url` (legado)
 - **Added**: logging de debug opcional em `get_quiz_ids` para diagnosticar turmas sem atividades encontradas
+
+### 0.20.0.dev4 - 2026-07-07 - (chore/ruff-cleanup-dev)
+
+- **Changed**: limpeza das violações de `ruff` restantes em `dev` após a chegada de `.github/workflows/ci.yml` (propagado de `main`/`nightly`, issue #67) — imports não usados/desordenados, `raise ... from` em blocos `except`, `zip(strict=)` em `download_softskills.py`; necessário para o CI de lint rodar limpo em `dev`

@@ -1,7 +1,4 @@
 from pathlib import Path
-from unittest.mock import MagicMock
-
-import pytest
 
 from scripthub.services.google.drive import GoogleDriveClient
 
@@ -75,9 +72,7 @@ def test_exportar_xlsx_retorna_bytes(mocker):
 
 def test_listar_arquivos_retorna_lista(mocker):
     mock_service = _setup(mocker)
-    mock_service.files.return_value.list.return_value.execute.return_value = {
-        "files": [{"id": "id-1"}, {"id": "id-2"}]
-    }
+    mock_service.files.return_value.list.return_value.execute.return_value = {"files": [{"id": "id-1"}, {"id": "id-2"}]}
     client = GoogleDriveClient(Path("creds.json"), _SCOPES)
 
     resultado = client.listar_arquivos("name='test' and trashed=false")

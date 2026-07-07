@@ -7,10 +7,7 @@ from bs4 import BeautifulSoup
 
 from scripthub.services import log
 
-_USER_AGENT = (
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-)
+_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 
 
 class MoodleSessao:
@@ -53,9 +50,7 @@ class MoodleSessao:
             },
         )
         if "/login/" in post_resp.url:
-            raise RuntimeError(
-                "Login falhou: redirecionado para a tela de login"
-            )
+            raise RuntimeError("Login falhou: redirecionado para a tela de login")
         post_soup = BeautifulSoup(post_resp.text, "html.parser")
         if post_soup.find("input", {"name": "logintoken"}):
             raise RuntimeError("Login falhou: credenciais inválidas")
@@ -96,9 +91,7 @@ class MoodleSessao:
             resp = self._session.get(url)
 
         if "/login/" in resp.url:
-            raise RuntimeError(
-                f"Sessão expirada ao tentar baixar: {url}"
-            )
+            raise RuntimeError(f"Sessão expirada ao tentar baixar: {url}")
 
         resp.raise_for_status()
         destino.parent.mkdir(parents=True, exist_ok=True)
