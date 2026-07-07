@@ -10,6 +10,9 @@ def _find_project_root() -> Path:
     return Path.cwd()
 
 
+_NIVEL_SUCESSO = 25  # entre INFO (20) e WARNING (30)
+logging.addLevelName(_NIVEL_SUCESSO, "SUCCESS")
+
 _log_dir = _find_project_root() / "logs"
 
 _comando_atual: str = " ".join(sys.argv[1:]) or "scripthub"
@@ -67,6 +70,11 @@ def passo(msg: str) -> None:
 def ok(msg: str) -> None:
     print(f"  ✔ {msg}")
     _logger.info("  ✔ %s", msg)
+
+
+def sucesso(msg: str) -> None:
+    print(f"  ✅ {msg}")
+    _logger.log(_NIVEL_SUCESSO, "  ✅ %s", msg)
 
 
 def erro(msg: str) -> None:

@@ -355,7 +355,7 @@ def publicar_no_forum(
         )
         if erro_real:
             msg = page.locator(".alert-danger, .notifyproblem, #id_error_message").first.inner_text()
-            log.aviso(f"Moodle exibiu erro: {msg.strip()[:120]}")
+            log.erro(f"Moodle exibiu erro: {msg.strip()[:120]}")
             return False
         return True
     except PlaywrightTimeoutError as exc:
@@ -443,7 +443,7 @@ def main() -> None:
 
     log.ok(f"Resumo: {ok_count}/{len(resultados)} fóruns publicados com sucesso.")
     if falhou:
-        log.aviso(f"{falhou} fórum(s) com falha:")
+        log.erro(f"{falhou} fórum(s) com falha:")
         for url, sucesso in resultados.items():
             if not sucesso:
                 log.passo(f"  - {url}")

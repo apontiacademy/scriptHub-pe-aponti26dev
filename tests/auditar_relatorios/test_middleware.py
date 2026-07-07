@@ -85,3 +85,10 @@ def test_main_propaga_excecao_do_core(config, mocker):
 
     with pytest.raises(RuntimeError, match="falha no core"):
         main(config)
+
+
+def test_main_converte_system_exit_do_core_em_runtime_error(config, mocker):
+    mocker.patch(_PATCH_CORE, side_effect=SystemExit(1))
+
+    with pytest.raises(RuntimeError, match="código de saída 1"):
+        main(config)

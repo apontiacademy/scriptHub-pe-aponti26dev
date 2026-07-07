@@ -215,26 +215,30 @@ def executar_script(config, escopos, passo: str | None, titulo: str):
             i, e = match
             log.secao(f"PASSO {i}/{total} — {e.nome}")
             e.func(config)
-    except (typer.Exit, SystemExit):
-        log.erro("Script finalizado com erro. Código de saída: 1")
+    except (typer.Exit, SystemExit) as exc:
+        code = exc.code if isinstance(exc, SystemExit) else exc.exit_code
+        if code:
+            log.erro("Script finalizado com erro. Código de saída: 1")
         raise
     except Exception as exc:
         log.erro(f"Erro durante execução: {exc}")
         log.erro("Script finalizado com erro. Código de saída: 1")
         raise typer.Exit(1)
 
-    log.ok("Script finalizado com sucesso. Código de saída: 0")
+    log.sucesso("Script finalizado com sucesso. Código de saída: 0")
 
 
 def _executar_pipeline_simples(fn) -> None:
     try:
         fn()
-    except (typer.Exit, SystemExit):
-        log.erro("Script finalizado com erro. Código de saída: 1")
+    except (typer.Exit, SystemExit) as exc:
+        code = exc.code if isinstance(exc, SystemExit) else exc.exit_code
+        if code:
+            log.erro("Script finalizado com erro. Código de saída: 1")
         raise
     except Exception as exc:
         log.erro(f"Erro durante execução: {exc}")
         log.erro("Script finalizado com erro. Código de saída: 1")
         raise typer.Exit(1)
 
-    log.ok("Script finalizado com sucesso. Código de saída: 0")
+    log.sucesso("Script finalizado com sucesso. Código de saída: 0")

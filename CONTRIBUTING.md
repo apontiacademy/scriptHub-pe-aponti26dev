@@ -175,13 +175,37 @@ from scripthub.services import log
 |---|---|---|
 | `log.secao("TÍTULO")` | Início de uma etapa principal | `\n===...===\n▶ TÍTULO\n===...===` |
 | `log.passo("msg")` | Passo em andamento | `  • msg` |
-| `log.ok("msg")` | Conclusão bem-sucedida | `  ✔ msg` |
-| `log.erro("msg")` | Erro (vai para stderr) | `  ❌ msg` |
-| `log.aviso("msg")` | Aviso não-fatal | `  ⚠️  msg` |
+| `log.ok("msg")` | Passo/item concluído — não implica que o processo inteiro terminou | `  ✔ msg` |
+| `log.sucesso("msg")` | Processo/pipeline **inteiro** terminou com sucesso (exit code `0`) — usar uma única vez, no fim | `  ✅ msg` (grava `SUCCESS` em `logs/scripthub.log`) |
+| `log.erro("msg")` | Erro que leva o processo a terminar com exit code `!= 0` (vai para stderr) | `  ❌ msg` |
+| `log.aviso("msg")` | Aviso não-fatal — execução segue, exit code final não é afetado | `  ⚠️  msg` |
 
 **Nunca use `print()` diretamente nos scripts.**
 
 Todo output é persistido automaticamente em `logs/scripthub.log` (ignorado pelo git).
+
+### Como decidir entre `erro()` e `aviso()`
+
+Pergunta prática: **se eu remover esta chamada de log e rodar o script até o
+fim, o exit code final muda?**
+
+- Se sim (o fluxo de controle logo depois é um `raise`/`sys.exit`/`typer.Exit`
+  não-zero que **sempre** acontece quando essa condição ocorre) → `log.erro()`.
+- Se não (o fluxo segue: `return` simples, `continue` em um loop, e nenhum
+  contador dessa falha é verificado depois de forma a abortar o processo) →
+  `log.aviso()`.
+
+Um erro comum é usar `log.erro()` "porque parece grave", mesmo quando o
+código imediatamente depois apenas segue em frente — isso conflita com o
+contrato acima.
+
+**Exceção documentada**: as linhas de `services/menu/main.py` que reportam o
+resultado de um script escolhido no menu interativo (`log.ok(...)`/`log.erro(...)`
+com o código de retorno) usam `ok`/`erro` para exibir o exit code de um
+**subprocesso filho** (`scripthub <cmd>` rodado via `subprocess`), não o exit
+code do próprio processo do `menu` — que sempre termina com código `0`
+independentemente do resultado do filho. Por isso essas linhas não seguem, de
+propósito, o contrato acima.
 
 ## Contrato de erros
 
@@ -337,3 +361,6 @@ def test_funcao(entrada, esperado):
 - Geração de PDF com FPDF — instanciar `RelatorioPDF` requer fontes instaladas
 - Google API real — sempre mockar `build`, `Credentials.from_service_account_file`, `gspread.authorize`
 - pentefino Core real — mockar `executar_analise_core`
+- Orquestradores Padrão A/B pesados (ex.: `auditar_softskills/main.py`) cujo `main()`/`ESCOPOS` exigiria mockar
+  muitos serviços externos para pouco ganho — teste os helpers que ele chama isoladamente; o próprio arquivo
+  entra no `omit` de cobertura do `pyproject.toml` quando esse for o caso

@@ -36,4 +36,7 @@ def main(config: Config):
     log.passo(f"Injetando argumentos no Core: {' '.join(argumentos_cli)}")
 
     # Executa a análise do core enviando a lista limpa de strings
-    executar_analise_core(argumentos_cli)
+    try:
+        executar_analise_core(argumentos_cli)
+    except SystemExit as e:
+        raise RuntimeError(f"Análise do pentefino falhou (código de saída {e.code}).") from e

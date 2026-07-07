@@ -22,7 +22,7 @@ def upload_to_drive(file_path: str, config: Config) -> None:
         folder_info = drive.metadados(folder_id, fields="id,name")
         log.passo(f"Pasta acessível: {folder_info['name']}")
     except Exception as e:
-        log.erro(f"Pasta não acessível (verifique o compartilhamento): {e}")
+        log.aviso(f"Pasta não acessível (verifique o compartilhamento): {e}")
         return
 
     sheet_name = Path(file_path).stem

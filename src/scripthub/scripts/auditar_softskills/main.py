@@ -23,7 +23,7 @@ def main():
 
     # ── 1. Download bootcamp ──────────────────────────────────────────────────
     if download_softskills.bootcamp_ja_baixado(config):
-        log.passo("[CACHE] Dados do bootcamp já existem em disco — pulando download.")
+        log.passo("Dados do bootcamp já existem em disco — pulando download.")
         turmas_nums = download_softskills.turmas_do_disco(config)
         log.passo(f"{len(turmas_nums)} turmas encontradas: {turmas_nums}")
     else:
@@ -49,7 +49,7 @@ def main():
             for label, fname in download_softskills.ACTIVITIES:
                 qid = quiz_ids["activities"].get(fname)
                 if not qid:
-                    log.aviso(f"[NOT FOUND] {label}")
+                    log.aviso(f"Atividade não encontrada: {label}")
                     continue
                 content = download_softskills.download_csv(sessao, qid, config)
                 if content:
@@ -58,7 +58,7 @@ def main():
                     has_nota = "Nota/10,00" in (list(rows[0].keys()) if rows else [])
                     log.ok(f"{label} — {len(rows)} alunos | nota={'sim' if has_nota else 'não'}")
                 else:
-                    log.erro(f"[ERROR] {label}")
+                    log.aviso(f"Falha ao baixar: {label}")
                 time.sleep(0.2)
 
             qid = quiz_ids["avaliativa"]
@@ -69,9 +69,9 @@ def main():
                     rows = list(csv.DictReader(io.StringIO(content.decode("utf-8-sig"))))
                     log.ok(f"Atividade Avaliativa SS — {len(rows)} alunos")
                 else:
-                    log.erro("[ERROR] Atividade Avaliativa SS")
+                    log.aviso("Falha ao baixar: Atividade Avaliativa SS")
             else:
-                log.aviso("[NOT FOUND] Atividade Avaliativa SS")
+                log.aviso("Atividade Avaliativa SS não encontrada.")
             time.sleep(0.2)
 
     # ── 2. Build softskills_resultado.csv ─────────────────────────────────────
@@ -147,7 +147,7 @@ def main():
 
     if not approved:
         if download_softskills.aprovados_ja_baixados(config):
-            log.passo("[CACHE] Dados dos aprovados já existem em disco — pulando download.")
+            log.passo("Dados dos aprovados já existem em disco — pulando download.")
             approved = download_softskills.aprovados_do_disco(config)
             log.passo(f"{len(approved)} aprovados carregados do disco.")
         else:

@@ -252,7 +252,7 @@ def _carregar_relatorios(
             try:
                 df = pd.read_csv(caminho_csv, dtype=str).fillna("")
             except Exception as e:
-                log.erro(f"Falha ao ler {caminho_csv}: {e}")
+                log.aviso(f"Falha ao ler {caminho_csv}: {e}")
                 continue
 
             colunas_perguntas = _extrair_colunas_perguntas(df)
@@ -362,7 +362,12 @@ def main(config: Config):
             erros += 1
 
     if erros:
-        raise RuntimeError(f"{erros} PDF(s) falharam ao gerar de {len(alunos)} aluno(s).")
+        raise RuntimeError(
+            f"{erros} PDF(s) falharam ao gerar de {len(alunos)} aluno(s). "
+            f"{gerados} gerado(s) com sucesso."
+        )
+
+    log.ok(f"{gerados} PDF(s) gerado(s) com sucesso.")
 
 
 if __name__ == "__main__":
