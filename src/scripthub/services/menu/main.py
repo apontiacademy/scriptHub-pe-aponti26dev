@@ -6,10 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from scripthub.services import log
-
 import questionary
 from questionary import Style
+
+from scripthub.services import log
 
 # Encontrar o diretório src/ (raiz do projeto)
 root_dir = Path(__file__)
@@ -77,9 +77,7 @@ def discover_modules(scripts_folder: Path) -> list[tuple[str, tuple[str, ...], s
 
 def run_module(cmd: tuple[str, ...]) -> int:
     scripthub_exe = (
-        shutil.which("scripthub", path=str(Path(sys.executable).parent))
-        or shutil.which("scripthub")
-        or "scripthub"
+        shutil.which("scripthub", path=str(Path(sys.executable).parent)) or shutil.which("scripthub") or "scripthub"
     )
     result = subprocess.run([scripthub_exe, *cmd], check=False)
     return result.returncode

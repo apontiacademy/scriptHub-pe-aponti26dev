@@ -1,4 +1,5 @@
-from importlib.metadata import PackageNotFoundError, version as _pkg_version
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _pkg_version
 from typing import Annotated
 
 import typer
@@ -20,7 +21,9 @@ from .scripts import (
     compilacao_de_relatorios,
     torpedo_de_forum,
 )
-from .services.config import config as config_service, limpar as limpar_config, visualizar as visualizar_config
+from .services.config import config as config_service
+from .services.config import limpar as limpar_config
+from .services.config import visualizar as visualizar_config
 from .services.menu import menu as _menu
 
 app = typer.Typer(
@@ -46,13 +49,13 @@ def _callback(
         raise typer.Exit()
     elif aliases:
         _ALIASES = [
-            ("scripthub frequencias",         "f"),
-            ("scripthub relatorios auditar",  "r auditar, ra"),
+            ("scripthub frequencias", "f"),
+            ("scripthub relatorios auditar", "r auditar, ra"),
             ("scripthub relatorios compilar", "r compilar, rc"),
-            ("scripthub softskills",          "s"),
-            ("scripthub torpedo",             "t"),
-            ("scripthub config",              "c"),
-            ("scripthub menu",                "m  [depreciado]"),
+            ("scripthub softskills", "s"),
+            ("scripthub torpedo", "t"),
+            ("scripthub config", "c"),
+            ("scripthub menu", "m  [depreciado]"),
         ]
         typer.echo("Aliases disponíveis:\n")
         for cmd, alias in _ALIASES:
@@ -80,14 +83,11 @@ def _carregar_config(fn, nome_script: str):
     except (FileNotFoundError, ValueError, KeyError) as e:
         typer.echo(f"❌ Configuração inválida para {nome_script}: {e}", err=True)
         typer.echo(f"   Execute: scripthub config -s {nome_script}", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 def _help_passo(escopos) -> str:
-    partes = " | ".join(
-        f"{e.slug} ({', '.join(e.aliases)})" if e.aliases else e.slug
-        for e in escopos
-    )
+    partes = " | ".join(f"{e.slug} ({', '.join(e.aliases)})" if e.aliases else e.slug for e in escopos)
     return f"Executar somente um passo do pipeline. Passos: {partes}"
 
 
@@ -206,10 +206,7 @@ def executar_script(config, escopos, passo: str | None, titulo: str):
                 None,
             )
             if match is None:
-                disponiveis = " | ".join(
-                    f"{e.slug} ({', '.join(e.aliases)})" if e.aliases else e.slug
-                    for e in escopos
-                )
+                disponiveis = " | ".join(f"{e.slug} ({', '.join(e.aliases)})" if e.aliases else e.slug for e in escopos)
                 log.erro(f"Passo '{passo}' inválido. Disponíveis: {disponiveis}")
                 raise typer.Exit(1)
             i, e = match
@@ -219,6 +216,6 @@ def executar_script(config, escopos, passo: str | None, titulo: str):
         raise
     except Exception as exc:
         log.erro(f"Erro durante execução: {exc}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
 
     log.ok("PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")

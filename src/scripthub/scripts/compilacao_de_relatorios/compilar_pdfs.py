@@ -48,8 +48,7 @@ def _para_latin1(texto: str) -> str:
     substituicoes = {
         "—": " - ",  # — em dash
         "–": "-",  # – en dash
-        "'": "'",  # ' aspa simples esquerda
-        "'": "'",  # ' aspa simples direita
+        "'": "'",  # ' aspa simples
         """: '"',  # " aspa dupla esquerda
         """: '"',  # " aspa dupla direita
         "…": "...",  # … reticências

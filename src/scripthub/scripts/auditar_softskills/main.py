@@ -7,7 +7,6 @@ from pathlib import Path as _Path
 
 import scripthub.scripts.auditar_softskills.download_softskills as download_softskills
 import scripthub.scripts.auditar_softskills.integracao_drive as integracao_drive
-
 from scripthub.services import log
 from scripthub.services.moodle import MoodleSessao
 
