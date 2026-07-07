@@ -86,8 +86,8 @@ def get_quiz_ids(session, course_url, debug=False):
         all_tags = soup.find_all("a", href=True)
         all_hrefs = [str(a.get("href", "")) for a in all_tags]
         all_texts = [a.text.strip() for a in all_tags]
-        quiz_links = [(h, t) for h, t in zip(all_hrefs, all_texts) if "quiz" in h.lower()]
-        course_links = [(h, t) for h, t in zip(all_hrefs, all_texts) if "course/view.php" in h]
+        quiz_links = [(h, t) for h, t in zip(all_hrefs, all_texts, strict=True) if "quiz" in h.lower()]
+        course_links = [(h, t) for h, t in zip(all_hrefs, all_texts, strict=True) if "course/view.php" in h]
         title = soup.find("title")
 
         log.aviso(f"[DEBUG] URL curso: {course_url}")
@@ -103,7 +103,7 @@ def get_quiz_ids(session, course_url, debug=False):
                 log.aviso(f"[DEBUG]   {h!r} → {t!r}")
         if not quiz_links and not course_links:
             log.aviso("[DEBUG] Primeiros 15 hrefs:")
-            for h, t in zip(all_hrefs[:15], all_texts[:15]):
+            for h, t in zip(all_hrefs[:15], all_texts[:15], strict=True):
                 log.aviso(f"[DEBUG]   {h!r} → {t!r}")
 
     return ids
