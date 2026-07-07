@@ -16,8 +16,7 @@ def main(config: Config) -> None:
 
     if not caminho_csv.exists():
         raise RuntimeError(
-            f"Arquivo de auditoria não encontrado em: {caminho_csv}. "
-            "Certifique-se de rodar o Escopo 2 antes."
+            f"Arquivo de auditoria não encontrado em: {caminho_csv}. Certifique-se de rodar o Escopo 2 antes."
         )
 
     if not caminho_credenciais.exists():
@@ -33,7 +32,7 @@ def main(config: Config) -> None:
         try:
             df = pd.read_csv(caminho_csv, encoding="latin1")
         except Exception as e:
-            raise RuntimeError(f"Falha ao ler o arquivo CSV local: {e}")
+            raise RuntimeError(f"Falha ao ler o arquivo CSV local: {e}") from e
 
     if df.shape[1] < 4:
         raise RuntimeError("O CSV de resultado possui menos de 4 colunas. Coluna D indisponível.")
@@ -51,7 +50,7 @@ def main(config: Config) -> None:
     try:
         aba = planilha.worksheet(nome_aba)
     except gspread.exceptions.WorksheetNotFound:
-        raise RuntimeError(f"A aba '{nome_aba}' não foi encontrada na planilha fornecida.")
+        raise RuntimeError(f"A aba '{nome_aba}' não foi encontrada na planilha fornecida.") from None
 
     log.passo(f"Limpando dados antigos da Coluna D na aba '{nome_aba}'...")
     aba.batch_clear(["D:D"])

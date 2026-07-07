@@ -8,7 +8,6 @@ from scripthub.scripts.torpedo_de_forum.main import (
 )
 from scripthub.services.moodle import MoodleSessao
 
-
 # ── carregar_conteudo ─────────────────────────────────────────────────────────
 
 

@@ -25,8 +25,7 @@ def main(config: Config) -> None:
     arquivos_xlsx = list(caminho_exportacao.glob("*.xlsx"))
     if not arquivos_xlsx:
         raise RuntimeError(
-            "Nenhum arquivo XLSX encontrado no diretório de exportação. "
-            "Certifique-se de rodar o Escopo 1 antes."
+            "Nenhum arquivo XLSX encontrado no diretório de exportação. Certifique-se de rodar o Escopo 1 antes."
         )
 
     log.passo("Autenticando com a API do Google...")
