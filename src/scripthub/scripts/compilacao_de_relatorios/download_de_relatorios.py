@@ -161,6 +161,7 @@ def main(config: Config):
 if __name__ == "__main__":
     try:
         from .config import Config as _Config
+
         main(_Config.load())
     except Exception as e:
         log.erro(str(e))

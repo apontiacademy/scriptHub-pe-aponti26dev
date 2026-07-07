@@ -1,6 +1,5 @@
-from pathlib import Path
-from unittest.mock import MagicMock, call
 from contextlib import contextmanager
+from unittest.mock import MagicMock, call
 
 from scripthub.scripts.auditar_frequencias.exportar_frequencias import (
     exportar_frequencia,
@@ -111,9 +110,7 @@ def test_exportar_frequencia_ja_marcado_nao_marca_novamente(tmp_path):
 
 def test_exportar_frequencia_redireciona_para_login(tmp_path, mocker):
     page, download_mock = _make_page_com_download(url_atual="https://example.com/login")
-    mock_login = mocker.patch(
-        "scripthub.scripts.auditar_frequencias.exportar_frequencias.realizar_login"
-    )
+    mock_login = mocker.patch("scripthub.scripts.auditar_frequencias.exportar_frequencias.realizar_login")
 
     exportar_frequencia(
         page,
