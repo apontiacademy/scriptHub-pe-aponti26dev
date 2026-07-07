@@ -359,7 +359,7 @@ def main(config: Config):
             log.ok(f"{caminho_pdf.relative_to(config.pdf.caminho_saida)}")
             gerados += 1
         except Exception as e:
-            log.erro(f"Falha ao gerar PDF para {aluno.nome}: {e}")
+            log.aviso(f"Falha ao gerar PDF para {aluno.nome}: {e}")
             erros += 1
 
     if erros:
