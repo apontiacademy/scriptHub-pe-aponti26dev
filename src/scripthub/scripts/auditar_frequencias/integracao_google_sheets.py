@@ -1,4 +1,3 @@
-import gspread
 import pandas as pd
 
 from scripthub.services import log
