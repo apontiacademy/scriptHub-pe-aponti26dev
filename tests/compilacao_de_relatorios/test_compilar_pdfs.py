@@ -57,6 +57,10 @@ def test_sanitizar_caminho(entrada, esperado):
         ("texto com – en dash", "-"),
         ("texto com … reticencias", "..."),
         ("texto com • bullet", "-"),
+        ("texto com ‘aspa simples esquerda", "'"),
+        ("texto com ’aspa simples direita", "'"),
+        ("texto com “aspa dupla esquerda", '"'),
+        ("texto com ”aspa dupla direita", '"'),
     ],
 )
 def test_para_latin1_substitui_caracteres_especiais(entrada, esperado_contem):
