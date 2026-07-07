@@ -62,7 +62,10 @@ def upload_to_drive(file_path: str, config: Config) -> None:
         num_cols = {i for i, col in enumerate(header) if col.startswith("Nota") or col == "Turma Trilha"}
         data = [[_parse(cell) if i in num_cols else cell for i, cell in enumerate(row)] for row in reader]
 
-    ws.clear()
+    # Limpa apenas as colunas de dados presentes no CSV, preservando as colunas
+    # manuais além dela (ex: "Lista Filtrada")
+    last_col = chr(ord("A") + len(header) - 1)
+    ws.batch_clear([f"A:{last_col}"])
     ws.update([header] + data)
 
     num_col_letters = [chr(ord("A") + i) for i in sorted(num_cols)]

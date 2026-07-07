@@ -1,4 +1,4 @@
-import sys
+from importlib.metadata import PackageNotFoundError, version as _pkg_version
 from typing import Annotated
 
 import typer
@@ -7,6 +7,11 @@ from ._i18n import instalar as _instalar_i18n
 from .services import log
 
 _instalar_i18n()
+
+try:
+    _VERSAO = _pkg_version("scriptHub-pe-aponti26dev")
+except PackageNotFoundError:
+    _VERSAO = "(versão desconhecida)"
 
 from .scripts import (
     auditar_frequencias,
@@ -27,12 +32,19 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 def _callback(
     ctx: typer.Context,
+    versao: Annotated[
+        bool,
+        typer.Option("--version", "-V", help="Exibir a versão instalada.", is_eager=True),
+    ] = False,
     aliases: Annotated[
         bool,
         typer.Option("--aliases", "-a", help="Exibir aliases de cada comando."),
     ] = False,
 ):
-    if aliases:
+    if versao:
+        typer.echo(f"scripthub {_VERSAO}")
+        raise typer.Exit()
+    elif aliases:
         _ALIASES = [
             ("scripthub frequencias",         "f"),
             ("scripthub relatorios auditar",  "r auditar, ra"),
