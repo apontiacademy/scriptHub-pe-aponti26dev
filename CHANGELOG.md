@@ -12,6 +12,19 @@ O histórico de 0.1.0 a 0.19.1 foi reconstruído a partir do `git log` de `main`
 
 Nenhuma mudança promovida de `dev` para `nightly` ainda. O trabalho em andamento em `dev` (ainda não consolidado) é acompanhado em [SNAPSHOTS.md](SNAPSHOTS.md).
 
+## [0.19.2] - 2026-07-07
+
+Exceção ao fluxo normal `dev → nightly → main`: PR aberta direto contra `main`, já que CI/ruleset é infraestrutura que precisa proteger as três branches o quanto antes (issue #67).
+
+### Added
+- `.github/workflows/ci.yml` — CI no GitHub Actions, rodando `ruff check`, `ruff format --check` e `pytest` em `pull_request`/`push` contra `main`, `dev`, `nightly` e em `merge_group` contra `dev`; job `test` depende do job `lint` (#74)
+
+### Fixed
+- `_para_latin1` (`compilacao_de_relatorios/compilar_pdfs.py`) nunca trocava aspas curvas (‘’“”) pelos equivalentes retos antes do `encode("latin-1")` — chaves do dict de substituição escritas incorretamente (#74)
+
+### Changed
+- Limpeza de violações de lint (`ruff`) pré-existentes em `main`, pré-requisito para o CI de lint rodar limpo (#74)
+
 ## [0.19.1] - 2026-06-25
 
 ### Added
