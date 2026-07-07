@@ -116,9 +116,7 @@ def test_upload_to_drive_nunca_deleta_arquivos(tmp_path, mocker):
 
 def test_upload_to_drive_autentica_com_scopes_corretos(tmp_path, mocker):
     csv_file = _make_csv(tmp_path)
-    mock_creds = mocker.patch(
-        f"{_PATCH_BASE}.service_account.Credentials.from_service_account_file"
-    )
+    mock_creds = mocker.patch(f"{_PATCH_BASE}.service_account.Credentials.from_service_account_file")
     mocker.patch(f"{_PATCH_BASE}.build").return_value.files.return_value.get.return_value.execute.return_value = {
         "id": "f",
         "name": "F",

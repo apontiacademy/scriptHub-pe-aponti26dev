@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 
 from scripthub.scripts.auditar_relatorios.backup import main, realizar_backup_xlsx_local

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 
 from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig

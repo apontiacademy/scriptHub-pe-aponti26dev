@@ -6,7 +6,6 @@ from scripthub.scripts.torpedo_de_forum.main import (
     encontrar_imagem,
 )
 
-
 # ── carregar_conteudo ─────────────────────────────────────────────────────────
 
 

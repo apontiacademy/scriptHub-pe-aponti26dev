@@ -1,6 +1,5 @@
 from scripthub.services.menu.main import discover_modules, read_docstring
 
-
 # ── read_docstring ────────────────────────────────────────────────────────────
 
 

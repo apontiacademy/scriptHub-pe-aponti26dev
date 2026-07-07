@@ -1,5 +1,4 @@
 import re
-import sys
 from pathlib import Path
 
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
@@ -37,8 +36,7 @@ def carregar_conteudo(filepath: Path) -> tuple[str, str]:
             break
     if not title:
         raise ValueError(
-            "O arquivo .md deve ter um título na primeira linha com '#'. "
-            "Exemplo: # Semana 10 - Relatórios"
+            "O arquivo .md deve ter um título na primeira linha com '#'. Exemplo: # Semana 10 - Relatórios"
         )
     body = "\n".join(lines[body_start:]).strip()
     html = _md_para_html(body) if body else ""

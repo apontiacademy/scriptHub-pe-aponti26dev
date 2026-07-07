@@ -30,8 +30,7 @@ def main(config: Config):
 
     if not arquivos_xlsx:
         raise RuntimeError(
-            "Nenhum arquivo XLSX encontrado no diretório de exportação. "
-            "Certifique-se de rodar o Escopo 1 antes."
+            "Nenhum arquivo XLSX encontrado no diretório de exportação. Certifique-se de rodar o Escopo 1 antes."
         )
 
     try:
@@ -74,7 +73,7 @@ def main(config: Config):
         log.ok("Escopo 2 finalizado com sucesso!")
 
     except gspread.exceptions.SpreadsheetNotFound:
-        raise RuntimeError(f"A planilha com ID '{id_planilha}' não foi encontrada.")
+        raise RuntimeError(f"A planilha com ID '{id_planilha}' não foi encontrada.") from None
     except RuntimeError:
         raise
     except Exception as e:
