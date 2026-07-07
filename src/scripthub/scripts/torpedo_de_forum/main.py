@@ -7,6 +7,7 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 from scripthub.services import log
+from scripthub.services.erros import ErroConfiguracao, FalhaParcial
 from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
@@ -27,7 +28,7 @@ _IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 def carregar_conteudo(filepath: Path) -> tuple[str, str]:
     """Lê o arquivo .md e retorna (titulo, html_conteudo)."""
     if not filepath.exists():
-        raise FileNotFoundError(f"Arquivo não encontrado: {filepath}")
+        raise ErroConfiguracao(f"Arquivo não encontrado: {filepath}")
     text = filepath.read_text(encoding="utf-8").strip()
     lines = text.splitlines()
     title = ""
@@ -38,7 +39,7 @@ def carregar_conteudo(filepath: Path) -> tuple[str, str]:
             body_start = i + 1
             break
     if not title:
-        raise ValueError(
+        raise ErroConfiguracao(
             "O arquivo .md deve ter um título na primeira linha com '#'. "
             "Exemplo: # Semana 10 - Relatórios"
         )
@@ -355,7 +356,7 @@ def publicar_no_forum(
         )
         if erro_real:
             msg = page.locator(".alert-danger, .notifyproblem, #id_error_message").first.inner_text()
-            log.erro(f"Moodle exibiu erro: {msg.strip()[:120]}")
+            log.aviso(f"Moodle exibiu erro: {msg.strip()[:120]}")
             return False
         return True
     except PlaywrightTimeoutError as exc:
@@ -388,10 +389,10 @@ def main() -> None:
     post_file = config.moodle.caminho_post_file
 
     if not post_file.exists():
-        raise FileNotFoundError(f"Arquivo de post não encontrado em: {post_file}")
+        raise ErroConfiguracao(f"Arquivo de post não encontrado em: {post_file}")
 
     if not forum_urls:
-        raise ValueError("Nenhuma URL de fórum encontrada no settings.json")
+        raise ErroConfiguracao("Nenhuma URL de fórum encontrada no settings.json")
 
     log.passo(f"Carregando conteúdo: {post_file.name}")
     title, html_content = carregar_conteudo(post_file)
@@ -447,4 +448,4 @@ def main() -> None:
         for url, sucesso in resultados.items():
             if not sucesso:
                 log.passo(f"  - {url}")
-        raise RuntimeError(f"{falhou} fórum(s) falharam ao publicar.")
+        raise FalhaParcial(f"{falhou} fórum(s) falharam ao publicar.")

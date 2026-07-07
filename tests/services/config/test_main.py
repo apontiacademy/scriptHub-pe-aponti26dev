@@ -15,12 +15,13 @@ def test_config_sem_scripts_com_esquema_loga_aviso_nao_erro(mocker):
     mock_log.erro.assert_not_called()
 
 
-def test_config_nome_invalido_mantem_erro_e_system_exit(mocker):
+def test_config_nome_invalido_mantem_erro_e_system_exit_3(mocker):
     mock_log = mocker.patch(f"{_PATCH}.log")
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc_info:
         config("script-que-nao-existe")
 
+    assert exc_info.value.code == 3
     mock_log.erro.assert_called_once()
     mock_log.aviso.assert_not_called()
 
@@ -35,22 +36,25 @@ def test_visualizar_sem_scripts_com_esquema_loga_aviso_nao_erro(mocker):
     mock_log.erro.assert_not_called()
 
 
-def test_visualizar_nome_invalido_mantem_erro_e_system_exit(mocker):
+def test_visualizar_nome_invalido_mantem_erro_e_system_exit_3(mocker):
     mock_log = mocker.patch(f"{_PATCH}.log")
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc_info:
         visualizar("script-que-nao-existe")
 
+    assert exc_info.value.code == 3
     mock_log.erro.assert_called_once()
 
 
-def test_limpar_nome_invalido_loga_aviso_e_retorna_sem_levantar(mocker):
+def test_limpar_nome_invalido_loga_erro_e_system_exit_3(mocker):
     mock_log = mocker.patch(f"{_PATCH}.log")
 
-    limpar("script-que-nao-existe")
+    with pytest.raises(SystemExit) as exc_info:
+        limpar("script-que-nao-existe")
 
-    mock_log.aviso.assert_called_once()
-    mock_log.erro.assert_not_called()
+    assert exc_info.value.code == 3
+    mock_log.erro.assert_called_once()
+    mock_log.aviso.assert_not_called()
 
 
 def test_limpar_sem_scripts_com_esquema_loga_aviso_nao_erro(mocker):

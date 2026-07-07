@@ -20,7 +20,7 @@ def config(nome_script: str | None = None) -> None:
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
             log.erro(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
-            raise SystemExit(1)
+            raise SystemExit(3)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
@@ -65,7 +65,7 @@ def visualizar(nome_script: str | None = None) -> None:
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
             log.erro(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
-            raise SystemExit(1)
+            raise SystemExit(3)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
@@ -93,8 +93,8 @@ def limpar(nome_script: str | None = None) -> None:
         nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
-            log.aviso(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
-            return
+            log.erro(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
+            raise SystemExit(3)
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [

@@ -5,6 +5,7 @@ import pytest
 
 from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.scripts.auditar_relatorios.download_de_relatorios import baixar_relatorio, main
+from scripthub.services.erros import ErroConfiguracao
 
 _PATCH = "scripthub.scripts.auditar_relatorios.download_de_relatorios"
 
@@ -120,7 +121,7 @@ def test_main_levanta_runtime_error_sem_urls(tmp_path, mocker):
     config.moodle.urls_relatorios = []
     mocker.patch(f"{_PATCH}.MoodleSessao")
 
-    with pytest.raises(RuntimeError, match="[Uu][Rr][Ll]"):
+    with pytest.raises(ErroConfiguracao, match="[Uu][Rr][Ll]"):
         main(config)
 
 

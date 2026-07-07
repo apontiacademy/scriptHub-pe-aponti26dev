@@ -10,6 +10,7 @@ from scripthub.scripts.compilacao_de_relatorios.download_de_relatorios import (
     baixar_relatorio,
     main,
 )
+from scripthub.services.erros import ErroConfiguracao
 
 _PATCH = "scripthub.scripts.compilacao_de_relatorios.download_de_relatorios"
 
@@ -106,7 +107,7 @@ def test_main_levanta_runtime_error_sem_meses(tmp_path, mocker):
     config.moodle.meses = {}
     mocker.patch(f"{_PATCH}.MoodleSessao")
 
-    with pytest.raises(RuntimeError, match="[Mm]ês|[Mm]es"):
+    with pytest.raises(ErroConfiguracao, match="[Mm]ês|[Mm]es"):
         main(config)
 
 

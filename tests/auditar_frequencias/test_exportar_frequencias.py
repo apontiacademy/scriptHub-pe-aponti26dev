@@ -5,6 +5,7 @@ import pytest
 
 from scripthub.scripts.auditar_frequencias.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.scripts.auditar_frequencias.exportar_frequencias import exportar_frequencia, main
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
 _PATCH = "scripthub.scripts.auditar_frequencias.exportar_frequencias"
 
@@ -107,7 +108,7 @@ def test_exportar_frequencia_posta_para_action_do_form(tmp_path):
 def test_exportar_frequencia_sem_form_levanta_runtime_error(tmp_path):
     sessao = _make_sessao(html=_HTML_SEM_FORM)
 
-    with pytest.raises(RuntimeError, match="[Ff]ormul"):
+    with pytest.raises(ErroIntegracao, match="[Ff]ormul"):
         exportar_frequencia(sessao, "https://moodle.example.com/freq?id=1", "Turma A", tmp_path)
 
 
@@ -131,7 +132,7 @@ def test_main_levanta_runtime_error_sem_urls(tmp_path, mocker):
     config.moodle.urls_frequencias = {}
     mocker.patch(f"{_PATCH}.MoodleSessao")
 
-    with pytest.raises(RuntimeError, match="[Uu][Rr][Ll]"):
+    with pytest.raises(ErroConfiguracao, match="[Uu][Rr][Ll]"):
         main(config)
 
 

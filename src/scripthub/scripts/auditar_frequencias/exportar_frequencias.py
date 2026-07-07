@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
 from scripthub.services import log
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
@@ -21,7 +22,7 @@ def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho
         None,
     )
     if not form:
-        raise RuntimeError(f"Formulário de exportação não encontrado em {url}")
+        raise ErroIntegracao(f"Formulário de exportação não encontrado em {url}")
 
     # Coleta campos hidden/checkbox e o primeiro submit
     data = {}
@@ -71,7 +72,7 @@ def main(config: Config) -> None:
     caminho_saida = config.moodle.caminho_exportacao
 
     if not urls_frequencias:
-        raise RuntimeError("Nenhuma URL de frequência encontrada no settings.json")
+        raise ErroConfiguracao("Nenhuma URL de frequência encontrada no settings.json")
 
     caminho_saida.mkdir(parents=True, exist_ok=True)
 

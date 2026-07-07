@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from scripthub.services.erros import ErroConfiguracao
 from scripthub.services.moodle import MoodleSessao, baixar_relatorio
 
 from .config import Config
@@ -11,7 +12,7 @@ def main(config: Config) -> None:
     diretorio_download = config.moodle.caminho_download_relatorio
 
     if not urls_relatorios:
-        raise RuntimeError("Nenhuma URL de relatório encontrada no settings.json")
+        raise ErroConfiguracao("Nenhuma URL de relatório encontrada no settings.json")
 
     diretorio_download.mkdir(parents=True, exist_ok=True)
 

@@ -5,6 +5,7 @@ import typer
 
 from ._i18n import instalar as _instalar_i18n
 from .services import log
+from .services.erros import ErroConfiguracao, ErroScriptHub
 
 _instalar_i18n()
 
@@ -77,10 +78,15 @@ def menu_cmd():
 def _carregar_config(fn, nome_script: str):
     try:
         return fn()
-    except (FileNotFoundError, ValueError, KeyError) as e:
-        typer.echo(f"❌ Configuração inválida para {nome_script}: {e}", err=True)
-        typer.echo(f"   Execute: scripthub config -s {nome_script}", err=True)
-        raise typer.Exit(1)
+    except (ErroConfiguracao, KeyError) as e:
+        log.erro(f"Configuração inválida para {nome_script}: {e}")
+        log.passo(f"Execute: scripthub config -s {nome_script}")
+        log.erro(f"Script finalizado com erro. Código de saída: {ErroConfiguracao.codigo_saida}")
+        raise typer.Exit(ErroConfiguracao.codigo_saida) from e
+    except Exception as e:
+        log.erro(f"Erro ao carregar configuração de {nome_script}: {e}")
+        log.erro("Script finalizado com erro. Código de saída: 1")
+        raise typer.Exit(1) from e
 
 
 def _help_passo(escopos) -> str:
@@ -123,10 +129,12 @@ def relatorios(
             executar_script(config, auditar_relatorios.ESCOPOS, passo, "AUDITORIA DE RELATÓRIOS")
         case "compilar":
             if passo:
-                raise ValueError('O modo compilar não aceita "passo".')
+                log.erro('O modo compilar não aceita "passo".')
+                raise typer.Exit(3)
             _executar_pipeline_simples(compilacao_de_relatorios.main)
         case _:
-            raise ValueError('Modo deve ser "auditar" ou "compilar".')
+            log.erro('Modo deve ser "auditar" ou "compilar".')
+            raise typer.Exit(3)
 
 
 @app.command("ra", hidden=True)
@@ -182,7 +190,7 @@ def config(
     """Configurar interativamente as opções de um script."""
     if apenas_visualizar and limpar:
         log.erro("--opcoes e --limpar não podem ser usados juntos.")
-        raise typer.Exit(1)
+        raise typer.Exit(3)
     if limpar:
         limpar_config(script)
     elif apenas_visualizar:
@@ -195,30 +203,37 @@ def executar_script(config, escopos, passo: str | None, titulo: str):
     log.secao(titulo)
     total = len(escopos)
 
+    match = None
+    if passo is not None:
+        match = next(
+            ((i + 1, e) for i, e in enumerate(escopos) if passo in (e.slug, *e.aliases)),
+            None,
+        )
+        if match is None:
+            disponiveis = " | ".join(
+                f"{e.slug} ({', '.join(e.aliases)})" if e.aliases else e.slug
+                for e in escopos
+            )
+            log.erro(f"Passo '{passo}' inválido. Disponíveis: {disponiveis}")
+            raise typer.Exit(3)
+
     try:
         if passo is None:
             for i, e in enumerate(escopos, 1):
                 log.secao(f"PASSO {i}/{total} — {e.nome}")
                 e.func(config)
         else:
-            match = next(
-                ((i + 1, e) for i, e in enumerate(escopos) if passo in (e.slug, *e.aliases)),
-                None,
-            )
-            if match is None:
-                disponiveis = " | ".join(
-                    f"{e.slug} ({', '.join(e.aliases)})" if e.aliases else e.slug
-                    for e in escopos
-                )
-                log.erro(f"Passo '{passo}' inválido. Disponíveis: {disponiveis}")
-                raise typer.Exit(1)
             i, e = match
             log.secao(f"PASSO {i}/{total} — {e.nome}")
             e.func(config)
+    except ErroScriptHub as exc:
+        log.erro(str(exc))
+        log.erro(f"Script finalizado com erro. Código de saída: {exc.codigo_saida}")
+        raise typer.Exit(exc.codigo_saida) from exc
     except (typer.Exit, SystemExit) as exc:
         code = exc.code if isinstance(exc, SystemExit) else exc.exit_code
         if code:
-            log.erro("Script finalizado com erro. Código de saída: 1")
+            log.erro(f"Script finalizado com erro. Código de saída: {code}")
         raise
     except Exception as exc:
         log.erro(f"Erro durante execução: {exc}")
@@ -231,10 +246,14 @@ def executar_script(config, escopos, passo: str | None, titulo: str):
 def _executar_pipeline_simples(fn) -> None:
     try:
         fn()
+    except ErroScriptHub as exc:
+        log.erro(str(exc))
+        log.erro(f"Script finalizado com erro. Código de saída: {exc.codigo_saida}")
+        raise typer.Exit(exc.codigo_saida) from exc
     except (typer.Exit, SystemExit) as exc:
         code = exc.code if isinstance(exc, SystemExit) else exc.exit_code
         if code:
-            log.erro("Script finalizado com erro. Código de saída: 1")
+            log.erro(f"Script finalizado com erro. Código de saída: {code}")
         raise
     except Exception as exc:
         log.erro(f"Erro durante execução: {exc}")

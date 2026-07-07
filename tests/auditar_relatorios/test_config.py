@@ -4,6 +4,7 @@ import pytest
 
 import scripthub.scripts.auditar_relatorios.config as cfg_module
 from scripthub.scripts.auditar_relatorios.config import Config
+from scripthub.services.erros import ErroConfiguracao
 
 
 @pytest.fixture
@@ -47,7 +48,7 @@ def test_load_sem_usuario_levanta_value_error(tmp_path, monkeypatch, settings_va
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
     monkeypatch.delenv("MOODLE_USUARIO", raising=False)
 
-    with pytest.raises(ValueError, match="MOODLE_USUARIO"):
+    with pytest.raises(ErroConfiguracao, match="MOODLE_USUARIO"):
         Config.load()
 
 
@@ -57,7 +58,7 @@ def test_load_sem_senha_levanta_value_error(tmp_path, monkeypatch, settings_vali
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
     monkeypatch.delenv("MOODLE_SENHA", raising=False)
 
-    with pytest.raises(ValueError, match="MOODLE_SENHA"):
+    with pytest.raises(ErroConfiguracao, match="MOODLE_SENHA"):
         Config.load()
 
 
@@ -65,7 +66,7 @@ def test_load_sem_settings_levanta_file_not_found(tmp_path, monkeypatch):
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ErroConfiguracao):
         Config.load()
 
 

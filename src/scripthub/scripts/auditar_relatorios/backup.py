@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 
 from scripthub.services import log
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 from scripthub.services.google.drive import GoogleDriveClient
 
 from .config import Config
@@ -45,14 +46,14 @@ def main(config: Config) -> None:
     diretorio_backup = config.gsheets.caminho_backup_local
 
     if not caminho_credenciais.exists():
-        raise RuntimeError(f"O arquivo de credenciais não foi encontrado em: {caminho_credenciais}")
+        raise ErroConfiguracao(f"O arquivo de credenciais não foi encontrado em: {caminho_credenciais}")
 
     if not id_planilha:
-        raise RuntimeError("id_planilha não configurado no arquivo de configurações.")
+        raise ErroConfiguracao("id_planilha não configurado no arquivo de configurações.")
 
     diretorio_backup.mkdir(parents=True, exist_ok=True)
 
     arquivo_gerado = realizar_backup_xlsx_local(caminho_credenciais, id_planilha, diretorio_backup)
 
     if not arquivo_gerado:
-        raise RuntimeError("Falha no processo de backup local.")
+        raise ErroIntegracao("Falha no processo de backup local.")

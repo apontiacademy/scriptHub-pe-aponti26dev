@@ -4,6 +4,7 @@ import pytest
 
 import scripthub.scripts.auditar_frequencias.config as cfg_module
 from scripthub.scripts.auditar_frequencias.config import Config
+from scripthub.services.erros import ErroConfiguracao
 
 
 @pytest.fixture
@@ -47,7 +48,7 @@ def test_load_sem_credenciais_levanta_excecao(tmp_path, monkeypatch, settings_va
     monkeypatch.delenv("MOODLE_USUARIO", raising=False)
     monkeypatch.delenv("MOODLE_SENHA", raising=False)
 
-    with pytest.raises(ValueError, match="MOODLE_USUARIO"):
+    with pytest.raises(ErroConfiguracao, match="MOODLE_USUARIO"):
         Config.load()
 
 
@@ -55,5 +56,5 @@ def test_load_sem_settings_levanta_excecao(tmp_path, monkeypatch):
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ErroConfiguracao):
         Config.load()

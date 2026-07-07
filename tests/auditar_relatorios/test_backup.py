@@ -4,6 +4,7 @@ import pytest
 
 from scripthub.scripts.auditar_relatorios.backup import main, realizar_backup_xlsx_local
 from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
 _PATCH = "scripthub.scripts.auditar_relatorios.backup"
 
@@ -84,14 +85,14 @@ def test_main_levanta_runtime_error_sem_credenciais(tmp_path, mocker):
     config = _make_config(tmp_path)
     config.gsheets.caminho_json_credenciais.unlink()
 
-    with pytest.raises(RuntimeError, match="credenciais"):
+    with pytest.raises(ErroConfiguracao, match="credenciais"):
         main(config)
 
 
 def test_main_levanta_runtime_error_sem_id_planilha(tmp_path):
     config = _make_config(tmp_path, id_planilha="")
 
-    with pytest.raises(RuntimeError, match="id_planilha"):
+    with pytest.raises(ErroConfiguracao, match="id_planilha"):
         main(config)
 
 
@@ -109,5 +110,5 @@ def test_main_levanta_runtime_error_quando_backup_local_falha(tmp_path, mocker):
     mocker.patch(f"{_PATCH}.realizar_backup_xlsx_local", return_value=None)
     config = _make_config(tmp_path)
 
-    with pytest.raises(RuntimeError, match="backup"):
+    with pytest.raises(ErroIntegracao, match="backup"):
         main(config)

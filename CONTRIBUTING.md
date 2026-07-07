@@ -159,7 +159,7 @@ def processar(config: Config): ...
 Slugs devem ser verbos no infinitivo. Aliases são letras únicas para uso rápido no terminal.
 
 5. Adicionar campos configuráveis em `services/config/esquemas.py` (ver "Sistema de configuração" abaixo)
-6. Seguir o padrão de output (log helpers) e o contrato de erros abaixo
+6. Seguir o padrão de output (log helpers) e o contrato de erros abaixo — consultar [ERRORS.md](ERRORS.md) ao decidir que exceção levantar
 7. Registrar o comando em `src/scripthub/cli.py`
 8. Escrever os testes antes ou junto da implementação (ver "TDD e testes" abaixo) — o menu detecta automaticamente novos scripts que tenham `MENU_CMD` no `__init__.py`, não precisa de registro manual ali
 
@@ -209,15 +209,17 @@ propósito, o contrato acima.
 
 ## Contrato de erros
 
-- **Funções de biblioteca**: levantar exceções (`ValueError`, `RuntimeError`, `FileNotFoundError`, etc.) — nunca chamar `sys.exit()`
-- **CLI (`executar_script`)**: captura exceções das funções ESCOPOS e termina com `typer.Exit(1)`
+- **Funções de biblioteca**: levantar exceções — nunca chamar `sys.exit()`. Prefira a subclasse mais específica de `scripthub.services.erros` (`ErroConfiguracao`, `FalhaParcial`, `ErroIntegracao`) quando a causa se encaixar numa categoria; caso contrário, uma exceção genérica do Python (`ValueError`, `RuntimeError`, `FileNotFoundError`, etc.) cai no código de saída genérico. Ver [ERRORS.md](ERRORS.md) para a tabela completa de códigos e a pergunta prática para escolher a categoria certa.
+- **CLI (`executar_script`)**: captura exceções das funções ESCOPOS e termina com `typer.Exit(<código>)` — `<código>` vem de `exc.codigo_saida` para subclasses de `ErroScriptHub`, ou `1` para qualquer outra exceção
 - **Menu**: invoca o CLI via subprocess (`scripthub <cmd>`), o exit code do processo é exibido ao final
 
 ```python
-# ✅ Correto — função de biblioteca
+# ✅ Correto — função de biblioteca, erro classificado
+from scripthub.services.erros import ErroConfiguracao
+
 def main(config: Config):
     if not arquivo.exists():
-        raise RuntimeError(f"Arquivo não encontrado: {arquivo}")
+        raise ErroConfiguracao(f"Arquivo não encontrado: {arquivo}")
 
 # ❌ Errado — sys.exit dentro de função de biblioteca
 def main(config: Config):

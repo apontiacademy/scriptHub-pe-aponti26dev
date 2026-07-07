@@ -2,6 +2,7 @@ import pytest
 
 from scripthub.scripts.auditar_frequencias.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.scripts.auditar_frequencias.integracao_google_sheets import main
+from scripthub.services.erros import ErroConfiguracao
 
 _PATCH = "scripthub.scripts.auditar_frequencias.integracao_google_sheets"
 
@@ -51,28 +52,28 @@ def _setup_mock(mocker, config):
 def test_main_levanta_runtime_sem_diretorio_exportacao(config):
     config.moodle.caminho_exportacao.rmdir()
 
-    with pytest.raises(RuntimeError, match="exportação"):
+    with pytest.raises(ErroConfiguracao, match="exportação"):
         main(config)
 
 
 def test_main_levanta_runtime_sem_credenciais(config):
     config.gsheets.caminho_json_credenciais.unlink()
 
-    with pytest.raises(RuntimeError, match="credenciais"):
+    with pytest.raises(ErroConfiguracao, match="credenciais"):
         main(config)
 
 
 def test_main_levanta_runtime_sem_id_planilha(config):
     config.gsheets.id_planilha = ""
 
-    with pytest.raises(RuntimeError, match="id_planilha"):
+    with pytest.raises(ErroConfiguracao, match="id_planilha"):
         main(config)
 
 
 def test_main_levanta_runtime_sem_arquivos_xlsx(config, mocker):
     mocker.patch(f"{_PATCH}.GoogleSheetsClient")
 
-    with pytest.raises(RuntimeError, match="XLSX"):
+    with pytest.raises(ErroConfiguracao, match="XLSX"):
         main(config)
 
 

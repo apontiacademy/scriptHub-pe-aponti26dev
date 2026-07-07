@@ -3,6 +3,7 @@ from pathlib import Path
 from pentefino.services.script import main as executar_analise_core
 
 from scripthub.services import log
+from scripthub.services.erros import ErroIntegracao
 
 from .config import Config
 
@@ -39,4 +40,4 @@ def main(config: Config):
     try:
         executar_analise_core(argumentos_cli)
     except SystemExit as e:
-        raise RuntimeError(f"Análise do pentefino falhou (código de saída {e.code}).") from e
+        raise ErroIntegracao(f"Análise do pentefino falhou (código de saída {e.code}).") from e

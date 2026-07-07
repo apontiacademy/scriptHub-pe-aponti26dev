@@ -10,6 +10,7 @@ from scripthub.scripts.compilacao_de_relatorios.compilar_pdfs import (
     sanitizar_caminho,
 )
 from scripthub.scripts.compilacao_de_relatorios.config import Config, MoodleConfig, PdfConfig
+from scripthub.services.erros import FalhaParcial
 
 _PATCH = "scripthub.scripts.compilacao_de_relatorios.compilar_pdfs"
 
@@ -41,7 +42,7 @@ def test_main_levanta_runtime_error_informando_gerados_e_falhas(tmp_path, mocker
     mocker.patch(f"{_PATCH}._gerar_pdf", side_effect=[None, Exception("falha ao gerar")])
 
     with pytest.raises(
-        RuntimeError,
+        FalhaParcial,
         match=r"1 PDF\(s\) falharam ao gerar de 2 aluno\(s\)\. 1 gerado\(s\) com sucesso\.",
     ):
         main(_make_config(tmp_path))

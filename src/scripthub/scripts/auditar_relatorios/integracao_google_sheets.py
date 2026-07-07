@@ -2,6 +2,7 @@ import gspread
 import pandas as pd
 
 from scripthub.services import log
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 from scripthub.services.google.sheets import GoogleSheetsClient
 
 from .config import Config
@@ -15,16 +16,16 @@ def main(config: Config) -> None:
     nome_aba = config.gsheets.nome_aba
 
     if not caminho_csv.exists():
-        raise RuntimeError(
+        raise ErroConfiguracao(
             f"Arquivo de auditoria não encontrado em: {caminho_csv}. "
             "Certifique-se de rodar o Escopo 2 antes."
         )
 
     if not caminho_credenciais.exists():
-        raise RuntimeError(f"Arquivo de credenciais do Google não encontrado em: {caminho_credenciais}")
+        raise ErroConfiguracao(f"Arquivo de credenciais do Google não encontrado em: {caminho_credenciais}")
 
     if not id_planilha:
-        raise RuntimeError("id_planilha não configurado no arquivo de configurações.")
+        raise ErroConfiguracao("id_planilha não configurado no arquivo de configurações.")
 
     log.passo(f"Lendo dados locais de {caminho_csv.name}...")
     try:
@@ -33,10 +34,10 @@ def main(config: Config) -> None:
         try:
             df = pd.read_csv(caminho_csv, encoding="latin1")
         except Exception as e:
-            raise RuntimeError(f"Falha ao ler o arquivo CSV local: {e}")
+            raise ErroIntegracao(f"Falha ao ler o arquivo CSV local: {e}")
 
     if df.shape[1] < 4:
-        raise RuntimeError("O CSV de resultado possui menos de 4 colunas. Coluna D indisponível.")
+        raise ErroIntegracao("O CSV de resultado possui menos de 4 colunas. Coluna D indisponível.")
 
     cabecalho_coluna_d = df.columns[3]
     valores_coluna_d = df.iloc[:, 3].fillna("").astype(str).tolist()
@@ -51,7 +52,7 @@ def main(config: Config) -> None:
     try:
         aba = planilha.worksheet(nome_aba)
     except gspread.exceptions.WorksheetNotFound:
-        raise RuntimeError(f"A aba '{nome_aba}' não foi encontrada na planilha fornecida.")
+        raise ErroIntegracao(f"A aba '{nome_aba}' não foi encontrada na planilha fornecida.")
 
     log.passo(f"Limpando dados antigos da Coluna D na aba '{nome_aba}'...")
     aba.batch_clear(["D:D"])

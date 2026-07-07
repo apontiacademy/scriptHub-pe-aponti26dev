@@ -4,6 +4,7 @@ import pytest
 
 from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios import main
+from scripthub.services.erros import ErroIntegracao
 
 _PATCH_CORE = "scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios.executar_analise_core"
 
@@ -87,8 +88,8 @@ def test_main_propaga_excecao_do_core(config, mocker):
         main(config)
 
 
-def test_main_converte_system_exit_do_core_em_runtime_error(config, mocker):
+def test_main_converte_system_exit_do_core_em_erro_integracao(config, mocker):
     mocker.patch(_PATCH_CORE, side_effect=SystemExit(1))
 
-    with pytest.raises(RuntimeError, match="código de saída 1"):
+    with pytest.raises(ErroIntegracao, match="código de saída 1"):
         main(config)
