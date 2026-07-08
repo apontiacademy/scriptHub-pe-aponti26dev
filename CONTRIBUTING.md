@@ -74,6 +74,8 @@ branch de feature → dev → nightly → main
 - **`CHANGELOG.md`** — histórico de versões já lançadas em `main`, no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) (`0.x.y`: `x` sobe em mudança expressiva, `y` em mudança pontual). Versões retiradas por bug grave ou falha de segurança levam a tag `[YANKED]`.
 - **`SNAPSHOTS.md`** — trabalho em andamento em `dev`, ainda não consolidado. Cada commit em `dev` vira uma entrada `x.y.z.devN` (`x.y.z` = versão sendo construída, `N` = snapshot sequencial), e `pyproject.toml` em `dev` é atualizado junto (`version = "x.y.z.devN"`) — usa o sufixo `.devN` do PEP 440 para permanecer uma versão válida (`x.y.z-Ns` quebraria `uv lock`/`uv sync`).
 
+A mensagem de commit do squash que chega em `main` deve possuir o código da versão lançada com ele no início do título (ex.: `[v0.19.2] título da PR (#74)`) — garante rastreabilidade entre o commit em `main` e a entrada correspondente em `CHANGELOG.md`, mesmo em merges fora do fluxo normal `nightly → main` (ex.: PRs de infraestrutura abertas direto contra `main`).
+
 Ciclo de vida de uma mudança:
 
 1. Mergeada em `dev` (squash) → entra em `SNAPSHOTS.md` como snapshot
