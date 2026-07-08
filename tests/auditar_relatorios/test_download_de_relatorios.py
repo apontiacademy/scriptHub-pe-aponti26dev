@@ -51,6 +51,7 @@ def _make_config(tmp_path):
             url_login="https://moodle.example.com/login/index.php",
             urls_relatorios=["https://moodle.example.com/report?id=1"],
             exportar_analise_relatorio=False,
+            caminho_exportacao_analise=None,
         ),
         gsheets=GsheetsConfig(
             id_planilha="planilha-id",

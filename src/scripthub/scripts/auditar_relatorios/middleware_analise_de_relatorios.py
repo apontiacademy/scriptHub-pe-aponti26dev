@@ -19,7 +19,7 @@ def main(config: Config):
     modo_analise = "feitos"
 
     # Garante que o diretório pai do arquivo de saída exista antes de rodar o Core
-    if config.moodle.exportar_analise_relatorio:
+    if csv_saida:
         csv_saida.parent.mkdir(parents=True, exist_ok=True)
 
     # Converte os objetos Path para str() ao montar a lista de argumentos para a CLI do Core

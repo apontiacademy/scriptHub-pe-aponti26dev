@@ -146,24 +146,3 @@ def test_persistir_valor_none_nao_escreve_campo_opcional(tmp_path):
     if settings_path.exists():
         dados = json.loads(settings_path.read_text(encoding="utf-8"))
         assert dados.get("moodle", {}).get("url") is None
-
-
-def test_persistir_valor_none_remove_chave_opcional_existente(tmp_path):
-    d = _script_dir(tmp_path, "meu_script")
-    (d / "settings.json").write_text(
-        json.dumps({"moodle": {"url": "https://antiga.com", "outraChave": "mantida"}}), encoding="utf-8"
-    )
-    campo = _campo_settings("url", "moodle", "url", obrigatorio=False)
-
-    persistir("meu_script", [campo], {"url": None})
-
-    dados = json.loads((d / "settings.json").read_text(encoding="utf-8"))
-    assert "url" not in dados["moodle"]
-    assert dados["moodle"]["outraChave"] == "mantida"
-
-
-def test_persistir_valor_none_com_json_chaves_vazio_nao_gera_indexerror(tmp_path):
-    _script_dir(tmp_path, "meu_script")
-    campo = _campo_settings("campo_sem_caminho", obrigatorio=False)
-
-    persistir("meu_script", [campo], {"campo_sem_caminho": None})

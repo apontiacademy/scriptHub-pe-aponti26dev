@@ -35,10 +35,3 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 ### 0.20.0.dev4 - 2026-07-07 - (chore/ruff-cleanup-dev)
 
 - **Changed**: limpeza das violações de `ruff` restantes em `dev` após a chegada de `.github/workflows/ci.yml` (propagado de `main`/`nightly`, issue #67) — imports não usados/desordenados, `raise ... from` em blocos `except`, `zip(strict=)` em `download_softskills.py`; necessário para o CI de lint rodar limpo em `dev`
-
-### 0.20.0.dev5 - 2026-07-08 - (PR#65)
-
-- **Fixed**: `caminhoExportacaoAnalise` configurado via `scripthub config -s ra` deixa de ser ignorado — `csv_saida_analise` agora é resolvido uma única vez em `Config.load()` e usado tanto pelo Escopo 2 (middleware) quanto pelo Escopo 3 (integração Google Sheets) (Closes #55)
-- **Changed**: `caminhoExportacaoAnalise` passa a ser obrigatório quando `exportarAnaliseRelatorio=true` (levanta `ValueError` em vez de cair silenciosamente no caminho padrão); suporte genérico a campos condicionalmente obrigatórios (`resolver_dependencias()` em `campo.py`), refletido em `scripthub config -s ra`
-- **Fixed**: com `exportarAnaliseRelatorio=false`, o Escopo 2 volta a usar o caminho padrão do sistema silenciosamente em vez de travar no prompt interativo de caminho de saída do Core (pentefino); diretório de saída deixa de ser criado antecipadamente quando a exportação está desativada
-- **Fixed**: `persistir()` remove do `settings.json` a chave de um campo opcional limpo pelo usuário em vez de deixá-la gravada (o que bloqueava o fallback ao caminho padrão); `_remover_chave_json` deixa de assumir `json_chaves` não-vazio, evitando `IndexError`

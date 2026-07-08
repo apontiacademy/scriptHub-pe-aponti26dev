@@ -2,7 +2,6 @@ import questionary
 
 from .. import log
 from ..menu.main import SCRIPTS_FOLDER, discover_modules
-from .campo import resolver_dependencias
 from .esquemas import ALIASES_CLI, ESQUEMAS
 from .persistencia import _script_dir, carregar_valores, persistir
 from .ui import STYLE, exibir_campos, obter_input, selecionar_campos, selecionar_script
@@ -12,7 +11,6 @@ from .validacao import validar_campo
 def _tem_pendencias(nome_script: str) -> bool:
     campos = ESQUEMAS[nome_script]
     valores = carregar_valores(nome_script, campos)
-    campos = resolver_dependencias(campos, valores)
     return not all(validar_campo(c, valores.get(c.chave))[0] for c in campos)
 
 
@@ -41,7 +39,7 @@ def config(nome_script: str | None = None) -> None:
     valores = carregar_valores(nome_script, campos)
 
     print()
-    selecionados = selecionar_campos(resolver_dependencias(campos, valores), valores)
+    selecionados = selecionar_campos(campos, valores)
 
     if not selecionados:
         log.aviso("Nenhum campo selecionado. Nada foi alterado.")
@@ -52,8 +50,7 @@ def config(nome_script: str | None = None) -> None:
         if campo.depende_de and not novos_valores.get(campo.depende_de):
             novos_valores[campo.chave] = None
             continue
-        campo_efetivo = resolver_dependencias([campo], novos_valores)[0]
-        novo = obter_input(campo_efetivo, valores.get(campo.chave))
+        novo = obter_input(campo, valores.get(campo.chave))
         novos_valores[campo.chave] = novo
 
     print()
@@ -86,7 +83,7 @@ def visualizar(nome_script: str | None = None) -> None:
     valores = carregar_valores(nome_script, campos)
 
     log.passo(f"Configuração atual de {nome_script}:")
-    exibir_campos(resolver_dependencias(campos, valores), valores)
+    exibir_campos(campos, valores)
 
 
 def limpar(nome_script: str | None = None) -> None:
