@@ -70,14 +70,15 @@ def test_main_injeta_flag_csv_saida(config, mocker):
     assert str(config.moodle.csv_saida_analise) in args
 
 
-def test_main_nao_injeta_flag_csv_saida_quando_exportacao_desativada(config, mocker):
+def test_main_injeta_flag_csv_saida_com_caminho_padrao_quando_exportacao_desativada(config, mocker):
     config = dataclasses.replace(config, moodle=dataclasses.replace(config.moodle, exportar_analise_relatorio=False))
     mock_core = mocker.patch(_PATCH_CORE)
 
     main(config)
 
     args = mock_core.call_args[0][0]
-    assert "-o" not in args
+    assert "-o" in args
+    assert str(config.moodle.csv_saida_analise) in args
 
 
 def test_main_cria_diretorio_pai_do_csv_saida(config, mocker):
