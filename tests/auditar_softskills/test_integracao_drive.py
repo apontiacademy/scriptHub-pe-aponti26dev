@@ -1,7 +1,3 @@
-from pathlib import Path
-
-import pytest
-
 from scripthub.scripts.auditar_softskills.config import Config, DriveConfig, MoodleConfig
 from scripthub.scripts.auditar_softskills.integracao_drive import upload_to_drive
 

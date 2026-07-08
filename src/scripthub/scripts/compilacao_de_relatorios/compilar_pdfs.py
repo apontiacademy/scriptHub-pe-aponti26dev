@@ -49,10 +49,10 @@ def _para_latin1(texto: str) -> str:
     substituicoes = {
         "—": " - ",  # — em dash
         "–": "-",  # – en dash
-        "'": "'",  # ' aspa simples esquerda
-        "'": "'",  # ' aspa simples direita
-        """: '"',  # " aspa dupla esquerda
-        """: '"',  # " aspa dupla direita
+        "‘": "'",  # ‘ aspa simples esquerda
+        "’": "'",  # ’ aspa simples direita
+        "“": '"',  # “ aspa dupla esquerda
+        "”": '"',  # ” aspa dupla direita
         "…": "...",  # … reticências
         "•": "-",  # • bullet
         "·": "-",  # · ponto médio
@@ -364,8 +364,7 @@ def main(config: Config):
 
     if erros:
         raise FalhaParcial(
-            f"{erros} PDF(s) falharam ao gerar de {len(alunos)} aluno(s). "
-            f"{gerados} gerado(s) com sucesso."
+            f"{erros} PDF(s) falharam ao gerar de {len(alunos)} aluno(s). {gerados} gerado(s) com sucesso."
         )
 
     log.ok(f"{gerados} PDF(s) gerado(s) com sucesso.")

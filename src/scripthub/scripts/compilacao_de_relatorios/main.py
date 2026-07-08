@@ -1,6 +1,5 @@
 import scripthub.scripts.compilacao_de_relatorios.compilar_pdfs as compilar_pdfs
 import scripthub.scripts.compilacao_de_relatorios.download_de_relatorios as download_de_relatorios
-
 from scripthub.services import log
 
 from .config import Config
@@ -18,6 +17,7 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     try:
         main()
     except Exception as e:

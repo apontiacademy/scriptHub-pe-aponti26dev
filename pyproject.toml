@@ -84,6 +84,12 @@ select = [
 # Rules to ignore
 ignore = []
 
+[tool.ruff.lint.per-file-ignores]
+# Padrão A exporta MENU_CMD antes do import de ESCOPOS/get_config (ver CLAUDE.md)
+"**/__init__.py" = ["E402"]
+# _instalar_i18n() precisa rodar antes dos imports de .scripts/.services (ordem deliberada)
+"src/scripthub/cli.py" = ["E402"]
+
 [tool.ruff.format]
 # Style settings for the formatter
 quote-style = "double"

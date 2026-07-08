@@ -9,7 +9,6 @@ from scripthub.scripts.torpedo_de_forum.main import (
 from scripthub.services.erros import ErroConfiguracao
 from scripthub.services.moodle import MoodleSessao
 
-
 # ── carregar_conteudo ─────────────────────────────────────────────────────────
 
 
@@ -125,9 +124,7 @@ def test_injetar_cookies_injeta_cookies_no_contexto(mocker):
     mock_cookie.value = "abc123"
     mock_cookie.path = "/"
     mock_session.cookies = [mock_cookie]
-    sessao = MoodleSessao(
-        "https://moodle.example.com/login/index.php", "u", "p", _session=mock_session
-    )
+    sessao = MoodleSessao("https://moodle.example.com/login/index.php", "u", "p", _session=mock_session)
     mock_contexto = mocker.MagicMock()
 
     _injetar_cookies(mock_contexto, sessao)
@@ -140,9 +137,7 @@ def test_injetar_cookies_injeta_cookies_no_contexto(mocker):
 def test_injetar_cookies_sem_cookies_nao_chama_add_cookies(mocker):
     mock_session = mocker.MagicMock()
     mock_session.cookies = []
-    sessao = MoodleSessao(
-        "https://moodle.example.com/login/index.php", "u", "p", _session=mock_session
-    )
+    sessao = MoodleSessao("https://moodle.example.com/login/index.php", "u", "p", _session=mock_session)
     mock_contexto = mocker.MagicMock()
 
     _injetar_cookies(mock_contexto, sessao)

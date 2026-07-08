@@ -32,8 +32,13 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 - **Changed**: `integracao_drive.py` usa `batch_clear` restrito às colunas do próprio CSV em vez de limpar a planilha inteira, preservando colunas adicionadas manualmente; mensagens de erro de configuração mais claras (`_obrigatorio`) e suporte a `moodle.urlBase` com fallback para `moodle.url` (legado)
 - **Added**: logging de debug opcional em `get_quiz_ids` para diagnosticar turmas sem atividades encontradas
 
+### 0.20.0.dev4 - 2026-07-07 - (chore/ruff-cleanup-dev)
+
+- **Changed**: limpeza das violações de `ruff` restantes em `dev` após a chegada de `.github/workflows/ci.yml` (propagado de `main`/`nightly`, issue #67) — imports não usados/desordenados, `raise ... from` em blocos `except`, `zip(strict=)` em `download_softskills.py`; necessário para o CI de lint rodar limpo em `dev`
+
 ### 0.20.0.dev4 - 2026-07-07 - (PR#66)
 
+<!-- TODO: renumerar dev4 -> devN definitivo quando a ordem de merge com a PR#65 for decidida -->
 - **Added**: helper `_executar_pipeline_simples` unificando a mensagem final (sucesso/erro + código de saída) nos scripts Padrão B; `log.sucesso()` (novo nível `SUCCESS`) para marcar exclusivamente o fim do pipeline com exit code 0; hierarquia de exceções em `services/erros.py` (`ErroConfiguracao`=2, `FalhaParcial`=4, `ErroIntegracao`=5, fallback genérico=1, uso inválido de CLI=3); `ERRORS.md` documentando o esquema de códigos de saída
 - **Changed**: contrato de 4 níveis de `services/log.py` (`ok`/`sucesso`/`erro`/`aviso`) documentado em `CONTRIBUTING.md`; ~10 chamadas `log.erro`/`log.aviso` reclassificadas conforme o contrato em `services/config/main.py`, `auditar_softskills`, `integracao_drive.py`, `compilar_pdfs.py` e `torpedo_de_forum/main.py`; mensagens redundantes de conclusão de escopo removidas (responsabilidade passa a ser só do CLI)
 - **Fixed**: 3 casos de erro engolido silenciosamente em `middleware_analise_de_relatorios.py`, `backup.py` e `compilar_pdfs.py` (`SystemExit` cru do pentefino agora vira `RuntimeError` com o código de saída); mensagem de erro de `compilar_pdfs.py` volta a informar quantos PDFs foram gerados com sucesso

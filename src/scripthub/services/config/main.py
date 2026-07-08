@@ -24,8 +24,7 @@ def config(nome_script: str | None = None) -> None:
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
-            (nome, cmd, desc, _tem_pendencias(nome))
-            for nome, cmd, desc in modulos if nome in ESQUEMAS
+            (nome, cmd, desc, _tem_pendencias(nome)) for nome, cmd, desc in modulos if nome in ESQUEMAS
         ]
 
         if not modulos_com_esquema:
@@ -69,8 +68,7 @@ def visualizar(nome_script: str | None = None) -> None:
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
-            (nome, cmd, desc, _tem_pendencias(nome))
-            for nome, cmd, desc in modulos if nome in ESQUEMAS
+            (nome, cmd, desc, _tem_pendencias(nome)) for nome, cmd, desc in modulos if nome in ESQUEMAS
         ]
 
         if not modulos_com_esquema:
@@ -98,8 +96,7 @@ def limpar(nome_script: str | None = None) -> None:
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
-            (nome, cmd, desc, _tem_pendencias(nome))
-            for nome, cmd, desc in modulos if nome in ESQUEMAS
+            (nome, cmd, desc, _tem_pendencias(nome)) for nome, cmd, desc in modulos if nome in ESQUEMAS
         ]
 
         if not modulos_com_esquema:

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from scripthub.services.erros import ErroConfiguracao
 from scripthub.services.moodle import MoodleSessao, baixar_relatorio
 

@@ -45,9 +45,7 @@ def _patch_rich_utils() -> None:
     _ru.COMMANDS_PANEL_TITLE = "Comandos"
     _ru.ERRORS_PANEL_TITLE = "Erro"
     _ru.ABORTED_TEXT = "Abortado."
-    _ru.RICH_HELP = (
-        "Execute [blue]'{command_path} {help_option}'[/] para obter ajuda."
-    )
+    _ru.RICH_HELP = "Execute [blue]'{command_path} {help_option}'[/] para obter ajuda."
 
 
 def _patch_typer_core() -> None:
@@ -73,6 +71,7 @@ def _patch_vendored_click() -> None:
     # ClickException.show — "Error: ..." → "Erro: ..."
     def _click_exception_show_pt(self, file=None) -> None:  # type: ignore[misc]
         import sys
+
         from typer._click.utils import echo
 
         if file is None:
@@ -84,6 +83,7 @@ def _patch_vendored_click() -> None:
     # UsageError.show — "Error: ..." e "Try ... for help." → pt-BR
     def _usage_error_show_pt(self, file=None) -> None:  # type: ignore[misc]
         import sys
+
         from typer._click.utils import echo
 
         if file is None:
@@ -167,7 +167,9 @@ def _patch_vendored_click() -> None:
     # NoSuchOption — mensagem gerada no __init__ quando message=None
     _orig_no_such_init = _ce.NoSuchOption.__init__
 
-    def _no_such_option_init_pt(self, option_name: str, message: str | None = None, possibilities=None, ctx=None) -> None:  # type: ignore[misc]
+    def _no_such_option_init_pt(
+        self, option_name: str, message: str | None = None, possibilities=None, ctx=None
+    ) -> None:  # type: ignore[misc]
         if message is None:
             message = f"Opção inválida: {option_name}"
         _orig_no_such_init(self, option_name, message, possibilities, ctx)
@@ -202,6 +204,7 @@ def _patch_help_option() -> None:
 
 def _patch_completion_options() -> None:
     import inspect
+
     import typer.completion as _tc
 
     sig = inspect.signature(_tc._install_completion_placeholder_function)
