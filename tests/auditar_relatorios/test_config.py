@@ -69,7 +69,7 @@ def test_load_sem_settings_levanta_file_not_found(tmp_path, monkeypatch):
         Config.load()
 
 
-def test_exportar_analise_false_resulta_em_caminho_none(tmp_path, monkeypatch, settings_valido):
+def test_exportar_analise_false_usa_caminho_padrao(tmp_path, monkeypatch, settings_valido):
     settings_valido["moodle"]["exportarAnaliseRelatorio"] = False
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
@@ -77,10 +77,10 @@ def test_exportar_analise_false_resulta_em_caminho_none(tmp_path, monkeypatch, s
 
     config = Config.load()
 
-    assert config.moodle.caminho_exportacao_analise is None
+    assert config.moodle.csv_saida_analise == tmp_path / "dados" / "resultado_analise.csv"
 
 
-def test_exportar_analise_true_com_caminho_preenchido(tmp_path, monkeypatch, settings_valido):
+def test_exportar_analise_true_com_caminho_preenchido_usa_caminho_configurado(tmp_path, monkeypatch, settings_valido):
     settings_valido["moodle"]["exportarAnaliseRelatorio"] = True
     settings_valido["moodle"]["caminhoExportacaoAnalise"] = str(tmp_path / "saida.csv")
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
@@ -89,4 +89,14 @@ def test_exportar_analise_true_com_caminho_preenchido(tmp_path, monkeypatch, set
 
     config = Config.load()
 
-    assert config.moodle.caminho_exportacao_analise == tmp_path / "saida.csv"
+    assert config.moodle.csv_saida_analise == tmp_path / "saida.csv"
+
+
+def test_exportar_analise_true_sem_caminho_levanta_value_error(tmp_path, monkeypatch, settings_valido):
+    settings_valido["moodle"]["exportarAnaliseRelatorio"] = True
+    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
+    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+
+    with pytest.raises(ValueError, match="caminhoExportacaoAnalise"):
+        Config.load()

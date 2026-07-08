@@ -68,7 +68,7 @@ cp settings.example.json settings.json
 | `moodle.urlLogin` | URL de login do Moodle |
 | `moodle.urlsRelatorios` | Lista de URLs dos formulários de relatório |
 | `moodle.exportarAnaliseRelatorio` | `true` para exportar análise em CSV |
-| `moodle.caminhoExportacaoAnalise` | Caminho de saída da análise (obrigatório se `exportarAnaliseRelatorio` for `true`) |
+| `moodle.caminhoExportacaoAnalise` | Caminho de saída da análise (obrigatório quando `exportarAnaliseRelatorio=true`) |
 | `moodle.csvResidentes` | Caminho do CSV de residentes usado na análise |
 | `gsheets.idPlanilha` | ID da planilha do Google Sheets |
 | `gsheets.nomeAba` | Nome da aba a ser atualizada |
