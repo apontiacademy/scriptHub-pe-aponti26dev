@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from scripthub.services import log
 from scripthub.services.moodle import MoodleSessao, baixar_relatorio
 

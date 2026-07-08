@@ -1,6 +1,6 @@
 [project]
 name = "scriptHub-pe-aponti26dev"
-version = "0.5.0"
+version = "0.20.0.dev4"
 description = "Central de scripts de automação da Aponti Academy"
 readme = "README.md"
 requires-python = ">3.12"
@@ -42,6 +42,8 @@ markers = [
 omit = [
     # Automação Playwright — requer browser real
     "src/scripthub/scripts/torpedo_de_forum/main.py",
+    # Padrão B (depreciado) — orquestração não testada diretamente, só helpers
+    "src/scripthub/scripts/auditar_softskills/main.py",
     # FPDF — requer fontes e renderização
     "src/scripthub/scripts/compilacao_de_relatorios/compilar_pdfs.py",
     # Questionary UI interativa
@@ -81,6 +83,12 @@ select = [
 
 # Rules to ignore
 ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# Padrão A exporta MENU_CMD antes do import de ESCOPOS/get_config (ver CLAUDE.md)
+"**/__init__.py" = ["E402"]
+# _instalar_i18n() precisa rodar antes dos imports de .scripts/.services (ordem deliberada)
+"src/scripthub/cli.py" = ["E402"]
 
 [tool.ruff.format]
 # Style settings for the formatter
