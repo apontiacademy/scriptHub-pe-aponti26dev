@@ -12,14 +12,42 @@ _HTML_FORM = """
 <form action="/mod/attendance/export.php" method="post">
   <input type="hidden" name="sesskey" value="sk123">
   <input type="hidden" name="id" value="456">
-  <input type="checkbox" id="id_col_observa" name="column[2]" value="1">
-  <label for="id_col_observa">Observa</label>
+  <select name="group" id="id_group">
+    <option value="0">Todos os participantes</option>
+    <option value="2320">Turma 1</option>
+  </select>
+  <select name="format" id="id_format">
+    <option value="excel">Download no formato Excel</option>
+    <option value="ooo">Download no formato OpenOffice</option>
+    <option value="text">Download no formato de texto</option>
+  </select>
+  <select name="users[]" id="id_users" multiple>
+    <option value="10">Aluno 1</option>
+    <option value="20">Aluno 2</option>
+  </select>
+  <input type="checkbox" id="id_includeremarks" name="includeremarks" value="1">
+  <label for="id_includeremarks">Incluir observações</label>
+  <input type="submit" value="OK">
+</form>
+</body></html>
+"""
+
+_HTML_FORM_FORMAT_NAO_EXCEL_PRIMEIRO = """
+<html><body>
+<form action="/mod/attendance/export.php" method="post">
+  <input type="hidden" name="sesskey" value="sk123">
+  <select name="format" id="id_format">
+    <option value="ooo">Download no formato OpenOffice</option>
+    <option value="excel">Download no formato Excel</option>
+  </select>
   <input type="submit" value="OK">
 </form>
 </body></html>
 """
 
 _HTML_SEM_FORM = "<html><body><p>sem formulário</p></body></html>"
+
+_XLSX_VALIDO = b"PK\x03\x04conteudo-xlsx-fake"
 
 
 def _resp(text="", url="https://moodle.example.com/mod/attendance/view.php"):
@@ -29,9 +57,18 @@ def _resp(text="", url="https://moodle.example.com/mod/attendance/view.php"):
     return r
 
 
+def _grava_arquivo(conteudo: bytes):
+    def _side_effect(url, destino, **kwargs):
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        destino.write_bytes(conteudo)
+
+    return _side_effect
+
+
 def _make_sessao(html=_HTML_FORM, url="https://moodle.example.com/mod/attendance/view.php"):
     sessao = MagicMock()
     sessao.get.return_value = _resp(html, url)
+    sessao.baixar.side_effect = _grava_arquivo(_XLSX_VALIDO)
     return sessao
 
 
@@ -80,9 +117,50 @@ def test_exportar_frequencia_marca_checkbox_observa(tmp_path):
 
     _, kwargs = sessao.baixar.call_args
     data = kwargs["data"]
-    # The "Observa" checkbox field must be present
-    assert "column[2]" in data
-    assert data["column[2]"] == "1"
+    # O checkbox "Incluir observações" (includeremarks) deve ser marcado
+    assert data.get("includeremarks") == "1"
+
+
+def test_exportar_frequencia_seleciona_primeira_opcao_do_select_sem_selected(tmp_path):
+    sessao = _make_sessao()
+
+    exportar_frequencia(sessao, "https://moodle.example.com/freq?id=1", "Turma A", tmp_path)
+
+    _, kwargs = sessao.baixar.call_args
+    data = kwargs["data"]
+    # Nenhuma <option> do select "group" tem `selected` -> deve usar a primeira
+    assert data.get("group") == "0"
+
+
+def test_exportar_frequencia_ignora_select_multiple(tmp_path):
+    sessao = _make_sessao()
+
+    exportar_frequencia(sessao, "https://moodle.example.com/freq?id=1", "Turma A", tmp_path)
+
+    _, kwargs = sessao.baixar.call_args
+    data = kwargs["data"]
+    # Select multiple (ex.: lista de usuários) não deve ter valor selecionado por padrão
+    assert "users[]" not in data
+
+
+def test_exportar_frequencia_forca_format_excel(tmp_path):
+    sessao = _make_sessao()
+
+    exportar_frequencia(sessao, "https://moodle.example.com/freq?id=1", "Turma A", tmp_path)
+
+    _, kwargs = sessao.baixar.call_args
+    data = kwargs["data"]
+    assert data.get("format") == "excel"
+
+
+def test_exportar_frequencia_forca_format_excel_mesmo_se_nao_for_a_primeira_opcao(tmp_path):
+    sessao = _make_sessao(html=_HTML_FORM_FORMAT_NAO_EXCEL_PRIMEIRO)
+
+    exportar_frequencia(sessao, "https://moodle.example.com/freq?id=1", "Turma A", tmp_path)
+
+    _, kwargs = sessao.baixar.call_args
+    data = kwargs["data"]
+    assert data.get("format") == "excel"
 
 
 def test_exportar_frequencia_salva_com_nome_da_turma(tmp_path):
@@ -107,6 +185,14 @@ def test_exportar_frequencia_sem_form_levanta_runtime_error(tmp_path):
     sessao = _make_sessao(html=_HTML_SEM_FORM)
 
     with pytest.raises(RuntimeError, match="[Ff]ormul"):
+        exportar_frequencia(sessao, "https://moodle.example.com/freq?id=1", "Turma A", tmp_path)
+
+
+def test_exportar_frequencia_conteudo_salvo_invalido_levanta_runtime_error(tmp_path):
+    sessao = _make_sessao()
+    sessao.baixar.side_effect = _grava_arquivo(b"<!DOCTYPE html><html>pagina de exportacao</html>")
+
+    with pytest.raises(RuntimeError, match="[Ee]xcel|[Vv]álido"):
         exportar_frequencia(sessao, "https://moodle.example.com/freq?id=1", "Turma A", tmp_path)
 
 

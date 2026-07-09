@@ -9,6 +9,13 @@ from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
 
+_ASSINATURA_ZIP = b"PK\x03\x04"
+
+
+def _e_xlsx_valido(arquivo: Path) -> bool:
+    """XLSX é um ZIP — detecta o formato pela assinatura mágica do arquivo."""
+    return arquivo.read_bytes().startswith(_ASSINATURA_ZIP)
+
 
 def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho_saida: Path) -> None:
     """Baixa o XLSX de frequência de uma turma via requisição HTTP."""
@@ -43,6 +50,18 @@ def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho
         else:
             data[name] = inp.get("value", "")
 
+    # Coleta selects (ex.: grupo, formato) — usa a opção marcada como
+    # "selected" ou, na ausência, a primeira opção (default do navegador)
+    for select in form.find_all("select"):
+        name = select.get("name")
+        if not name or select.get("multiple") is not None:
+            continue
+        opcoes = select.find_all("option")
+        if not opcoes:
+            continue
+        selecionada = next((o for o in opcoes if o.get("selected") is not None), opcoes[0])
+        data[name] = selecionada.get("value", "")
+
     # Marca o checkbox "Observa" explicitamente
     label = form.find("label", string=re.compile(r"observa", re.IGNORECASE))
     if label and label.get("for"):
@@ -56,12 +75,24 @@ def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho
                     data[inp["name"]] = inp.get("value", "1")
                 break
 
+    # Formato do arquivo exportado é sempre XLSX — força explicitamente em
+    # vez de depender da ordem das opções do select no Moodle
+    if "format" in data:
+        data["format"] = "excel"
+
     action = form.get("action", url)
     if not action.startswith("http"):
         action = urljoin(url, action)
 
     arquivo = caminho_saida / f"{nome_turma}.xlsx"
     sessao.baixar(action, arquivo, method="post", data=data)
+
+    if not _e_xlsx_valido(arquivo):
+        raise RuntimeError(
+            f"Resposta do Moodle não é um arquivo Excel válido para {nome_turma} — "
+            "o formulário de exportação pode ter mudado"
+        )
+
     log.ok(f"Salvo em: {arquivo}")
 
 
