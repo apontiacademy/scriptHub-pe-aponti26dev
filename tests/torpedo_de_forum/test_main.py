@@ -94,8 +94,8 @@ def test_encontrar_imagem_override_existente(tmp_path):
     assert caminho == str(img)
 
 
-def test_encontrar_imagem_override_inexistente_levanta_file_not_found(tmp_path):
-    with pytest.raises(FileNotFoundError):
+def test_encontrar_imagem_override_inexistente_levanta_erro_configuracao(tmp_path):
+    with pytest.raises(ErroConfiguracao):
         encontrar_imagem(tmp_path, override=str(tmp_path / "nao_existe.png"))
 
 

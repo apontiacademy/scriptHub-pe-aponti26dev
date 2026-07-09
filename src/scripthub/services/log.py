@@ -77,9 +77,25 @@ def sucesso(msg: str) -> None:
     _logger.log(_NIVEL_SUCESSO, "  ✅ %s", msg)
 
 
+def _painel_erro(msg: str) -> None:
+    from rich.console import Console
+    from rich.panel import Panel
+
+    Console(stderr=True).print(Panel(msg, border_style="red", title="Erro", title_align="left"))
+
+
 def erro(msg: str) -> None:
-    print(f"  ❌ {msg}", file=sys.stderr)
+    _painel_erro(msg)
     _logger.error("  ❌ %s", msg)
+
+
+def traceback() -> None:
+    import traceback as _tb
+
+    from rich.console import Console
+
+    Console(stderr=True).print_exception(show_locals=False)
+    _logger.error(_tb.format_exc())
 
 
 def aviso(msg: str) -> None:

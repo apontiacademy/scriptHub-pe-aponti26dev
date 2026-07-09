@@ -3,11 +3,21 @@ class ErroScriptHub(Exception):
 
     codigo_saida = 1
 
+    def __init__(self, mensagem: str, *, dica: str | None = None) -> None:
+        super().__init__(mensagem)
+        self.dica = dica
+
 
 class ErroConfiguracao(ErroScriptHub):
     """.env, settings.json, credenciais ou um arquivo/diretório esperado de um passo anterior."""
 
     codigo_saida = 2
+
+
+class ErroUsoCLI(ErroScriptHub):
+    """Uso inválido da CLI — opção/passo/flag/argumento inválidos, validados antes do script rodar."""
+
+    codigo_saida = 3
 
 
 class FalhaParcial(ErroScriptHub):

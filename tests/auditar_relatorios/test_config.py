@@ -93,11 +93,11 @@ def test_exportar_analise_true_com_caminho_preenchido_usa_caminho_configurado(tm
     assert config.moodle.csv_saida_analise == tmp_path / "saida.csv"
 
 
-def test_exportar_analise_true_sem_caminho_levanta_value_error(tmp_path, monkeypatch, settings_valido):
+def test_exportar_analise_true_sem_caminho_levanta_erro_configuracao(tmp_path, monkeypatch, settings_valido):
     settings_valido["moodle"]["exportarAnaliseRelatorio"] = True
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
-    with pytest.raises(ValueError, match="caminhoExportacaoAnalise"):
+    with pytest.raises(ErroConfiguracao, match="caminhoExportacaoAnalise"):
         Config.load()

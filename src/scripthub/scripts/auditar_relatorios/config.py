@@ -47,9 +47,8 @@ class Config:
         caminho_exportacao = moodle_json.get("caminhoExportacaoAnalise")
 
         if exportar_analise and not caminho_exportacao:
-            raise ValueError(
-                "caminhoExportacaoAnalise deve ser definido em settings.json quando "
-                "exportarAnaliseRelatorio=true. Configure com `scripthub config -s ra`."
+            raise ErroConfiguracao(
+                "caminhoExportacaoAnalise deve ser definido em settings.json quando exportarAnaliseRelatorio=true"
             )
 
         moodle_config = MoodleConfig(

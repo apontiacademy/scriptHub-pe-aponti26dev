@@ -100,7 +100,7 @@ def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho
     sessao.baixar(action, arquivo, method="post", data=data)
 
     if not _e_xlsx_valido(arquivo):
-        raise RuntimeError(
+        raise ErroIntegracao(
             f"Resposta do Moodle não é um arquivo Excel válido para {nome_turma} — "
             "o formulário de exportação pode ter mudado"
         )

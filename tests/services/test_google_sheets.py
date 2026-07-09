@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import gspread
 import pytest
 
+from scripthub.services.erros import ErroIntegracao
 from scripthub.services.google.sheets import GoogleSheetsClient
 
 _PATCH = "scripthub.services.google.sheets"
@@ -40,13 +41,13 @@ def test_planilha_abre_por_chave(mocker):
     mock_gc.open_by_key.assert_called_once_with("id-abc123")
 
 
-def test_planilha_levanta_runtime_error_quando_nao_encontrada(mocker):
+def test_planilha_levanta_erro_integracao_quando_nao_encontrada(mocker):
     mock_gc = MagicMock()
     mock_gc.open_by_key.side_effect = gspread.exceptions.SpreadsheetNotFound
     mocker.patch(f"{_PATCH}.gspread.service_account", return_value=mock_gc)
     client = GoogleSheetsClient(Path("creds.json"))
 
-    with pytest.raises(RuntimeError, match="[Pp]lanilha"):
+    with pytest.raises(ErroIntegracao, match="[Pp]lanilha"):
         client.planilha("id-inexistente")
 
 

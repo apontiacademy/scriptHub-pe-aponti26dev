@@ -1104,6 +1104,7 @@ dependencies = [
     { name = "pentefinocli-pe-aponti26dev" },
     { name = "playwright" },
     { name = "questionary" },
+    { name = "rich" },
     { name = "typer" },
 ]
 
@@ -1128,6 +1129,7 @@ requires-dist = [
     { name = "pentefinocli-pe-aponti26dev", git = "https://github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git?rev=main" },
     { name = "playwright", specifier = ">=1.60.0" },
     { name = "questionary", specifier = ">=2.1.1" },
+    { name = "rich", specifier = ">=13.0.0" },
     { name = "typer", specifier = ">=0.26.7" },
 ]
 

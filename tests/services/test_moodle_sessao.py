@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 from scripthub.services.moodle.sessao import MoodleSessao
 
 _LOGIN_URL = "https://moodle.example.com/login/index.php"
@@ -63,13 +64,24 @@ def test_login_sem_logintoken_posta_com_token_none():
     assert kwargs["data"]["logintoken"] is None
 
 
-def test_login_levanta_runtime_error_quando_redireciona_para_login():
+def test_login_levanta_erro_configuracao_quando_redireciona_para_login():
     mock = MagicMock()
     mock.get.return_value = _resp(text='<input name="logintoken" value="t">')
     mock.post.return_value = _resp(url=_LOGIN_URL)  # ainda no login → falha
     s = MoodleSessao(_LOGIN_URL, "u", "p", _session=mock)
 
-    with pytest.raises(RuntimeError, match="[Ll]ogin"):
+    with pytest.raises(ErroConfiguracao, match="[Ll]ogin"):
+        s.login()
+
+
+def test_login_levanta_erro_configuracao_quando_credenciais_invalidas():
+    mock = MagicMock()
+    mock.get.return_value = _resp(text='<input name="logintoken" value="t">')
+    # não redireciona para /login/, mas a página pós-login ainda mostra o form de login
+    mock.post.return_value = _resp(url=_HOME_URL, text='<input name="logintoken" value="t2">')
+    s = MoodleSessao(_LOGIN_URL, "u", "p", _session=mock)
+
+    with pytest.raises(ErroConfiguracao, match="[Cc]redenc"):
         s.login()
 
 
@@ -83,6 +95,15 @@ def test_get_delega_para_session():
     s.get("https://moodle.example.com/page")
 
     mock.get.assert_called_once_with("https://moodle.example.com/page")
+
+
+def test_get_levanta_erro_integracao_quando_sessao_expira():
+    mock = MagicMock()
+    mock.get.return_value = _resp(url="https://moodle.example.com/login/index.php")
+    s = _sessao(mock)
+
+    with pytest.raises(ErroIntegracao, match="[Ss]ess"):
+        s.get("https://moodle.example.com/protegida")
 
 
 def test_post_delega_para_session():
@@ -132,10 +153,10 @@ def test_baixar_cria_diretorios_pais(tmp_path):
     assert destino.exists()
 
 
-def test_baixar_levanta_runtime_error_quando_redireciona_para_login(tmp_path):
+def test_baixar_levanta_erro_integracao_quando_sessao_expira(tmp_path):
     mock = MagicMock()
     mock.get.return_value = _resp(url="https://moodle.example.com/login/index.php", content=b"<html>login</html>")
     s = _sessao(mock)
 
-    with pytest.raises(RuntimeError, match="[Ss]ess"):
+    with pytest.raises(ErroIntegracao, match="[Ss]ess"):
         s.baixar("https://moodle.example.com/protected", tmp_path / "f.csv")

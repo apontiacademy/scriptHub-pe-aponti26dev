@@ -179,8 +179,9 @@ from scripthub.services import log
 | `log.passo("msg")` | Passo em andamento | `  • msg` |
 | `log.ok("msg")` | Passo/item concluído — não implica que o processo inteiro terminou | `  ✔ msg` |
 | `log.sucesso("msg")` | Processo/pipeline **inteiro** terminou com sucesso (exit code `0`) — usar uma única vez, no fim | `  ✅ msg` (grava `SUCCESS` em `logs/scripthub.log`) |
-| `log.erro("msg")` | Erro que leva o processo a terminar com exit code `!= 0` (vai para stderr) | `  ❌ msg` |
+| `log.erro("msg")` | Erro que leva o processo a terminar com exit code `!= 0` (vai para stderr) | painel Rich (`╭─ Erro ─╮`) no terminal; `  ❌ msg` em texto plano em `logs/scripthub.log` |
 | `log.aviso("msg")` | Aviso não-fatal — execução segue, exit code final não é afetado | `  ⚠️  msg` |
+| `log.traceback()` | Traceback completo de um erro genérico, só quando `--debug` está ativo (ver [ERRORS.md](ERRORS.md)) | traceback formatado pelo Rich no terminal; texto puro (`traceback.format_exc()`) em `logs/scripthub.log` |
 
 **Nunca use `print()` diretamente nos scripts.**
 
@@ -211,8 +212,8 @@ propósito, o contrato acima.
 
 ## Contrato de erros
 
-- **Funções de biblioteca**: levantar exceções — nunca chamar `sys.exit()`. Prefira a subclasse mais específica de `scripthub.services.erros` (`ErroConfiguracao`, `FalhaParcial`, `ErroIntegracao`) quando a causa se encaixar numa categoria; caso contrário, uma exceção genérica do Python (`ValueError`, `RuntimeError`, `FileNotFoundError`, etc.) cai no código de saída genérico. Ver [ERRORS.md](ERRORS.md) para a tabela completa de códigos e a pergunta prática para escolher a categoria certa.
-- **CLI (`executar_script`)**: captura exceções das funções ESCOPOS e termina com `typer.Exit(<código>)` — `<código>` vem de `exc.codigo_saida` para subclasses de `ErroScriptHub`, ou `1` para qualquer outra exceção
+- **Funções de biblioteca e comandos da CLI**: apenas levantar a exceção certa — nunca chamar `sys.exit()`/`typer.Exit()`, nunca logar o erro final diretamente. Prefira a subclasse mais específica de `scripthub.services.erros` (`ErroConfiguracao`, `ErroUsoCLI`, `FalhaParcial`, `ErroIntegracao`) quando a causa se encaixar numa categoria; caso contrário, uma exceção genérica do Python (`ValueError`, `RuntimeError`, `FileNotFoundError`, etc.) cai no código de saída genérico. Ver [ERRORS.md](ERRORS.md) para a tabela completa de códigos e a pergunta prática para escolher a categoria certa.
+- **CLI**: um único handler global, `_executar_com_tratamento_global` (chamado a partir de `run()`, o entry point do pacote), envolve a execução do app inteiro — captura qualquer `ErroScriptHub`/exceção genérica, loga a mensagem final mesclada com o código de saída e termina com `SystemExit(<código>)`. Nenhum outro ponto do código (comandos, `executar_script`, `_carregar_config`) faz esse tratamento — todos só levantam a exceção.
 - **Menu**: invoca o CLI via subprocess (`scripthub <cmd>`), o exit code do processo é exibido ao final
 
 ```python

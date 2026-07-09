@@ -51,7 +51,7 @@ def encontrar_imagem(pasta: Path, override: str | None = None) -> str | None:
     if override:
         path = Path(override).resolve()
         if not path.exists():
-            raise FileNotFoundError(f"Arquivo de imagem não encontrado: {override}")
+            raise ErroConfiguracao(f"Arquivo de imagem não encontrado: {override}")
         return str(path)
     for ext in _IMAGE_EXTENSIONS:
         matches = sorted(pasta.glob(f"*{ext}"))

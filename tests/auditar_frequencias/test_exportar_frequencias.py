@@ -244,11 +244,11 @@ def test_exportar_frequencia_sem_form_levanta_runtime_error(tmp_path):
         exportar_frequencia(sessao, "https://moodle.example.com/freq?id=1", "Turma A", tmp_path)
 
 
-def test_exportar_frequencia_conteudo_salvo_invalido_levanta_runtime_error(tmp_path):
+def test_exportar_frequencia_conteudo_salvo_invalido_levanta_erro_integracao(tmp_path):
     sessao = _make_sessao()
     sessao.baixar.side_effect = _grava_arquivo(b"<!DOCTYPE html><html>pagina de exportacao</html>")
 
-    with pytest.raises(RuntimeError, match="[Ee]xcel|[Vv]álido"):
+    with pytest.raises(ErroIntegracao, match="[Ee]xcel|[Vv]álido"):
         exportar_frequencia(sessao, "https://moodle.example.com/freq?id=1", "Turma A", tmp_path)
 
 
