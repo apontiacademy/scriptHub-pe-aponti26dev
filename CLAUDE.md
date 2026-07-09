@@ -6,7 +6,7 @@ Guia para desenvolvimento deste projeto com Claude Code.
 
 Os padrões de estrutura de scripts, fluxo de contribuição (branch/commit/PR), sistema de configuração e testes estão documentados no arquivo acima — leia-o integralmente antes de criar ou alterar qualquer script. Ele é a fonte canônica desses padrões; não os duplique aqui.
 
-Antes de abrir qualquer PR, releia as seções "Fluxo de contribuição" e "Versionamento e changelog" de CONTRIBUTING.md: confirme que o PR é contra `dev` (nunca `nightly`/`main` diretamente) e que a própria branch já inclui a entrada em `SNAPSHOTS.md` e o bump de versão em `pyproject.toml` (`x.y.z.devN`).
+Antes de abrir qualquer PR, releia as seções "Fluxo de contribuição" e "Versionamento e changelog" de CONTRIBUTING.md: confirme que o PR é contra `dev` (nunca `nightly`/`main` diretamente). A entrada em `SNAPSHOTS.md` e o bump de versão em `pyproject.toml` (`x.y.z.devN`) **não** entram na abertura da PR — são adicionados depois, como último commit da branch, só após a aprovação e imediatamente antes do squash (ver "Squash manual em dev/nightly/main" em CONTRIBUTING.md).
 
 ## Comandos úteis
 

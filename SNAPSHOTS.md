@@ -2,7 +2,7 @@
 
 Registro cumulativo do que já está em `dev`, mas ainda não foi promovido para `nightly` (branch de release candidate) nem virou uma entrada em [CHANGELOG.md](CHANGELOG.md).
 
-`dev` usa merge queue com squash — cada PR vira um único commit linear, sem commit de merge. Cada commit em `dev` gera uma nova entrada `x.y.z.devN`, em que:
+`dev` usa squash manual — cada PR vira um único commit linear, sem commit de merge (mesmo mecanismo de `nightly`/`main`, ver "Squash manual em dev/nightly/main" em [CONTRIBUTING.md](CONTRIBUTING.md)). Cada commit em `dev` gera uma nova entrada `x.y.z.devN`, em que:
 
 - `x.y.z` é a versão que está sendo construída — o próximo destino em `nightly`/`main`
 - `N` é o número sequencial do snapshot dentro dessa versão (incrementa a cada commit em `dev`)
