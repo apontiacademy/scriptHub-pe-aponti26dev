@@ -14,7 +14,8 @@ _ASSINATURA_ZIP = b"PK\x03\x04"
 
 def _e_xlsx_valido(arquivo: Path) -> bool:
     """XLSX é um ZIP — detecta o formato pela assinatura mágica do arquivo."""
-    return arquivo.read_bytes().startswith(_ASSINATURA_ZIP)
+    with arquivo.open("rb") as f:
+        return f.read(len(_ASSINATURA_ZIP)) == _ASSINATURA_ZIP
 
 
 def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho_saida: Path) -> None:
@@ -64,12 +65,12 @@ def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho
     # "selected" ou, na ausência, a primeira opção (default do navegador)
     for select in form.find_all("select"):
         name = select.get("name")
-        if not name or select.get("multiple") is not None:
+        if not name or select.has_attr("multiple"):
             continue
         opcoes = select.find_all("option")
         if not opcoes:
             continue
-        selecionada = next((o for o in opcoes if o.get("selected") is not None), opcoes[0])
+        selecionada = next((o for o in opcoes if o.has_attr("selected")), opcoes[0])
         data[name] = selecionada.get("value", "")
 
     # Marca o checkbox "Observa" explicitamente
