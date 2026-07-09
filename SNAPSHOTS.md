@@ -42,3 +42,9 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 - **Changed**: `caminhoExportacaoAnalise` passa a ser obrigatório quando `exportarAnaliseRelatorio=true` (levanta `ValueError` em vez de cair silenciosamente no caminho padrão); suporte genérico a campos condicionalmente obrigatórios (`resolver_dependencias()` em `campo.py`), refletido em `scripthub config -s ra`
 - **Fixed**: com `exportarAnaliseRelatorio=false`, o Escopo 2 volta a usar o caminho padrão do sistema silenciosamente em vez de travar no prompt interativo de caminho de saída do Core (pentefino); diretório de saída deixa de ser criado antecipadamente quando a exportação está desativada
 - **Fixed**: `persistir()` remove do `settings.json` a chave de um campo opcional limpo pelo usuário em vez de deixá-la gravada (o que bloqueava o fallback ao caminho padrão); `_remover_chave_json` deixa de assumir `json_chaves` não-vazio, evitando `IndexError`
+
+### 0.20.0.dev6 - 2026-07-09 - (PR#82)
+
+- **Fixed**: `exportar_frequencia` (Escopo 1 de `auditar_frequencias`) deixava de enviar o campo `format` (não lia `<select>`, só `<input>`) e podia postar no formulário errado da página (`editmode.php` em vez do `mform` real de exportação), fazendo o Moodle devolver HTML em vez de XLSX (Closes #80)
+- **Fixed**: checkboxes marcados por padrão no Moodle via atributo booleano `checked` "bare" (sem valor) deixavam de ser detectados — `BeautifulSoup` representa esse atributo como string vazia (falsy); troca de `inp.get("checked")` para `inp.has_attr("checked")`, também aplicado à detecção de `selected`/`multiple` nos `<select>`
+- **Added**: validação da assinatura ZIP do arquivo baixado (`_e_xlsx_valido`) para falhar cedo com erro claro caso o Moodle volte a devolver uma página HTML em vez do XLSX esperado
