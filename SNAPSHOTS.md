@@ -36,10 +36,15 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 
 - **Changed**: limpeza das violações de `ruff` restantes em `dev` após a chegada de `.github/workflows/ci.yml` (propagado de `main`/`nightly`, issue #67) — imports não usados/desordenados, `raise ... from` em blocos `except`, `zip(strict=)` em `download_softskills.py`; necessário para o CI de lint rodar limpo em `dev`
 
-### 0.20.0.dev4 - 2026-07-07 - (PR#66)
+### 0.20.0.dev5 - 2026-07-08 - (PR#65)
 
-<!-- TODO: renumerar dev4 -> devN definitivo quando a ordem de merge com a PR#65 for decidida -->
-- **Added**: helper `_executar_pipeline_simples` unificando a mensagem final (sucesso/erro + código de saída) nos scripts Padrão B; `log.sucesso()` (novo nível `SUCCESS`) para marcar exclusivamente o fim do pipeline com exit code 0; hierarquia de exceções em `services/erros.py` (`ErroConfiguracao`=2, `FalhaParcial`=4, `ErroIntegracao`=5, fallback genérico=1, uso inválido de CLI=3); `ERRORS.md` documentando o esquema de códigos de saída
-- **Changed**: contrato de 4 níveis de `services/log.py` (`ok`/`sucesso`/`erro`/`aviso`) documentado em `CONTRIBUTING.md`; ~10 chamadas `log.erro`/`log.aviso` reclassificadas conforme o contrato em `services/config/main.py`, `auditar_softskills`, `integracao_drive.py`, `compilar_pdfs.py` e `torpedo_de_forum/main.py`; mensagens redundantes de conclusão de escopo removidas (responsabilidade passa a ser só do CLI)
-- **Fixed**: 3 casos de erro engolido silenciosamente em `middleware_analise_de_relatorios.py`, `backup.py` e `compilar_pdfs.py` (`SystemExit` cru do pentefino agora vira `RuntimeError` com o código de saída); mensagem de erro de `compilar_pdfs.py` volta a informar quantos PDFs foram gerados com sucesso
-- **Removed**: marcadores visuais `[CACHE]`/`[NOT FOUND]`/`[ERROR]` de `auditar_softskills/main.py`
+- **Fixed**: `caminhoExportacaoAnalise` configurado via `scripthub config -s ra` deixa de ser ignorado — `csv_saida_analise` agora é resolvido uma única vez em `Config.load()` e usado tanto pelo Escopo 2 (middleware) quanto pelo Escopo 3 (integração Google Sheets) (Closes #55)
+- **Changed**: `caminhoExportacaoAnalise` passa a ser obrigatório quando `exportarAnaliseRelatorio=true` (levanta `ValueError` em vez de cair silenciosamente no caminho padrão); suporte genérico a campos condicionalmente obrigatórios (`resolver_dependencias()` em `campo.py`), refletido em `scripthub config -s ra`
+- **Fixed**: com `exportarAnaliseRelatorio=false`, o Escopo 2 volta a usar o caminho padrão do sistema silenciosamente em vez de travar no prompt interativo de caminho de saída do Core (pentefino); diretório de saída deixa de ser criado antecipadamente quando a exportação está desativada
+- **Fixed**: `persistir()` remove do `settings.json` a chave de um campo opcional limpo pelo usuário em vez de deixá-la gravada (o que bloqueava o fallback ao caminho padrão); `_remover_chave_json` deixa de assumir `json_chaves` não-vazio, evitando `IndexError`
+
+### 0.20.0.dev6 - 2026-07-09 - (PR#82)
+
+- **Fixed**: `exportar_frequencia` (Escopo 1 de `auditar_frequencias`) deixava de enviar o campo `format` (não lia `<select>`, só `<input>`) e podia postar no formulário errado da página (`editmode.php` em vez do `mform` real de exportação), fazendo o Moodle devolver HTML em vez de XLSX (Closes #80)
+- **Fixed**: checkboxes marcados por padrão no Moodle via atributo booleano `checked` "bare" (sem valor) deixavam de ser detectados — `BeautifulSoup` representa esse atributo como string vazia (falsy); troca de `inp.get("checked")` para `inp.has_attr("checked")`, também aplicado à detecção de `selected`/`multiple` nos `<select>`
+- **Added**: validação da assinatura ZIP do arquivo baixado (`_e_xlsx_valido`) para falhar cedo com erro claro caso o Moodle volte a devolver uma página HTML em vez do XLSX esperado

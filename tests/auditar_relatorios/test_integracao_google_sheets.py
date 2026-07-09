@@ -23,7 +23,6 @@ def config(tmp_path):
             url_login="https://example.com/login",
             urls_relatorios=["https://example.com/r1"],
             exportar_analise_relatorio=False,
-            caminho_exportacao_analise=None,
         ),
         gsheets=GsheetsConfig(
             id_planilha="planilha-id-123",

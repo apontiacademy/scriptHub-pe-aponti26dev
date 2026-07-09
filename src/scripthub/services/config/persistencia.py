@@ -14,6 +14,17 @@ def _script_dir(nome_script: str) -> Path:
     return _SCRIPTS_FOLDER / nome_script
 
 
+def _remover_chave_json(settings: dict, json_chaves: list[str]) -> None:
+    if not json_chaves:
+        return
+    node = settings
+    for chave in json_chaves[:-1]:
+        node = node.get(chave, {})
+        if not isinstance(node, dict):
+            return
+    node.pop(json_chaves[-1], None)
+
+
 def carregar_valores(nome_script: str, campos: list[Campo]) -> dict[str, Any]:
     diretorio = _script_dir(nome_script)
 
@@ -78,9 +89,9 @@ def persistir(nome_script: str, campos: list[Campo], valores: dict[str, Any]) ->
 
         for campo in campos_settings:
             novo = valores.get(campo.chave)
-            if novo is None and not campo.obrigatorio:
-                continue
             if novo is None:
+                if not campo.obrigatorio:
+                    _remover_chave_json(settings, campo.json_chaves)
                 continue
             node = settings
             for chave in campo.json_chaves[:-1]:
