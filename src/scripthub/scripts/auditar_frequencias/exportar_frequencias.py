@@ -23,8 +23,15 @@ def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho
     resp = sessao.get(url)
     soup = BeautifulSoup(resp.text, "html.parser")
 
+    # A página tem outros <form> além do de exportação (ex.: o botão de
+    # "ativar/desativar edição" que posta para editmode.php) — o mform real
+    # do Moodle é identificável pelo id "mformN_..." gerado pelo moodleform
     form = next(
-        (f for f in soup.find_all("form") if "/login/" not in f.get("action", "")),
+        (
+            f
+            for f in soup.find_all("form")
+            if "/login/" not in f.get("action", "") and re.match(r"mform\d", f.get("id", ""))
+        ),
         None,
     )
     if not form:
@@ -45,7 +52,10 @@ def exportar_frequencia(sessao: MoodleSessao, url: str, nome_turma: str, caminho
         elif tipo == "button":
             continue
         elif tipo == "checkbox":
-            if inp.get("checked"):
+            # BeautifulSoup representa o atributo booleano "checked" (sem
+            # valor) como string vazia — falsy em Python — então a presença
+            # do atributo precisa ser checada com has_attr, não get()
+            if inp.has_attr("checked"):
                 data[name] = inp.get("value", "1")
         else:
             data[name] = inp.get("value", "")
