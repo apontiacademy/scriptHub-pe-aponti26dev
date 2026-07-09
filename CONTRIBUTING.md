@@ -49,6 +49,8 @@ chore(tests): implementar estrutura de testes completa com cobertura ≥ 80%
 docs: atualizar READMEs internos
 ```
 
+Essa convenção vale só durante o lifecycle da branch de feature — é o que dá rastreamento ao histórico de commits enquanto o trabalho está em andamento. Ela é eliminada a partir do momento em que a PR vira snapshot: o commit de squash final que chega em `dev`, `nightly` ou `main` nunca carrega o marcador `tipo(escopo):` — ele segue o padrão `[vX.Y.Z(.devN)] título (#pr)` descrito em "Versionamento e changelog".
+
 ### Checklist antes de abrir PR
 
 ```bash
@@ -57,7 +59,7 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-PRs são abertos contra `dev`, nunca contra `nightly` ou `main`. `dev` usa merge queue com squash — cada PR vira um único commit linear em `dev`, sem commit de merge.
+PRs são abertos contra `dev`, nunca contra `nightly` ou `main`.
 
 O fluxo de branches tem 4 estágios:
 
@@ -65,7 +67,7 @@ O fluxo de branches tem 4 estágios:
 branch de feature → dev → nightly → main
 ```
 
-- **`dev`** — branch de integração contínua, recebe os PRs via merge queue (squash). Cada commit em `dev` gera uma entrada cumulativa em `SNAPSHOTS.md` — squash elimina a distinção entre "merge de PR" e "commit direto", todo commit em `dev` é um PR fechado.
+- **`dev`** — branch de integração contínua, recebe os PRs via squash manual (mesmo mecanismo de `nightly`/`main`). Cada commit em `dev` gera uma entrada cumulativa em `SNAPSHOTS.md` — squash elimina a distinção entre "merge de PR" e "commit direto", todo commit em `dev` é um PR fechado.
 - **`nightly`** — branch de release candidate. Quando um conjunto de snapshots em `dev` é considerado pronto, é promovido (merge) para `nightly` — é o que aparece na seção `[Unreleased]` de `CHANGELOG.md`.
 - **`main`** — branch de release. Só recebe merge de `nightly` quando uma versão é oficialmente publicada.
 
@@ -74,7 +76,7 @@ branch de feature → dev → nightly → main
 - **`CHANGELOG.md`** — histórico de versões já lançadas em `main`, no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) (`0.x.y`: `x` sobe em mudança expressiva, `y` em mudança pontual). Versões retiradas por bug grave ou falha de segurança levam a tag `[YANKED]`.
 - **`SNAPSHOTS.md`** — trabalho em andamento em `dev`, ainda não consolidado. Cada commit em `dev` vira uma entrada `x.y.z.devN` (`x.y.z` = versão sendo construída, `N` = snapshot sequencial), e `pyproject.toml` em `dev` é atualizado junto (`version = "x.y.z.devN"`) — usa o sufixo `.devN` do PEP 440 para permanecer uma versão válida (`x.y.z-Ns` quebraria `uv lock`/`uv sync`).
 
-A mensagem de commit do squash que chega em `main` deve possuir o código da versão lançada com ele no início do título (ex.: `[v0.19.2] título da PR (#74)`) — garante rastreabilidade entre o commit em `main` e a entrada correspondente em `CHANGELOG.md`, mesmo em merges fora do fluxo normal `nightly → main` (ex.: PRs de infraestrutura abertas direto contra `main`).
+O commit de squash que chega em `dev`, `nightly` ou `main` deve possuir o código da versão no início do título (ex.: `[v0.19.2] título da PR (#74)`) — garante rastreabilidade entre o commit e a entrada correspondente em `SNAPSHOTS.md`/`CHANGELOG.md`, mesmo em merges fora do fluxo normal (ex.: PRs de infraestrutura abertas direto contra `main`). Ver "Squash manual em dev/nightly/main" abaixo para o passo a passo.
 
 Ciclo de vida de uma mudança:
 
@@ -83,6 +85,17 @@ Ciclo de vida de uma mudança:
 3. `nightly` mergeada em `main` (release) → `[Unreleased]` vira `## [x.y.z] - data`, e `pyproject.toml` em `main`/`nightly`/`docs/geral` reflete essa versão
 
 Toda vez que a versão em `pyproject.toml` muda (novo snapshot, promoção `dev → nightly` ou release `nightly → main`), rode `uv sync` (ou `uv lock`) e commite o `uv.lock` atualizado junto — ele fixa a própria versão do pacote (`scripthub-pe-aponti26dev`) e fica desatualizado silenciosamente se o lock não for regenerado.
+
+### Squash manual em dev/nightly/main
+
+`dev`, `nightly` e `main` usam o mesmo mecanismo: squash manual via ruleset `pull_request` (sem merge queue em nenhum dos três). Quem faz o merge de uma PR aprovada edita manualmente a caixa "Squash and merge" do GitHub:
+
+- **Título**: trocar o prefixo de tipo (`tipo(escopo):`) pela versão — `[vX.Y.Z(.devN)] título (#pr)`, com `x.y.z.devN` em `dev` e `x.y.z` em `nightly`/`main`. O `(#pr)` só vem preenchido sozinho na sugestão inicial da caixa; ao editar o título, é preciso digitar `(#pr)` de volta manualmente.
+- **Descrição**: o texto da entrada correspondente — a entrada nova em `SNAPSHOTS.md` (merge em `dev`) ou em `CHANGELOG.md` (merge em `nightly`/`main`).
+
+Sem merge queue serializando os merges, quem mergeia em `dev` precisa se atentar manualmente à ordem: mergear PRs aprovadas fora de ordem pode gerar dois commits com o mesmo `devN` ou pular a sequência.
+
+É por isso que o bump de `SNAPSHOTS.md`/`devN` em `pyproject.toml` **não** é feito na abertura da PR — só se sabe o número correto depois que a PR é aprovada, já que outra PR pode mergear antes e consumir aquele `devN`. A entrada em `SNAPSHOTS.md` e o bump em `pyproject.toml` (+ `uv.lock`) são adicionados como último commit da branch, depois de aprovada a PR e imediatamente antes do squash: confira o HEAD atual de `dev`, calcule o próximo `devN` livre, empurre esse commit para a branch (a aprovação continua valendo — `dismiss_stale_reviews_on_push` é `false` na ruleset) e só então faça o squash. PRs contra `nightly`/`main` seguem a mesma lógica para a consolidação de `CHANGELOG.md`.
 
 ### Commits de changelog/release
 
@@ -95,7 +108,7 @@ chore(release): 0.20.0                                 # nightly → main
 
 `dev`, `nightly` e `main` são protegidas por ruleset — só aceitam mudança via PR, nunca commit direto. Isso também vale para esses commits, mas o mecanismo muda dependendo do caso:
 
-- **Snapshot de cada PR** (entrada em `SNAPSHOTS.md` + versão `x.y.z.devN` em `pyproject.toml`) — não é um evento separado. O autor já inclui essa atualização na própria branch de feature, como parte do PR normal contra `dev`. Não existe branch/PR dedicada para isso.
+- **Snapshot de cada PR** (entrada em `SNAPSHOTS.md` + versão `x.y.z.devN` em `pyproject.toml`) — não é um evento separado nem precisa de branch/PR dedicada: é adicionado como último commit da própria branch de feature, depois que a PR contra `dev` é aprovada e imediatamente antes do squash (ver "Squash manual em dev/nightly/main" acima).
 - **Promoção `dev → nightly`** — branch dedicada a partir de `dev`, levando as mudanças de código da versão + o commit `chore(changelog)`, que consolida `[Unreleased]` em `CHANGELOG.md` e troca a versão em `pyproject.toml` do formato de snapshot para a versão plana (`x.y.z.devN` → `x.y.z`). PR contra `nightly`. Essa branch **não** limpa `SNAPSHOTS.md`.
 - **Limpeza de `SNAPSHOTS.md`** — branch separada, também a partir de `dev`, com PR de volta contra o próprio `dev`, removendo as entradas já consolidadas em `[Unreleased]`. `SNAPSHOTS.md` é bookkeeping exclusivo de `dev`: essa limpeza nunca chega em `nightly` nem em `main`.
 - **Promoção `nightly → main`** — branch dedicada a partir de `nightly`, com o commit `chore(release)`, que fecha `[Unreleased]` em `## [x.y.z] - data`. A versão em `pyproject.toml` já está correta desde a promoção anterior, não muda de novo aqui. PR contra `main`.

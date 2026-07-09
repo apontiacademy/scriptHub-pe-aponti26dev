@@ -2,7 +2,7 @@
 
 Registro cumulativo do que já está em `dev`, mas ainda não foi promovido para `nightly` (branch de release candidate) nem virou uma entrada em [CHANGELOG.md](CHANGELOG.md).
 
-`dev` usa merge queue com squash — cada PR vira um único commit linear, sem commit de merge. Cada commit em `dev` gera uma nova entrada `x.y.z.devN`, em que:
+`dev` usa squash manual — cada PR vira um único commit linear, sem commit de merge (mesmo mecanismo de `nightly`/`main`, ver "Squash manual em dev/nightly/main" em [CONTRIBUTING.md](CONTRIBUTING.md)). Cada commit em `dev` gera uma nova entrada `x.y.z.devN`, em que:
 
 - `x.y.z` é a versão que está sendo construída — o próximo destino em `nightly`/`main`
 - `N` é o número sequencial do snapshot dentro dessa versão (incrementa a cada commit em `dev`)
@@ -48,3 +48,8 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 - **Fixed**: `exportar_frequencia` (Escopo 1 de `auditar_frequencias`) deixava de enviar o campo `format` (não lia `<select>`, só `<input>`) e podia postar no formulário errado da página (`editmode.php` em vez do `mform` real de exportação), fazendo o Moodle devolver HTML em vez de XLSX (Closes #80)
 - **Fixed**: checkboxes marcados por padrão no Moodle via atributo booleano `checked` "bare" (sem valor) deixavam de ser detectados — `BeautifulSoup` representa esse atributo como string vazia (falsy); troca de `inp.get("checked")` para `inp.has_attr("checked")`, também aplicado à detecção de `selected`/`multiple` nos `<select>`
 - **Added**: validação da assinatura ZIP do arquivo baixado (`_e_xlsx_valido`) para falhar cedo com erro claro caso o Moodle volte a devolver uma página HTML em vez do XLSX esperado
+
+### 0.20.0.dev7 - 2026-07-09 - (PR#83)
+
+- **Changed**: `dev` passa a usar squash manual (mesmo mecanismo de `nightly`/`main`) em vez de merge queue automática; `CONTRIBUTING.md` documenta o padrão único `[vX.Y.Z(.devN)] título (#pr)` de título/descrição do squash para os três branches e passa a exigir que o bump de `SNAPSHOTS.md`/`devN` em `pyproject.toml` seja feito como último commit da branch, após aprovação da PR, em vez de na abertura (Closes #79)
+- **Removed**: ruleset "dev merge queue" no GitHub; trigger `merge_group` para `dev` em `.github/workflows/ci.yml`, que nunca mais dispara sem a ruleset
