@@ -67,7 +67,7 @@ class Config:
             id_planilha=gsheets_json["idPlanilha"],
             nome_aba=gsheets_json["nomeAba"],
             caminho_backup_local=Path(gsheets_json["caminhoBackupLocal"]),
-            caminho_json_credenciais=DIRETORIO_BASE / "credentials.json",
+            caminho_json_credenciais=Path(gsheets_json["caminhoJsonCredenciais"]),
         )
 
         return Config(moodle=moodle_config, gsheets=gsheets_config)

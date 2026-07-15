@@ -19,6 +19,7 @@ def settings_valido(tmp_path):
         },
         "gsheets": {
             "idPlanilha": "planilha-id-123",
+            "caminhoJsonCredenciais": str(tmp_path / "credentials.json"),
         },
     }
 
@@ -38,6 +39,17 @@ def test_load_valido(tmp_path, monkeypatch, settings_valido):
         "Turma B": "https://example.com/freq?id=2",
     }
     assert config.moodle.caminho_exportacao == tmp_path / "output"
+    assert config.gsheets.caminho_json_credenciais == tmp_path / "credentials.json"
+
+
+def test_load_sem_caminho_json_credenciais_levanta_key_error(tmp_path, monkeypatch, settings_valido):
+    del settings_valido["gsheets"]["caminhoJsonCredenciais"]
+    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
+    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+
+    with pytest.raises(KeyError):
+        Config.load()
 
 
 def test_load_sem_credenciais_levanta_excecao(tmp_path, monkeypatch, settings_valido):
