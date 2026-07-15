@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from urllib.parse import urlparse
 
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
@@ -86,9 +85,7 @@ def _md_para_html(text: str) -> str:
 
 def _injetar_cookies(contexto, sessao: MoodleSessao) -> None:
     """Transfere cookies da sessão HTTP para o contexto do Playwright."""
-    parsed = urlparse(sessao.url_login)
-    base_url = f"{parsed.scheme}://{parsed.netloc}"
-    cookies = [{"name": c.name, "value": c.value, "url": base_url, "path": c.path or "/"} for c in sessao.cookies]
+    cookies = [{"name": c.name, "value": c.value, "domain": c.domain, "path": c.path or "/"} for c in sessao.cookies]
     if cookies:
         contexto.add_cookies(cookies)
 
