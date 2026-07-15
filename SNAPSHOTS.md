@@ -53,3 +53,7 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 
 - **Changed**: `dev` passa a usar squash manual (mesmo mecanismo de `nightly`/`main`) em vez de merge queue automática; `CONTRIBUTING.md` documenta o padrão único `[vX.Y.Z(.devN)] título (#pr)` de título/descrição do squash para os três branches e passa a exigir que o bump de `SNAPSHOTS.md`/`devN` em `pyproject.toml` seja feito como último commit da branch, após aprovação da PR, em vez de na abertura (Closes #79)
 - **Removed**: ruleset "dev merge queue" no GitHub; trigger `merge_group` para `dev` em `.github/workflows/ci.yml`, que nunca mais dispara sem a ruleset
+
+### 0.20.0.dev8 - 2026-07-15 - (PR#85)
+
+- **Fixed**: `_injetar_cookies` (`torpedo_de_forum/main.py`) montava cada cookie do Playwright com `url` e `path` simultaneamente, o que o Playwright rejeita (`Cookie should have either url or path`) — quebrava 100% das execuções de `uv run scripthub t` logo após o login; corrigido usando `c.domain` (já preenchido pelo `RequestsCookieJar` de `MoodleSessao`) em vez de derivar `url` via `urlparse(sessao.url_login)` (Closes #84)
