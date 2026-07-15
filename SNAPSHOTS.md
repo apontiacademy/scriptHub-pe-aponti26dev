@@ -57,3 +57,7 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 ### 0.20.0.dev8 - 2026-07-15 - (PR#85)
 
 - **Fixed**: `_injetar_cookies` (`torpedo_de_forum/main.py`) montava cada cookie do Playwright com `url` e `path` simultaneamente, o que o Playwright rejeita (`Cookie should have either url or path`) — quebrava 100% das execuções de `uv run scripthub t` logo após o login; corrigido usando `c.domain` (já preenchido pelo `RequestsCookieJar` de `MoodleSessao`) em vez de derivar `url` via `urlparse(sessao.url_login)` (Closes #84)
+
+### 0.20.0.dev9 - 2026-07-15 - (PR#90)
+
+- **Fixed**: `uv.lock` refeito para refletir em `dev` o mesmo hotfix aplicado direto em `main` (ver `[0.19.3]` em [CHANGELOG.md](CHANGELOG.md)) — `pentefinocli-pe-aponti26dev` `0.1.0` (release retirada/yanked) atualizado para `0.2.1`, com bump decorrente do `cffi` para `2.1.0`

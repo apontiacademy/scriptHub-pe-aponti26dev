@@ -12,6 +12,13 @@ O histórico de 0.1.0 a 0.19.1 foi reconstruído a partir do `git log` de `main`
 
 Nenhuma mudança promovida de `dev` para `nightly` ainda. O trabalho em andamento em `dev` (ainda não consolidado) é acompanhado em [SNAPSHOTS.md](SNAPSHOTS.md).
 
+## [0.19.3] - 2026-07-15
+
+Exceção ao fluxo normal `dev → nightly → main`: hotfix aberto direto contra `main` devido a urgência — release `0.1.0` do `pentefinocli-pe-aponti26dev` foi retirada (yanked) pelo autor (PR#90).
+
+### Fixed
+- `uv.lock` atualizado para apontar `pentefinocli-pe-aponti26dev` `0.2.1` em vez da release `0.1.0` retirada; bump decorrente do `cffi` para `2.1.0` (#90)
+
 ## [0.19.2] - 2026-07-07
 
 Exceção ao fluxo normal `dev → nightly → main`: PR aberta direto contra `main`, já que CI/ruleset é infraestrutura que precisa proteger as três branches o quanto antes (issue #67).
