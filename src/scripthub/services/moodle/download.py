@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 from urllib.parse import urljoin
 
+import requests
 from bs4 import BeautifulSoup
 
 from scripthub.services import log
@@ -11,11 +12,20 @@ from scripthub.services import log
 from .sessao import MoodleSessao
 
 
+def _validar_csv(resp: requests.Response, url: str) -> None:
+    content_type = resp.headers.get("Content-Type", "")
+    if "csv" not in content_type.lower():
+        raise RuntimeError(
+            f"Resposta inesperada ({content_type or 'sem Content-Type'}) ao baixar relatório de {url} — esperado CSV"
+        )
+
+
 def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> None:
     """Baixa um relatório via requisição HTTP.
 
-    Tenta primeiro um link de download direto; cai no envio do formulário
-    caso não exista link. Lança RuntimeError se não encontrar nem um nem outro.
+    Tenta, em ordem: link de download direto; formulário com seletor de
+    formato de download (`<select name="download">`, ex.: mod/feedback);
+    formulário genérico (fallback). Lança RuntimeError se nenhum for encontrado.
     """
     log.passo(f"Acessando relatório: {url}")
     resp = sessao.get(url)  # lança RuntimeError se sessão expirada
@@ -27,11 +37,38 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
         href = link["href"]
         if not href.startswith("http"):
             href = urljoin(url, href)
-        sessao.baixar(href, caminho_saida)
+        resp_download = sessao.baixar(href, caminho_saida)
+        _validar_csv(resp_download, url)
         log.ok(f"Salvo em: {caminho_saida}")
         return
 
-    # Caminho 2: formulário — ignora forms que apontem para /login/
+    # Caminho 2: formulário com seletor de formato de download (ex.: mod/feedback) —
+    # identificado pelo <select name="download">, não pela ordem dos forms na
+    # página, já que páginas de feedback têm outros forms (edição, filtros, etc.)
+    # antes do form de exportação.
+    form_download = next(
+        (f for f in soup.find_all("form") if f.find("select", {"name": "download"})),
+        None,
+    )
+    if form_download:
+        data: dict[str, str] = {}
+        for inp in form_download.find_all("input"):
+            name = inp.get("name")
+            if name:
+                data[name] = inp.get("value", "")
+        data["download"] = "csv"
+
+        action = form_download.get("action", url)
+        if not action.startswith("http"):
+            action = urljoin(url, action)
+        method = form_download.get("method", "get").lower()
+
+        resp_download = sessao.baixar(action, caminho_saida, method=method, data=data)
+        _validar_csv(resp_download, url)
+        log.ok(f"Salvo em: {caminho_saida}")
+        return
+
+    # Caminho 3: formulário genérico (fallback) — ignora forms que apontem para /login/
     form = next(
         (f for f in soup.find_all("form") if "/login/" not in f.get("action", "")),
         None,
@@ -55,7 +92,8 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
         if not action.startswith("http"):
             action = urljoin(url, action)
 
-        sessao.baixar(action, caminho_saida, method="post", data=data)
+        resp_download = sessao.baixar(action, caminho_saida, method="post", data=data)
+        _validar_csv(resp_download, url)
         log.ok(f"Salvo em: {caminho_saida}")
         return
 
