@@ -79,6 +79,7 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
     log.passo(f"Acessando relatório: {url}")
     resp = sessao.get(url)  # lança RuntimeError se sessão expirada
     soup = BeautifulSoup(resp.text, "html.parser")
+    forms = soup.find_all("form")
 
     # Caminho 1: link de download direto
     link = soup.find("a", string=re.compile(r"[Dd]ownload"))
@@ -94,7 +95,7 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
     # página, já que páginas de feedback têm outros forms (edição, filtros, etc.)
     # antes do form de exportação.
     form_download = next(
-        (f for f in soup.find_all("form") if "/login/" not in f.get("action", "") and f.find("select", {"name": "download"})),
+        (f for f in forms if "/login/" not in f.get("action", "") and f.find("select", {"name": "download"})),
         None,
     )
     if form_download:
@@ -113,14 +114,12 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
             action = urljoin(url, action)
         method = form_download.get("method", "get").lower()
 
-        resp_download = sessao.baixar(action, caminho_saida, method=method, data=data)
-        _validar_csv(resp_download, url)
-        log.ok(f"Salvo em: {caminho_saida}")
+        _baixar_e_validar(sessao, action, caminho_saida, url, method=method, data=data)
         return
 
     # Caminho 3: formulário genérico (fallback) — ignora forms que apontem para /login/
     form = next(
-        (f for f in soup.find_all("form") if "/login/" not in f.get("action", "")),
+        (f for f in forms if "/login/" not in f.get("action", "")),
         None,
     )
     if form:
