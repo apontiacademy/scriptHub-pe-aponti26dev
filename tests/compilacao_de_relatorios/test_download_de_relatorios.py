@@ -125,6 +125,25 @@ def test_baixar_relatorio_inclui_sesskey_no_post(tmp_path):
     assert kwargs["data"].get("sesskey") == "sk1"
 
 
+_HTML_FORM_GENERICO_METHOD_GET = """
+<html><body>
+<form action="/mod/quiz/report.php" method="get">
+  <input type="hidden" name="sesskey" value="sk1">
+  <input type="submit" name="download" value="Download">
+</form>
+</body></html>
+"""
+
+
+def test_baixar_relatorio_form_generico_respeita_method_get_do_form(tmp_path):
+    sessao = _make_sessao(html=_HTML_FORM_GENERICO_METHOD_GET)
+
+    baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
+
+    _, kwargs = sessao.baixar.call_args
+    assert kwargs["method"] == "get"
+
+
 def test_baixar_relatorio_form_feedback_ignora_form_irrelevante_e_usa_get(tmp_path):
     sessao = _make_sessao(html=_HTML_FEEDBACK_DOWNLOAD)
 

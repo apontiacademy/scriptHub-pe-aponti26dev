@@ -118,6 +118,26 @@ def test_baixar_relatorio_form_inclui_submit_download(tmp_path):
     assert data.get("download") == "Download"
 
 
+_HTML_FORM_GENERICO_METHOD_GET = """
+<html><body>
+<form action="/mod/quiz/report.php" method="get">
+  <input type="hidden" name="sesskey" value="sk1">
+  <input type="hidden" name="id" value="1">
+  <input type="submit" name="download" value="Download">
+</form>
+</body></html>
+"""
+
+
+def test_baixar_relatorio_form_generico_respeita_method_get_do_form(tmp_path):
+    sessao = _make_sessao(html=_HTML_FORM_GENERICO_METHOD_GET)
+
+    baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
+
+    _, kwargs = sessao.baixar.call_args
+    assert kwargs["method"] == "get"
+
+
 def test_baixar_relatorio_via_link_direto(tmp_path):
     sessao = _make_sessao(html=_HTML_LINK_DOWNLOAD)
 

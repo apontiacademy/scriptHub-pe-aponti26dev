@@ -129,7 +129,8 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
         if not action.startswith("http"):
             action = urljoin(url, action)
 
-        _baixar_e_validar(sessao, action, caminho_saida, url, method="post", data=data)
+        method = form.get("method", "post").lower()
+        _baixar_e_validar(sessao, action, caminho_saida, url, method=method, data=data)
         return
 
     raise RuntimeError(f"Link ou formulário de download não encontrado em {url}")
