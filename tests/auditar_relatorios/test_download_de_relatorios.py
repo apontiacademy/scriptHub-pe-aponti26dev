@@ -163,6 +163,17 @@ def test_baixar_relatorio_levanta_runtime_error_quando_resposta_nao_e_csv(tmp_pa
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
 
 
+def test_baixar_relatorio_apaga_arquivo_quando_validacao_csv_falha(tmp_path):
+    sessao = _make_sessao(download_content_type="text/html")
+    caminho_saida = tmp_path / "r.csv"
+    caminho_saida.write_bytes(b"<html>lixo</html>")  # simula gravacao ja feita por MoodleSessao.baixar()
+
+    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+        baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", caminho_saida)
+
+    assert not caminho_saida.exists()
+
+
 # ── main ─────────────────────────────────────────────────────────────────────
 
 

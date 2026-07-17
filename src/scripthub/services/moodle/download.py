@@ -20,6 +20,55 @@ def _validar_csv(resp: requests.Response, url: str) -> None:
         )
 
 
+def _baixar_e_validar(
+    sessao: MoodleSessao,
+    action: str,
+    caminho_saida: Path,
+    url: str,
+    *,
+    method: str = "get",
+    data: dict[str, str] | None = None,
+) -> None:
+    resp_download = sessao.baixar(action, caminho_saida, method=method, data=data)
+    try:
+        _validar_csv(resp_download, url)
+    except RuntimeError:
+        caminho_saida.unlink(missing_ok=True)
+        raise
+    log.ok(f"Salvo em: {caminho_saida}")
+
+
+def _campos_de_form(form) -> dict[str, str]:
+    """Coleta os campos de um <form> em um dict nome→valor.
+
+    Inclui todo <input> exceto botões (do tipo submit, só o primeiro é
+    incluído; do tipo button, nenhum) e todo <select> (valor da opção
+    marcada como selected, ou a primeira opção se nenhuma estiver marcada).
+    """
+    data: dict[str, str] = {}
+    submit_adicionado = False
+    for inp in form.find_all("input"):
+        tipo = inp.get("type", "text").lower()
+        name = inp.get("name")
+        if not name:
+            continue
+        if tipo == "submit":
+            if not submit_adicionado:
+                data[name] = inp.get("value", "")
+                submit_adicionado = True
+        elif tipo != "button":
+            data[name] = inp.get("value", "")
+
+    for sel in form.find_all("select"):
+        name = sel.get("name")
+        if not name:
+            continue
+        opcao = sel.find("option", selected=True) or sel.find("option")
+        data[name] = opcao.get("value", "") if opcao else ""
+
+    return data
+
+
 def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> None:
     """Baixa um relatório via requisição HTTP.
 
@@ -37,9 +86,7 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
         href = link["href"]
         if not href.startswith("http"):
             href = urljoin(url, href)
-        resp_download = sessao.baixar(href, caminho_saida)
-        _validar_csv(resp_download, url)
-        log.ok(f"Salvo em: {caminho_saida}")
+        _baixar_e_validar(sessao, href, caminho_saida, url)
         return
 
     # Caminho 2: formulário com seletor de formato de download (ex.: mod/feedback) —
@@ -74,27 +121,13 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
         None,
     )
     if form:
-        data: dict[str, str] = {}
-        submit_adicionado = False
-        for inp in form.find_all("input"):
-            tipo = inp.get("type", "text").lower()
-            name = inp.get("name")
-            if not name:
-                continue
-            if tipo == "submit":
-                if not submit_adicionado:
-                    data[name] = inp.get("value", "")
-                    submit_adicionado = True
-            elif tipo != "button":
-                data[name] = inp.get("value", "")
+        data = _campos_de_form(form)
 
         action = form.get("action", url)
         if not action.startswith("http"):
             action = urljoin(url, action)
 
-        resp_download = sessao.baixar(action, caminho_saida, method="post", data=data)
-        _validar_csv(resp_download, url)
-        log.ok(f"Salvo em: {caminho_saida}")
+        _baixar_e_validar(sessao, action, caminho_saida, url, method="post", data=data)
         return
 
     raise RuntimeError(f"Link ou formulário de download não encontrado em {url}")
