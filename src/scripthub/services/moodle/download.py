@@ -94,15 +94,11 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
     # página, já que páginas de feedback têm outros forms (edição, filtros, etc.)
     # antes do form de exportação.
     form_download = next(
-        (f for f in soup.find_all("form") if f.find("select", {"name": "download"})),
+        (f for f in soup.find_all("form") if "/login/" not in f.get("action", "") and f.find("select", {"name": "download"})),
         None,
     )
     if form_download:
-        data: dict[str, str] = {}
-        for inp in form_download.find_all("input"):
-            name = inp.get("name")
-            if name:
-                data[name] = inp.get("value", "")
+        data = _campos_de_form(form_download)
         data["download"] = "csv"
 
         action = form_download.get("action", url)
