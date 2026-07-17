@@ -22,12 +22,42 @@ _HTML_FORM = """
 </body></html>
 """
 
+# Estrutura real de mod/feedback/show_entries.php: o primeiro form da página
+# (ex.: "Configurar modo de edição") não tem relação com exportação — o form
+# correto é identificado pelo <select name="download">, com method="get".
+_HTML_FEEDBACK_DOWNLOAD = """
+<html><body>
+<form action="/editmode.php" method="post">
+  <input type="checkbox" name="setmode">
+  <input type="hidden" name="sesskey" value="skedit">
+  <input type="submit" value="Configurar modo">
+</form>
+<form action="/mod/feedback/show_entries.php" method="get">
+  <input type="hidden" name="sesskey" value="sk789">
+  <input type="hidden" name="id" value="8313">
+  <select name="download">
+    <option value="csv">CSV</option>
+    <option value="excel">Excel</option>
+  </select>
+</form>
+</body></html>
+"""
+
 
 def _resp(text="", url="https://moodle.example.com/report"):
     r = MagicMock()
     r.text = text
     r.url = url
     return r
+
+
+def _make_sessao(html=_HTML_FORM, download_content_type="text/csv"):
+    sessao = MagicMock()
+    sessao.get.return_value = _resp(html)
+    resp_download = MagicMock()
+    resp_download.headers = {"Content-Type": download_content_type}
+    sessao.baixar.return_value = resp_download
+    return sessao
 
 
 def _make_config(tmp_path):
@@ -79,8 +109,7 @@ def test_todos_relatorios_existem_false_para_vazio():
 
 
 def test_baixar_relatorio_delega_para_sessao(tmp_path):
-    sessao = MagicMock()
-    sessao.get.return_value = _resp(_HTML_FORM)
+    sessao = _make_sessao()
 
     baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
 
@@ -88,13 +117,92 @@ def test_baixar_relatorio_delega_para_sessao(tmp_path):
 
 
 def test_baixar_relatorio_inclui_sesskey_no_post(tmp_path):
-    sessao = MagicMock()
-    sessao.get.return_value = _resp(_HTML_FORM)
+    sessao = _make_sessao()
 
     baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
 
     _, kwargs = sessao.baixar.call_args
     assert kwargs["data"].get("sesskey") == "sk1"
+
+
+_HTML_FORM_GENERICO_METHOD_GET = """
+<html><body>
+<form action="/mod/quiz/report.php" method="get">
+  <input type="hidden" name="sesskey" value="sk1">
+  <input type="submit" name="download" value="Download">
+</form>
+</body></html>
+"""
+
+
+def test_baixar_relatorio_form_generico_respeita_method_get_do_form(tmp_path):
+    sessao = _make_sessao(html=_HTML_FORM_GENERICO_METHOD_GET)
+
+    baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
+
+    _, kwargs = sessao.baixar.call_args
+    assert kwargs["method"] == "get"
+
+
+def test_baixar_relatorio_form_feedback_ignora_form_irrelevante_e_usa_get(tmp_path):
+    sessao = _make_sessao(html=_HTML_FEEDBACK_DOWNLOAD)
+
+    baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
+
+    args, kwargs = sessao.baixar.call_args
+    assert "editmode.php" not in args[0]
+    assert "show_entries.php" in args[0]
+    assert kwargs["method"] == "get"
+
+
+def test_baixar_relatorio_form_feedback_data_inclui_sesskey_id_e_download_csv(tmp_path):
+    sessao = _make_sessao(html=_HTML_FEEDBACK_DOWNLOAD)
+
+    baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
+
+    _, kwargs = sessao.baixar.call_args
+    assert kwargs["data"]["sesskey"] == "sk789"
+    assert kwargs["data"]["id"] == "8313"
+    assert kwargs["data"]["download"] == "csv"
+
+
+def test_baixar_relatorio_levanta_runtime_error_quando_resposta_nao_e_csv(tmp_path):
+    sessao = _make_sessao(download_content_type="text/html")
+
+    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+        baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
+
+
+def test_baixar_relatorio_apaga_arquivo_quando_validacao_csv_falha(tmp_path):
+    sessao = _make_sessao(download_content_type="text/html")
+    caminho_saida = tmp_path / "r.csv"
+    caminho_saida.write_bytes(b"<html>lixo</html>")
+
+    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+        baixar_relatorio(sessao, "https://moodle.example.com/r", caminho_saida)
+
+    assert not caminho_saida.exists()
+
+
+_HTML_FEEDBACK_SEM_OPCAO_CSV = """
+<html><body>
+<form action="/mod/feedback/show_entries.php" method="get">
+  <input type="hidden" name="sesskey" value="sk789">
+  <input type="hidden" name="id" value="8313">
+  <select name="download">
+    <option value="excel">Excel</option>
+    <option value="pdf">PDF</option>
+  </select>
+</form>
+</body></html>
+"""
+
+
+def test_baixar_relatorio_levanta_erro_quando_select_nao_oferece_csv(tmp_path):
+    sessao = _make_sessao(html=_HTML_FEEDBACK_SEM_OPCAO_CSV)
+
+    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+        baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
 
 
 # ── main ─────────────────────────────────────────────────────────────────────

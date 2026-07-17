@@ -80,15 +80,15 @@ class MoodleSessao:
         *,
         method: str = "get",
         data: dict | None = None,
-    ) -> None:
-        """Baixa um arquivo para *destino*.
+    ) -> requests.Response:
+        """Baixa um arquivo para *destino* e retorna a resposta HTTP.
 
         Lança RuntimeError se a resposta indicar sessão expirada (redirect para /login/).
         """
         if method == "post":
             resp = self._session.post(url, data=data or {})
         else:
-            resp = self._session.get(url)
+            resp = self._session.get(url, params=data or None)
 
         if "/login/" in resp.url:
             raise RuntimeError(f"Sessão expirada ao tentar baixar: {url}")
@@ -96,3 +96,4 @@ class MoodleSessao:
         resp.raise_for_status()
         destino.parent.mkdir(parents=True, exist_ok=True)
         destino.write_bytes(resp.content)
+        return resp

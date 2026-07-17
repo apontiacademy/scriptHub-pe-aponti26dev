@@ -139,3 +139,28 @@ def test_baixar_levanta_runtime_error_quando_redireciona_para_login(tmp_path):
 
     with pytest.raises(RuntimeError, match="[Ss]ess"):
         s.baixar("https://moodle.example.com/protected", tmp_path / "f.csv")
+
+
+def test_baixar_retorna_a_resposta(tmp_path):
+    mock = MagicMock()
+    resp = _resp(url="https://moodle.example.com/file.csv", content=b"col1,col2\n1,2")
+    mock.get.return_value = resp
+    s = _sessao(mock)
+
+    resultado = s.baixar("https://moodle.example.com/file.csv", tmp_path / "f.csv")
+
+    assert resultado is resp
+
+
+def test_baixar_get_com_data_envia_como_query_params(tmp_path):
+    mock = MagicMock()
+    mock.get.return_value = _resp(url="https://moodle.example.com/report", content=b"data")
+    s = _sessao(mock)
+
+    s.baixar(
+        "https://moodle.example.com/report",
+        tmp_path / "relatorio.csv",
+        data={"sesskey": "sk1", "download": "csv"},
+    )
+
+    mock.get.assert_called_once_with("https://moodle.example.com/report", params={"sesskey": "sk1", "download": "csv"})

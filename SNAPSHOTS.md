@@ -66,3 +66,10 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 ### 0.20.0.dev10 - 2026-07-17 - (PR#97)
 
 - **Changed**: `uv.lock` atualizado para alinhar `dev` ao hotfix já aplicado em `main` (PR#90, `[0.19.3]`) — `pentefinocli-pe-aponti26dev` de `0.1.0` (yanked) para `0.2.1`; bump transitivo de `cffi` para `2.1.0`
+
+### 0.20.0.dev11 - 2026-07-17 - (PR#98)
+
+- **Fixed**: `baixar_relatorio()` (`services/moodle/download.py`), usado por `auditar_relatorios`/`ra` e `compilacao_de_relatorios`/`rc`, falhava contra páginas reais `mod/feedback/show_entries.php` — a heurística de seleção de formulário pegava o primeiro `<form>` da página (ex.: "Configurar modo de edição"), não o form de exportação real, e a requisição resultante devolvia HTML em vez de CSV; passa a identificar o form correto pelo `<select name="download">` e a montar a requisição (`method`, `action`, campos) a partir dele
+- **Added**: validação de Content-Type (`_validar_csv`) na resposta do download, com `RuntimeError` claro em vez de gravar HTML silenciosamente como `.csv`; arquivo gravado é apagado automaticamente quando essa validação falha, evitando que uma execução seguinte trate o arquivo corrompido como já baixado
+- **Fixed**: forms cuja `action` aponte para `/login/` deixam de ser elegíveis como form de exportação (paridade com o caminho de fallback genérico); coleta de campos do form de exportação passa a deduplicar botões `submit` (só o primeiro) e a incluir `<select>` além de `<input>` (ex.: filtros de grupo/turma)
+- **Fixed**: `download=csv` deixa de ser forçado sem checar se a opção `csv` está de fato disponível no `<select name="download">` do form encontrado — levanta `RuntimeError` com as opções disponíveis quando não está
