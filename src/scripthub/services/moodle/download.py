@@ -98,6 +98,13 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
         None,
     )
     if form_download:
+        select_download = form_download.find("select", {"name": "download"})
+        opcoes = {opt.get("value", "") for opt in select_download.find_all("option")}
+        if "csv" not in opcoes:
+            raise RuntimeError(
+                f"Formulário de exportação em {url} não oferece a opção CSV (opções disponíveis: {sorted(opcoes)})"
+            )
+
         data = _campos_de_form(form_download)
         data["download"] = "csv"
 
