@@ -62,3 +62,7 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 
 - **Added**: campo `gsheets.caminhoJsonCredenciais` (tipo `caminho`) ao esquema de config de `auditar_frequencias` e `auditar_relatorios`, seguindo o padrão já usado em `auditar_softskills` (`drive_credentials_path`); suporte genérico a caminhos que exigem valor absoluto (`Campo.caminho_absoluto`, validado em `validacao.py` e em `Config.load()`)
 - **Changed**: `caminho_json_credenciais` deixa de ser fixo em `DIRETORIO_BASE / "credentials.json"` e passa a ser lido obrigatoriamente de `settings.json`; caminhos relativos são rejeitados (`ValueError` em `Config.load()`, mensagem de validação em `scripthub config -s auditar_frequencias`/`-s ra`) para evitar resolução silenciosa contra o CWD do processo em vez do diretório do módulo. **Breaking change**: quem já tem `settings.json` configurado precisa rodar `scripthub config -s frequencias`/`-s relatorios` para definir o novo campo (Closes #63)
+
+### 0.20.0.dev10 - 2026-07-17 - (PR#97)
+
+- **Changed**: `uv.lock` atualizado para alinhar `dev` ao hotfix já aplicado em `main` (PR#90, `[0.19.3]`) — `pentefinocli-pe-aponti26dev` de `0.1.0` (yanked) para `0.2.1`; bump transitivo de `cffi` para `2.1.0`
