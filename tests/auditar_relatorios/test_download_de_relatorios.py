@@ -198,6 +198,33 @@ def test_baixar_relatorio_ignora_select_download_em_form_de_login(tmp_path):
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
 
 
+_HTML_FEEDBACK_COM_GROUP = """
+<html><body>
+<form action="/mod/feedback/show_entries.php" method="get">
+  <input type="hidden" name="sesskey" value="sk789">
+  <input type="hidden" name="id" value="8313">
+  <select name="group">
+    <option value="0">Todos os grupos</option>
+    <option value="42" selected>Turma 42</option>
+  </select>
+  <select name="download">
+    <option value="csv">CSV</option>
+    <option value="excel">Excel</option>
+  </select>
+</form>
+</body></html>
+"""
+
+
+def test_baixar_relatorio_form_feedback_coleta_outros_selects(tmp_path):
+    sessao = _make_sessao(html=_HTML_FEEDBACK_COM_GROUP)
+
+    baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
+
+    _, kwargs = sessao.baixar.call_args
+    assert kwargs["data"]["group"] == "42"
+
+
 def test_baixar_relatorio_levanta_runtime_error_quando_resposta_nao_e_csv(tmp_path):
     sessao = _make_sessao(download_content_type="text/html")
 
