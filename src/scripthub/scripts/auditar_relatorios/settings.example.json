@@ -12,6 +12,6 @@
     "idPlanilha": "abcdefghijklmnopqrstuvwxyz1234567890",
     "nomeAba": "Spreadsheet1",
     "caminhoBackupLocal": "/home/you/Downloads",
-    "caminhoJsonCredenciais": "credentials.json"
+    "caminhoJsonCredenciais": "/home/you/credentials.json"
   }
 }

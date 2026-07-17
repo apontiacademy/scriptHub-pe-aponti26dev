@@ -63,11 +63,17 @@ class Config:
             exportar_analise_relatorio=exportar_analise,
         )
 
+        caminho_json_credenciais = Path(gsheets_json["caminhoJsonCredenciais"])
+        if not caminho_json_credenciais.is_absolute():
+            raise ValueError(
+                "gsheets.caminhoJsonCredenciais deve ser um caminho absoluto. Configure com `scripthub config -s ra`."
+            )
+
         gsheets_config = GsheetsConfig(
             id_planilha=gsheets_json["idPlanilha"],
             nome_aba=gsheets_json["nomeAba"],
             caminho_backup_local=Path(gsheets_json["caminhoBackupLocal"]),
-            caminho_json_credenciais=Path(gsheets_json["caminhoJsonCredenciais"]),
+            caminho_json_credenciais=caminho_json_credenciais,
         )
 
         return Config(moodle=moodle_config, gsheets=gsheets_config)

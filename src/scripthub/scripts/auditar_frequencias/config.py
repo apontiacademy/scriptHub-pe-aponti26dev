@@ -44,9 +44,16 @@ class Config:
             caminho_exportacao=Path(moodle_json["caminhoExportacao"]),
         )
 
+        caminho_json_credenciais = Path(gsheets_json["caminhoJsonCredenciais"])
+        if not caminho_json_credenciais.is_absolute():
+            raise ValueError(
+                "gsheets.caminhoJsonCredenciais deve ser um caminho absoluto. "
+                "Configure com `scripthub config -s frequencias`."
+            )
+
         gsheets_config = GsheetsConfig(
             id_planilha=gsheets_json["idPlanilha"],
-            caminho_json_credenciais=Path(gsheets_json["caminhoJsonCredenciais"]),
+            caminho_json_credenciais=caminho_json_credenciais,
         )
 
         return Config(moodle=moodle_config, gsheets=gsheets_config)

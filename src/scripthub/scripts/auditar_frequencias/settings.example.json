@@ -9,6 +9,6 @@
   },
   "gsheets": {
     "idPlanilha": "abcdefghijklmnopqrstuvwxyz12345678",
-    "caminhoJsonCredenciais": "credentials.json"
+    "caminhoJsonCredenciais": "/home/you/credentials.json"
   }
 }

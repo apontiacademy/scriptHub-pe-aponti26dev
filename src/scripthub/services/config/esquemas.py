@@ -70,6 +70,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Caminho para o arquivo credentials.json da conta de serviço Google",
             json_chaves=["gsheets", "caminhoJsonCredenciais"],
+            caminho_absoluto=True,
         ),
     ],
     "auditar_relatorios": [
@@ -158,6 +159,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Caminho para o arquivo credentials.json da conta de serviço Google",
             json_chaves=["gsheets", "caminhoJsonCredenciais"],
+            caminho_absoluto=True,
         ),
     ],
     "auditar_softskills": [

@@ -58,6 +58,7 @@ cp settings.example.json settings.json
 | `moodle.urlsFrequencias` | Dicionário `{ "Nome da Turma": "URL do módulo de presença" }` |
 | `moodle.caminhoExportacao` | Pasta onde os `.xlsx` serão salvos |
 | `gsheets.idPlanilha` | ID da planilha do Google Sheets |
+| `gsheets.caminhoJsonCredenciais` | Caminho absoluto para o `credentials.json` da conta de serviço Google |
 
 Exemplo de `urlsFrequencias`:
 
@@ -70,7 +71,7 @@ Exemplo de `urlsFrequencias`:
 
 ### 3. credentials.json
 
-Necessário para a integração com Google Sheets. O caminho é fixo em `src/scripthub/scripts/auditar_frequencias/credentials.json` (dentro da pasta deste módulo) — hoje não é configurável via `settings.json` nem `scripthub config`.
+Necessário para a integração com Google Sheets. O caminho é definido pela chave `gsheets.caminhoJsonCredenciais` em `settings.json` (ou via `scripthub config -s auditar_frequencias`) e deve ser um **caminho absoluto** — caminhos relativos são rejeitados.
 
 > A planilha deve ser compartilhada com o e-mail da conta de serviço.
 

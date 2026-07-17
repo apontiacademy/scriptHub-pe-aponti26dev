@@ -73,10 +73,11 @@ cp settings.example.json settings.json
 | `gsheets.idPlanilha` | ID da planilha do Google Sheets |
 | `gsheets.nomeAba` | Nome da aba a ser atualizada |
 | `gsheets.caminhoBackupLocal` | Pasta onde o backup `.xlsx` será salvo |
+| `gsheets.caminhoJsonCredenciais` | Caminho absoluto para o `credentials.json` da conta de serviço Google |
 
 ### 3. credentials.json
 
-Necessário para integração com Google Sheets e backup no Drive. O caminho é fixo em `src/scripthub/scripts/auditar_relatorios/credentials.json` (dentro da pasta deste módulo) — hoje não é configurável via `settings.json` nem `scripthub config`.
+Necessário para integração com Google Sheets e backup no Drive. O caminho é definido pela chave `gsheets.caminhoJsonCredenciais` em `settings.json` (ou via `scripthub config -s auditar_relatorios` / `-s ra`) e deve ser um **caminho absoluto** — caminhos relativos são rejeitados.
 
 > A planilha deve ser compartilhada com o e-mail da conta de serviço.
 

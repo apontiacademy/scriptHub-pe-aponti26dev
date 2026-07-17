@@ -4,7 +4,7 @@ from scripthub.services.config.campo import Campo
 from scripthub.services.config.validacao import resumo_valor, validar_campo
 
 
-def _campo(tipo, obrigatorio=True):
+def _campo(tipo, obrigatorio=True, caminho_absoluto=False):
     return Campo(
         chave="k",
         rotulo="r",
@@ -12,6 +12,7 @@ def _campo(tipo, obrigatorio=True):
         origem="settings",
         json_chaves=["k"],
         obrigatorio=obrigatorio,
+        caminho_absoluto=caminho_absoluto,
     )
 
 
@@ -83,6 +84,25 @@ def test_validar_campo_lista_url_url_invalida_menciona_url_na_mensagem():
     _, msg = validar_campo(_campo("lista_url"), ["nao-e-url"])
 
     assert "nao-e-url" in msg
+
+
+def test_validar_campo_caminho_absoluto_com_valor_relativo_retorna_invalido():
+    ok, msg = validar_campo(_campo("caminho", caminho_absoluto=True), "credentials.json")
+
+    assert ok is False
+    assert msg != ""
+
+
+def test_validar_campo_caminho_absoluto_com_valor_absoluto_retorna_valido():
+    ok, _ = validar_campo(_campo("caminho", caminho_absoluto=True), "/home/user/credentials.json")
+
+    assert ok is True
+
+
+def test_validar_campo_caminho_sem_exigir_absoluto_aceita_relativo():
+    ok, _ = validar_campo(_campo("caminho", caminho_absoluto=False), "credentials.json")
+
+    assert ok is True
 
 
 # ── resumo_valor ──────────────────────────────────────────────────────────────
