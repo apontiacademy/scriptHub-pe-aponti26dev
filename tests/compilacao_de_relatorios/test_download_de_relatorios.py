@@ -154,6 +154,38 @@ def test_baixar_relatorio_levanta_runtime_error_quando_resposta_nao_e_csv(tmp_pa
         baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
 
 
+def test_baixar_relatorio_apaga_arquivo_quando_validacao_csv_falha(tmp_path):
+    sessao = _make_sessao(download_content_type="text/html")
+    caminho_saida = tmp_path / "r.csv"
+    caminho_saida.write_bytes(b"<html>lixo</html>")
+
+    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+        baixar_relatorio(sessao, "https://moodle.example.com/r", caminho_saida)
+
+    assert not caminho_saida.exists()
+
+
+_HTML_FEEDBACK_SEM_OPCAO_CSV = """
+<html><body>
+<form action="/mod/feedback/show_entries.php" method="get">
+  <input type="hidden" name="sesskey" value="sk789">
+  <input type="hidden" name="id" value="8313">
+  <select name="download">
+    <option value="excel">Excel</option>
+    <option value="pdf">PDF</option>
+  </select>
+</form>
+</body></html>
+"""
+
+
+def test_baixar_relatorio_levanta_erro_quando_select_nao_oferece_csv(tmp_path):
+    sessao = _make_sessao(html=_HTML_FEEDBACK_SEM_OPCAO_CSV)
+
+    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+        baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
+
+
 # ── main ─────────────────────────────────────────────────────────────────────
 
 
