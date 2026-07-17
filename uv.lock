@@ -1090,7 +1090,7 @@ wheels = [
 
 [[package]]
 name = "scripthub-pe-aponti26dev"
-version = "0.20.0.dev7"
+version = "0.20.0.dev8"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
