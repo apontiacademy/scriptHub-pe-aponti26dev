@@ -63,6 +63,15 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="ID da planilha de destino no Google Sheets",
             json_chaves=["gsheets", "idPlanilha"],
         ),
+        Campo(
+            chave="gsheets_caminho_json_credenciais",
+            rotulo="Caminho do credentials.json",
+            tipo="caminho",
+            origem="settings",
+            descricao="Caminho para o arquivo credentials.json da conta de serviço Google",
+            json_chaves=["gsheets", "caminhoJsonCredenciais"],
+            caminho_absoluto=True,
+        ),
     ],
     "auditar_relatorios": [
         Campo(
@@ -142,6 +151,15 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Diretório onde o backup XLSX da planilha será salvo",
             json_chaves=["gsheets", "caminhoBackupLocal"],
+        ),
+        Campo(
+            chave="gsheets_caminho_json_credenciais",
+            rotulo="Caminho do credentials.json",
+            tipo="caminho",
+            origem="settings",
+            descricao="Caminho para o arquivo credentials.json da conta de serviço Google",
+            json_chaves=["gsheets", "caminhoJsonCredenciais"],
+            caminho_absoluto=True,
         ),
     ],
     "auditar_softskills": [

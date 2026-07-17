@@ -27,6 +27,7 @@ class Campo:
     env_var: str | None = None
     json_chaves: list[str] = field(default_factory=list)
     depende_de: str | None = None
+    caminho_absoluto: bool = False
 
 
 def resolver_dependencias(campos: list[Campo], valores: dict[str, Any]) -> list[Campo]:

@@ -122,6 +122,7 @@ def test_injetar_cookies_injeta_cookies_no_contexto(mocker):
     mock_cookie = mocker.MagicMock()
     mock_cookie.name = "MoodleSession"
     mock_cookie.value = "abc123"
+    mock_cookie.domain = "moodle.example.com"
     mock_cookie.path = "/"
     mock_session.cookies = [mock_cookie]
     sessao = MoodleSessao("https://moodle.example.com/login/index.php", "u", "p", _session=mock_session)
@@ -130,7 +131,7 @@ def test_injetar_cookies_injeta_cookies_no_contexto(mocker):
     _injetar_cookies(mock_contexto, sessao)
 
     mock_contexto.add_cookies.assert_called_once_with(
-        [{"name": "MoodleSession", "value": "abc123", "url": "https://moodle.example.com", "path": "/"}]
+        [{"name": "MoodleSession", "value": "abc123", "domain": "moodle.example.com", "path": "/"}]
     )
 
 

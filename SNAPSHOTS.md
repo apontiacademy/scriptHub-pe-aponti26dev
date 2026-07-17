@@ -53,3 +53,23 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 
 - **Changed**: `dev` passa a usar squash manual (mesmo mecanismo de `nightly`/`main`) em vez de merge queue automática; `CONTRIBUTING.md` documenta o padrão único `[vX.Y.Z(.devN)] título (#pr)` de título/descrição do squash para os três branches e passa a exigir que o bump de `SNAPSHOTS.md`/`devN` em `pyproject.toml` seja feito como último commit da branch, após aprovação da PR, em vez de na abertura (Closes #79)
 - **Removed**: ruleset "dev merge queue" no GitHub; trigger `merge_group` para `dev` em `.github/workflows/ci.yml`, que nunca mais dispara sem a ruleset
+
+### 0.20.0.dev8 - 2026-07-15 - (PR#85)
+
+- **Fixed**: `_injetar_cookies` (`torpedo_de_forum/main.py`) montava cada cookie do Playwright com `url` e `path` simultaneamente, o que o Playwright rejeita (`Cookie should have either url or path`) — quebrava 100% das execuções de `uv run scripthub t` logo após o login; corrigido usando `c.domain` (já preenchido pelo `RequestsCookieJar` de `MoodleSessao`) em vez de derivar `url` via `urlparse(sessao.url_login)` (Closes #84)
+
+### 0.20.0.dev9 - 2026-07-17 - (PR#92)
+
+- **Added**: campo `gsheets.caminhoJsonCredenciais` (tipo `caminho`) ao esquema de config de `auditar_frequencias` e `auditar_relatorios`, seguindo o padrão já usado em `auditar_softskills` (`drive_credentials_path`); suporte genérico a caminhos que exigem valor absoluto (`Campo.caminho_absoluto`, validado em `validacao.py` e em `Config.load()`)
+- **Changed**: `caminho_json_credenciais` deixa de ser fixo em `DIRETORIO_BASE / "credentials.json"` e passa a ser lido obrigatoriamente de `settings.json`; caminhos relativos são rejeitados (`ValueError` em `Config.load()`, mensagem de validação em `scripthub config -s auditar_frequencias`/`-s ra`) para evitar resolução silenciosa contra o CWD do processo em vez do diretório do módulo. **Breaking change**: quem já tem `settings.json` configurado precisa rodar `scripthub config -s frequencias`/`-s relatorios` para definir o novo campo (Closes #63)
+
+### 0.20.0.dev10 - 2026-07-17 - (PR#97)
+
+- **Changed**: `uv.lock` atualizado para alinhar `dev` ao hotfix já aplicado em `main` (PR#90, `[0.19.3]`) — `pentefinocli-pe-aponti26dev` de `0.1.0` (yanked) para `0.2.1`; bump transitivo de `cffi` para `2.1.0`
+
+### 0.20.0.dev11 - 2026-07-17 - (PR#98)
+
+- **Fixed**: `baixar_relatorio()` (`services/moodle/download.py`), usado por `auditar_relatorios`/`ra` e `compilacao_de_relatorios`/`rc`, falhava contra páginas reais `mod/feedback/show_entries.php` — a heurística de seleção de formulário pegava o primeiro `<form>` da página (ex.: "Configurar modo de edição"), não o form de exportação real, e a requisição resultante devolvia HTML em vez de CSV; passa a identificar o form correto pelo `<select name="download">` e a montar a requisição (`method`, `action`, campos) a partir dele
+- **Added**: validação de Content-Type (`_validar_csv`) na resposta do download, com `RuntimeError` claro em vez de gravar HTML silenciosamente como `.csv`; arquivo gravado é apagado automaticamente quando essa validação falha, evitando que uma execução seguinte trate o arquivo corrompido como já baixado
+- **Fixed**: forms cuja `action` aponte para `/login/` deixam de ser elegíveis como form de exportação (paridade com o caminho de fallback genérico); coleta de campos do form de exportação passa a deduplicar botões `submit` (só o primeiro) e a incluir `<select>` além de `<input>` (ex.: filtros de grupo/turma)
+- **Fixed**: `download=csv` deixa de ser forçado sem checar se a opção `csv` está de fato disponível no `<select name="download">` do form encontrado — levanta `RuntimeError` com as opções disponíveis quando não está
