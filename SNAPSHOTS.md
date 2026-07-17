@@ -57,3 +57,8 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 ### 0.20.0.dev8 - 2026-07-15 - (PR#85)
 
 - **Fixed**: `_injetar_cookies` (`torpedo_de_forum/main.py`) montava cada cookie do Playwright com `url` e `path` simultaneamente, o que o Playwright rejeita (`Cookie should have either url or path`) — quebrava 100% das execuções de `uv run scripthub t` logo após o login; corrigido usando `c.domain` (já preenchido pelo `RequestsCookieJar` de `MoodleSessao`) em vez de derivar `url` via `urlparse(sessao.url_login)` (Closes #84)
+
+### 0.20.0.dev9 - 2026-07-17 - (PR#92)
+
+- **Added**: campo `gsheets.caminhoJsonCredenciais` (tipo `caminho`) ao esquema de config de `auditar_frequencias` e `auditar_relatorios`, seguindo o padrão já usado em `auditar_softskills` (`drive_credentials_path`); suporte genérico a caminhos que exigem valor absoluto (`Campo.caminho_absoluto`, validado em `validacao.py` e em `Config.load()`)
+- **Changed**: `caminho_json_credenciais` deixa de ser fixo em `DIRETORIO_BASE / "credentials.json"` e passa a ser lido obrigatoriamente de `settings.json`; caminhos relativos são rejeitados (`ValueError` em `Config.load()`, mensagem de validação em `scripthub config -s auditar_frequencias`/`-s ra`) para evitar resolução silenciosa contra o CWD do processo em vez do diretório do módulo. **Breaking change**: quem já tem `settings.json` configurado precisa rodar `scripthub config -s frequencias`/`-s relatorios` para definir o novo campo (Closes #63)
