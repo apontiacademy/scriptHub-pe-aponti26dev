@@ -5,7 +5,16 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from scripthub.services.erros import ErroConfiguracao
+
 DIRETORIO_BASE = Path(__file__).resolve().parent
+
+
+def _obrigatorio(dados: dict, chave: str, caminho: str) -> str:
+    valor = dados.get(chave)
+    if not valor:
+        raise ErroConfiguracao(f"settings.json deve conter a chave '{caminho}'")
+    return valor
 
 
 @dataclass
@@ -41,21 +50,27 @@ class Config:
         credentials_raw = drive_json.get("credentialsPath", "credentials.json")
         credentials_path = Path(credentials_raw)
         if not credentials_path.is_absolute():
-            credentials_path = (DIRETORIO_BASE.parent / credentials_path).resolve()
+            credentials_path = (DIRETORIO_BASE / credentials_path).resolve()
 
         output_dir_raw = dados_settings.get("outputDir", "bootcamps")
         aprovados_dir_raw = dados_settings.get("aprovadosDir", "aprovados")
 
+        url_raw = moodle_json.get("urlBase") or moodle_json.get("url")
+        if not url_raw:
+            raise ErroConfiguracao(
+                "settings.json deve conter a chave 'moodle.urlBase' (ou 'moodle.url' por compatibilidade)"
+            )
+
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
-            url=moodle_json["url"],
-            bootcamp_cat_id=moodle_json["bootcampCatId"],
-            aprovados_cat_id=moodle_json["aprovadosCatId"],
+            url=url_raw.rstrip("/"),
+            bootcamp_cat_id=_obrigatorio(moodle_json, "bootcampCatId", "moodle.bootcampCatId"),
+            aprovados_cat_id=_obrigatorio(moodle_json, "aprovadosCatId", "moodle.aprovadosCatId"),
         )
 
         drive_config = DriveConfig(
-            folder_id=drive_json["folderId"],
+            folder_id=_obrigatorio(drive_json, "folderId", "drive.folderId"),
             credentials_path=credentials_path,
         )
 
@@ -74,9 +89,9 @@ class Config:
         senha = os.getenv("MOODLE_SENHA")
 
         if not usuario:
-            raise ValueError("MOODLE_USUARIO deve ser definido no arquivo .env")
+            raise ErroConfiguracao("MOODLE_USUARIO deve ser definido no arquivo .env")
         if not senha:
-            raise ValueError("MOODLE_SENHA deve ser definida no arquivo .env")
+            raise ErroConfiguracao("MOODLE_SENHA deve ser definida no arquivo .env")
 
         return {
             "moodle_usuario": usuario,
@@ -88,7 +103,7 @@ class Config:
         caminho_settings = DIRETORIO_BASE / "settings.json"
 
         if not caminho_settings.exists():
-            raise FileNotFoundError(f"O arquivo {caminho_settings} não foi encontrado.")
+            raise ErroConfiguracao(f"O arquivo {caminho_settings} não foi encontrado.")
 
         with open(caminho_settings, encoding="utf-8") as f:
             return json.load(f)

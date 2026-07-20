@@ -63,6 +63,15 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="ID da planilha de destino no Google Sheets",
             json_chaves=["gsheets", "idPlanilha"],
         ),
+        Campo(
+            chave="gsheets_caminho_json_credenciais",
+            rotulo="Caminho do credentials.json",
+            tipo="caminho",
+            origem="settings",
+            descricao="Caminho para o arquivo credentials.json da conta de serviço Google",
+            json_chaves=["gsheets", "caminhoJsonCredenciais"],
+            caminho_absoluto=True,
+        ),
     ],
     "auditar_relatorios": [
         Campo(
@@ -93,15 +102,6 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Lista de URLs das páginas de feedback do Moodle",
             json_chaves=["moodle", "urlsRelatorios"],
-        ),
-        Campo(
-            chave="moodle_headless",
-            rotulo="Modo headless do navegador",
-            tipo="bool",
-            origem="settings",
-            descricao="Se verdadeiro, o navegador roda em segundo plano sem interface gráfica (padrão: sim)",
-            obrigatorio=False,
-            json_chaves=["moodle", "headless"],
         ),
         Campo(
             chave="moodle_exportar_analise",
@@ -152,6 +152,15 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Diretório onde o backup XLSX da planilha será salvo",
             json_chaves=["gsheets", "caminhoBackupLocal"],
         ),
+        Campo(
+            chave="gsheets_caminho_json_credenciais",
+            rotulo="Caminho do credentials.json",
+            tipo="caminho",
+            origem="settings",
+            descricao="Caminho para o arquivo credentials.json da conta de serviço Google",
+            json_chaves=["gsheets", "caminhoJsonCredenciais"],
+            caminho_absoluto=True,
+        ),
     ],
     "auditar_softskills": [
         Campo(
@@ -174,7 +183,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="url",
             origem="settings",
             descricao="URL raiz do Moodle sem path (ex: https://moodle.inst.edu)",
-            json_chaves=["moodle", "url"],
+            json_chaves=["moodle", "urlBase"],
         ),
         Campo(
             chave="moodle_bootcamp_cat_id",
@@ -254,14 +263,6 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Mapeamento de nome do mês → lista de URLs semanais de feedback",
             json_chaves=["moodle", "meses"],
-        ),
-        Campo(
-            chave="headless",
-            rotulo="Modo headless do navegador",
-            tipo="bool",
-            origem="settings",
-            descricao="Se verdadeiro, o navegador roda em segundo plano sem interface gráfica",
-            json_chaves=["headless"],
         ),
         Campo(
             chave="pdf_caminho_saida",

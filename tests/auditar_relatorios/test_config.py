@@ -4,6 +4,7 @@ import pytest
 
 import scripthub.scripts.auditar_relatorios.config as cfg_module
 from scripthub.scripts.auditar_relatorios.config import Config
+from scripthub.services.erros import ErroConfiguracao
 
 
 @pytest.fixture
@@ -15,7 +16,6 @@ def settings_valido(tmp_path):
                 "https://example.com/relatorio1",
                 "https://example.com/relatorio2",
             ],
-            "headless": True,
             "csvResidentes": str(tmp_path / "residentes.csv"),
             "exportarAnaliseRelatorio": False,
         },
@@ -23,6 +23,7 @@ def settings_valido(tmp_path):
             "idPlanilha": "planilha-id-123",
             "nomeAba": "Resultados",
             "caminhoBackupLocal": str(tmp_path / "backups"),
+            "caminhoJsonCredenciais": str(tmp_path / "credentials.json"),
         },
     }
 
@@ -38,9 +39,29 @@ def test_load_retorna_config_completa(tmp_path, monkeypatch, settings_valido):
     assert config.moodle.senha == "pass"
     assert config.moodle.url_login == "https://example.com/login"
     assert len(config.moodle.urls_relatorios) == 2
-    assert config.moodle.headless is True
     assert config.gsheets.id_planilha == "planilha-id-123"
     assert config.gsheets.nome_aba == "Resultados"
+    assert config.gsheets.caminho_json_credenciais == tmp_path / "credentials.json"
+
+
+def test_load_sem_caminho_json_credenciais_levanta_key_error(tmp_path, monkeypatch, settings_valido):
+    del settings_valido["gsheets"]["caminhoJsonCredenciais"]
+    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
+    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+
+    with pytest.raises(KeyError):
+        Config.load()
+
+
+def test_load_caminho_json_credenciais_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, settings_valido):
+    settings_valido["gsheets"]["caminhoJsonCredenciais"] = "credentials.json"
+    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
+    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+
+    with pytest.raises(ErroConfiguracao, match="caminhoJsonCredenciais"):
+        Config.load()
 
 
 def test_load_sem_usuario_levanta_value_error(tmp_path, monkeypatch, settings_valido):
@@ -49,7 +70,7 @@ def test_load_sem_usuario_levanta_value_error(tmp_path, monkeypatch, settings_va
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
     monkeypatch.delenv("MOODLE_USUARIO", raising=False)
 
-    with pytest.raises(ValueError, match="MOODLE_USUARIO"):
+    with pytest.raises(ErroConfiguracao, match="MOODLE_USUARIO"):
         Config.load()
 
 
@@ -59,7 +80,7 @@ def test_load_sem_senha_levanta_value_error(tmp_path, monkeypatch, settings_vali
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
     monkeypatch.delenv("MOODLE_SENHA", raising=False)
 
-    with pytest.raises(ValueError, match="MOODLE_SENHA"):
+    with pytest.raises(ErroConfiguracao, match="MOODLE_SENHA"):
         Config.load()
 
 
@@ -67,11 +88,11 @@ def test_load_sem_settings_levanta_file_not_found(tmp_path, monkeypatch):
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ErroConfiguracao):
         Config.load()
 
 
-def test_exportar_analise_false_resulta_em_caminho_none(tmp_path, monkeypatch, settings_valido):
+def test_exportar_analise_false_usa_caminho_padrao(tmp_path, monkeypatch, settings_valido):
     settings_valido["moodle"]["exportarAnaliseRelatorio"] = False
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
@@ -79,10 +100,10 @@ def test_exportar_analise_false_resulta_em_caminho_none(tmp_path, monkeypatch, s
 
     config = Config.load()
 
-    assert config.moodle.caminho_exportacao_analise is None
+    assert config.moodle.csv_saida_analise == tmp_path / "dados" / "resultado_analise.csv"
 
 
-def test_exportar_analise_true_com_caminho_preenchido(tmp_path, monkeypatch, settings_valido):
+def test_exportar_analise_true_com_caminho_preenchido_usa_caminho_configurado(tmp_path, monkeypatch, settings_valido):
     settings_valido["moodle"]["exportarAnaliseRelatorio"] = True
     settings_valido["moodle"]["caminhoExportacaoAnalise"] = str(tmp_path / "saida.csv")
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
@@ -91,4 +112,14 @@ def test_exportar_analise_true_com_caminho_preenchido(tmp_path, monkeypatch, set
 
     config = Config.load()
 
-    assert config.moodle.caminho_exportacao_analise == tmp_path / "saida.csv"
+    assert config.moodle.csv_saida_analise == tmp_path / "saida.csv"
+
+
+def test_exportar_analise_true_sem_caminho_levanta_erro_configuracao(tmp_path, monkeypatch, settings_valido):
+    settings_valido["moodle"]["exportarAnaliseRelatorio"] = True
+    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
+    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+
+    with pytest.raises(ErroConfiguracao, match="caminhoExportacaoAnalise"):
+        Config.load()
