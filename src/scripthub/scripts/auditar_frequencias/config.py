@@ -5,6 +5,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from scripthub.services.erros import ErroConfiguracao
+
 DIRETORIO_BASE = Path(__file__).resolve().parent
 
 
@@ -46,7 +48,7 @@ class Config:
 
         caminho_json_credenciais = Path(gsheets_json["caminhoJsonCredenciais"])
         if not caminho_json_credenciais.is_absolute():
-            raise ValueError(
+            raise ErroConfiguracao(
                 "gsheets.caminhoJsonCredenciais deve ser um caminho absoluto. "
                 "Configure com `scripthub config -s frequencias`."
             )
@@ -68,7 +70,7 @@ class Config:
         }
 
         if not dados["moodle_usuario"] or not dados["moodle_senha"]:
-            raise ValueError("MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env")
+            raise ErroConfiguracao("MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env")
         return dados
 
     @staticmethod
@@ -76,7 +78,7 @@ class Config:
         caminho_settings = DIRETORIO_BASE / "settings.json"
 
         if not caminho_settings.exists():
-            raise FileNotFoundError(f"O arquivo {caminho_settings} não foi encontrado.")
+            raise ErroConfiguracao(f"O arquivo {caminho_settings} não foi encontrado.")
 
         with open(caminho_settings, encoding="utf-8") as f:
             return json.load(f)

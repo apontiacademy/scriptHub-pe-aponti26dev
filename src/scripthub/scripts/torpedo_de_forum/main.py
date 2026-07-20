@@ -5,6 +5,7 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 from scripthub.services import log
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao, FalhaParcial
 from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
@@ -25,7 +26,7 @@ _IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 def carregar_conteudo(filepath: Path) -> tuple[str, str]:
     """Lê o arquivo .md e retorna (titulo, html_conteudo)."""
     if not filepath.exists():
-        raise FileNotFoundError(f"Arquivo não encontrado: {filepath}")
+        raise ErroConfiguracao(f"Arquivo não encontrado: {filepath}")
     text = filepath.read_text(encoding="utf-8").strip()
     lines = text.splitlines()
     title = ""
@@ -36,7 +37,7 @@ def carregar_conteudo(filepath: Path) -> tuple[str, str]:
             body_start = i + 1
             break
     if not title:
-        raise ValueError(
+        raise ErroConfiguracao(
             "O arquivo .md deve ter um título na primeira linha com '#'. Exemplo: # Semana 10 - Relatórios"
         )
     body = "\n".join(lines[body_start:]).strip()
@@ -49,7 +50,7 @@ def encontrar_imagem(pasta: Path, override: str | None = None) -> str | None:
     if override:
         path = Path(override).resolve()
         if not path.exists():
-            raise FileNotFoundError(f"Arquivo de imagem não encontrado: {override}")
+            raise ErroConfiguracao(f"Arquivo de imagem não encontrado: {override}")
         return str(path)
     for ext in _IMAGE_EXTENSIONS:
         matches = sorted(pasta.glob(f"*{ext}"))
@@ -114,7 +115,7 @@ def _clicar_novo_topico(page) -> None:
     if link.count() > 0:
         link.click()
         return
-    raise RuntimeError("Botão de novo tópico não encontrado na página do fórum.")
+    raise ErroIntegracao("Botão de novo tópico não encontrado na página do fórum.")
 
 
 def _definir_conteudo_editor(page, html_content: str) -> None:
@@ -150,7 +151,7 @@ def _definir_conteudo_editor(page, html_content: str) -> None:
     if page.locator("#id_message").count() > 0:
         page.fill("#id_message", html_content)
         return
-    raise RuntimeError("Editor de conteúdo do fórum não encontrado.")
+    raise ErroIntegracao("Editor de conteúdo do fórum não encontrado.")
 
 
 def _verificar_conteudo_editor(page) -> bool:
@@ -294,7 +295,7 @@ def _submeter_formulario(page) -> None:
         if loc.count() > 0:
             loc.first.click()
             return
-    raise RuntimeError("Botão de submissão não encontrado.")
+    raise ErroIntegracao("Botão de submissão não encontrado.")
 
 
 def publicar_no_forum(
@@ -352,7 +353,7 @@ def publicar_no_forum(
         return True
     except PlaywrightTimeoutError as exc:
         log.erro(f"[TIMEOUT] {exc}")
-    except RuntimeError as exc:
+    except ErroIntegracao as exc:
         log.erro(f"[ERRO] {exc}")
     except Exception as exc:
         log.erro(f"[ERRO inesperado] {exc}")
@@ -380,10 +381,10 @@ def main() -> None:
     post_file = config.moodle.caminho_post_file
 
     if not post_file.exists():
-        raise FileNotFoundError(f"Arquivo de post não encontrado em: {post_file}")
+        raise ErroConfiguracao(f"Arquivo de post não encontrado em: {post_file}")
 
     if not forum_urls:
-        raise ValueError("Nenhuma URL de fórum encontrada no settings.json")
+        raise ErroConfiguracao("Nenhuma URL de fórum encontrada no settings.json")
 
     log.passo(f"Carregando conteúdo: {post_file.name}")
     title, html_content = carregar_conteudo(post_file)
@@ -435,10 +436,8 @@ def main() -> None:
 
     log.ok(f"Resumo: {ok_count}/{len(resultados)} fóruns publicados com sucesso.")
     if falhou:
-        log.aviso(f"{falhou} fórum(s) com falha:")
+        log.erro(f"{falhou} fórum(s) com falha:")
         for url, sucesso in resultados.items():
             if not sucesso:
                 log.passo(f"  - {url}")
-        raise RuntimeError(f"{falhou} fórum(s) falharam ao publicar.")
-
-    log.ok("AUTOMAÇÃO DE FÓRUNS CONCLUÍDA COM SUCESSO!")
+        raise FalhaParcial(f"{falhou} fórum(s) falharam ao publicar.")

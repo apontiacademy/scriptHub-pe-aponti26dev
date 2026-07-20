@@ -5,13 +5,15 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from scripthub.services.erros import ErroConfiguracao
+
 DIRETORIO_BASE = Path(__file__).resolve().parent
 
 
 def _obrigatorio(dados: dict, chave: str, caminho: str) -> str:
     valor = dados.get(chave)
     if not valor:
-        raise RuntimeError(f"settings.json deve conter a chave '{caminho}'")
+        raise ErroConfiguracao(f"settings.json deve conter a chave '{caminho}'")
     return valor
 
 
@@ -55,7 +57,7 @@ class Config:
 
         url_raw = moodle_json.get("urlBase") or moodle_json.get("url")
         if not url_raw:
-            raise RuntimeError(
+            raise ErroConfiguracao(
                 "settings.json deve conter a chave 'moodle.urlBase' (ou 'moodle.url' por compatibilidade)"
             )
 
@@ -87,9 +89,9 @@ class Config:
         senha = os.getenv("MOODLE_SENHA")
 
         if not usuario:
-            raise ValueError("MOODLE_USUARIO deve ser definido no arquivo .env")
+            raise ErroConfiguracao("MOODLE_USUARIO deve ser definido no arquivo .env")
         if not senha:
-            raise ValueError("MOODLE_SENHA deve ser definida no arquivo .env")
+            raise ErroConfiguracao("MOODLE_SENHA deve ser definida no arquivo .env")
 
         return {
             "moodle_usuario": usuario,
@@ -101,7 +103,7 @@ class Config:
         caminho_settings = DIRETORIO_BASE / "settings.json"
 
         if not caminho_settings.exists():
-            raise FileNotFoundError(f"O arquivo {caminho_settings} não foi encontrado.")
+            raise ErroConfiguracao(f"O arquivo {caminho_settings} não foi encontrado.")
 
         with open(caminho_settings, encoding="utf-8") as f:
             return json.load(f)

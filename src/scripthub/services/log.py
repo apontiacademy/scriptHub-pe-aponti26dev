@@ -10,6 +10,9 @@ def _find_project_root() -> Path:
     return Path.cwd()
 
 
+_NIVEL_SUCESSO = 25  # entre INFO (20) e WARNING (30)
+logging.addLevelName(_NIVEL_SUCESSO, "SUCCESS")
+
 _log_dir = _find_project_root() / "logs"
 
 _comando_atual: str = " ".join(sys.argv[1:]) or "scripthub"
@@ -69,9 +72,30 @@ def ok(msg: str) -> None:
     _logger.info("  ✔ %s", msg)
 
 
+def sucesso(msg: str) -> None:
+    print(f"  ✅ {msg}")
+    _logger.log(_NIVEL_SUCESSO, "  ✅ %s", msg)
+
+
+def _painel_erro(msg: str) -> None:
+    from rich.console import Console
+    from rich.panel import Panel
+
+    Console(stderr=True).print(Panel(msg, border_style="red", title="Erro", title_align="left"))
+
+
 def erro(msg: str) -> None:
-    print(f"  ❌ {msg}", file=sys.stderr)
+    _painel_erro(msg)
     _logger.error("  ❌ %s", msg)
+
+
+def traceback() -> None:
+    import traceback as _tb
+
+    from rich.console import Console
+
+    Console(stderr=True).print_exception(show_locals=False)
+    _logger.error(_tb.format_exc())
 
 
 def aviso(msg: str) -> None:

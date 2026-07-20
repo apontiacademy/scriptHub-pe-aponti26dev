@@ -9,6 +9,7 @@ from scripthub.scripts.compilacao_de_relatorios.download_de_relatorios import (
     baixar_relatorio,
     main,
 )
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
 _PATCH = "scripthub.scripts.compilacao_de_relatorios.download_de_relatorios"
 
@@ -166,10 +167,10 @@ def test_baixar_relatorio_form_feedback_data_inclui_sesskey_id_e_download_csv(tm
     assert kwargs["data"]["download"] == "csv"
 
 
-def test_baixar_relatorio_levanta_runtime_error_quando_resposta_nao_e_csv(tmp_path):
+def test_baixar_relatorio_levanta_erro_integracao_quando_resposta_nao_e_csv(tmp_path):
     sessao = _make_sessao(download_content_type="text/html")
 
-    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+    with pytest.raises(ErroIntegracao, match="[Cc][Ss][Vv]"):
         baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
 
 
@@ -178,7 +179,7 @@ def test_baixar_relatorio_apaga_arquivo_quando_validacao_csv_falha(tmp_path):
     caminho_saida = tmp_path / "r.csv"
     caminho_saida.write_bytes(b"<html>lixo</html>")
 
-    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+    with pytest.raises(ErroIntegracao, match="[Cc][Ss][Vv]"):
         baixar_relatorio(sessao, "https://moodle.example.com/r", caminho_saida)
 
     assert not caminho_saida.exists()
@@ -201,7 +202,7 @@ _HTML_FEEDBACK_SEM_OPCAO_CSV = """
 def test_baixar_relatorio_levanta_erro_quando_select_nao_oferece_csv(tmp_path):
     sessao = _make_sessao(html=_HTML_FEEDBACK_SEM_OPCAO_CSV)
 
-    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+    with pytest.raises(ErroIntegracao, match="[Cc][Ss][Vv]"):
         baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
 
 
@@ -213,7 +214,7 @@ def test_main_levanta_runtime_error_sem_meses(tmp_path, mocker):
     config.moodle.meses = {}
     mocker.patch(f"{_PATCH}.MoodleSessao")
 
-    with pytest.raises(RuntimeError, match="[Mm]ês|[Mm]es"):
+    with pytest.raises(ErroConfiguracao, match="[Mm]ês|[Mm]es"):
         main(config)
 
 

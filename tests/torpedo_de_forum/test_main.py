@@ -6,6 +6,7 @@ from scripthub.scripts.torpedo_de_forum.main import (
     carregar_conteudo,
     encontrar_imagem,
 )
+from scripthub.services.erros import ErroConfiguracao
 from scripthub.services.moodle import MoodleSessao
 
 # ── carregar_conteudo ─────────────────────────────────────────────────────────
@@ -31,16 +32,16 @@ def test_carregar_conteudo_sem_body_retorna_html_vazio(tmp_path):
     assert html == ""
 
 
-def test_carregar_conteudo_arquivo_inexistente_levanta_file_not_found(tmp_path):
-    with pytest.raises(FileNotFoundError):
+def test_carregar_conteudo_arquivo_inexistente_levanta_erro_configuracao(tmp_path):
+    with pytest.raises(ErroConfiguracao):
         carregar_conteudo(tmp_path / "nao_existe.md")
 
 
-def test_carregar_conteudo_sem_titulo_levanta_value_error(tmp_path):
+def test_carregar_conteudo_sem_titulo_levanta_erro_configuracao(tmp_path):
     md = tmp_path / "post.md"
     md.write_text("Sem título aqui.\n\nApenas parágrafos.", encoding="utf-8")
 
-    with pytest.raises(ValueError, match="título"):
+    with pytest.raises(ErroConfiguracao, match="título"):
         carregar_conteudo(md)
 
 
@@ -93,8 +94,8 @@ def test_encontrar_imagem_override_existente(tmp_path):
     assert caminho == str(img)
 
 
-def test_encontrar_imagem_override_inexistente_levanta_file_not_found(tmp_path):
-    with pytest.raises(FileNotFoundError):
+def test_encontrar_imagem_override_inexistente_levanta_erro_configuracao(tmp_path):
+    with pytest.raises(ErroConfiguracao):
         encontrar_imagem(tmp_path, override=str(tmp_path / "nao_existe.png"))
 
 

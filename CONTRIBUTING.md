@@ -174,7 +174,7 @@ def processar(config: Config): ...
 Slugs devem ser verbos no infinitivo. Aliases são letras únicas para uso rápido no terminal.
 
 5. Adicionar campos configuráveis em `services/config/esquemas.py` (ver "Sistema de configuração" abaixo)
-6. Seguir o padrão de output (log helpers) e o contrato de erros abaixo
+6. Seguir o padrão de output (log helpers) e o contrato de erros abaixo — consultar [ERRORS.md](ERRORS.md) ao decidir que exceção levantar
 7. Registrar o comando em `src/scripthub/cli.py`
 8. Escrever os testes antes ou junto da implementação (ver "TDD e testes" abaixo) — o menu detecta automaticamente novos scripts que tenham `MENU_CMD` no `__init__.py`, não precisa de registro manual ali
 
@@ -190,25 +190,52 @@ from scripthub.services import log
 |---|---|---|
 | `log.secao("TÍTULO")` | Início de uma etapa principal | `\n===...===\n▶ TÍTULO\n===...===` |
 | `log.passo("msg")` | Passo em andamento | `  • msg` |
-| `log.ok("msg")` | Conclusão bem-sucedida | `  ✔ msg` |
-| `log.erro("msg")` | Erro (vai para stderr) | `  ❌ msg` |
-| `log.aviso("msg")` | Aviso não-fatal | `  ⚠️  msg` |
+| `log.ok("msg")` | Passo/item concluído — não implica que o processo inteiro terminou | `  ✔ msg` |
+| `log.sucesso("msg")` | Processo/pipeline **inteiro** terminou com sucesso (exit code `0`) — usar uma única vez, no fim | `  ✅ msg` (grava `SUCCESS` em `logs/scripthub.log`) |
+| `log.erro("msg")` | Erro que leva o processo a terminar com exit code `!= 0` (vai para stderr) | painel Rich (`╭─ Erro ─╮`) no terminal; `  ❌ msg` em texto plano em `logs/scripthub.log` |
+| `log.aviso("msg")` | Aviso não-fatal — execução segue, exit code final não é afetado | `  ⚠️  msg` |
+| `log.traceback()` | Traceback completo de um erro genérico, só quando `--debug` está ativo (ver [ERRORS.md](ERRORS.md)) | traceback formatado pelo Rich no terminal; texto puro (`traceback.format_exc()`) em `logs/scripthub.log` |
 
 **Nunca use `print()` diretamente nos scripts.**
 
 Todo output é persistido automaticamente em `logs/scripthub.log` (ignorado pelo git).
 
+### Como decidir entre `erro()` e `aviso()`
+
+Pergunta prática: **se eu remover esta chamada de log e rodar o script até o
+fim, o exit code final muda?**
+
+- Se sim (o fluxo de controle logo depois é um `raise`/`sys.exit`/`typer.Exit`
+  não-zero que **sempre** acontece quando essa condição ocorre) → `log.erro()`.
+- Se não (o fluxo segue: `return` simples, `continue` em um loop, e nenhum
+  contador dessa falha é verificado depois de forma a abortar o processo) →
+  `log.aviso()`.
+
+Um erro comum é usar `log.erro()` "porque parece grave", mesmo quando o
+código imediatamente depois apenas segue em frente — isso conflita com o
+contrato acima.
+
+**Exceção documentada**: as linhas de `services/menu/main.py` que reportam o
+resultado de um script escolhido no menu interativo (`log.ok(...)`/`log.erro(...)`
+com o código de retorno) usam `ok`/`erro` para exibir o exit code de um
+**subprocesso filho** (`scripthub <cmd>` rodado via `subprocess`), não o exit
+code do próprio processo do `menu` — que sempre termina com código `0`
+independentemente do resultado do filho. Por isso essas linhas não seguem, de
+propósito, o contrato acima.
+
 ## Contrato de erros
 
-- **Funções de biblioteca**: levantar exceções (`ValueError`, `RuntimeError`, `FileNotFoundError`, etc.) — nunca chamar `sys.exit()`
-- **CLI (`executar_script`)**: captura exceções das funções ESCOPOS e termina com `typer.Exit(1)`
+- **Funções de biblioteca e comandos da CLI**: apenas levantar a exceção certa — nunca chamar `sys.exit()`/`typer.Exit()`, nunca logar o erro final diretamente. Prefira a subclasse mais específica de `scripthub.services.erros` (`ErroConfiguracao`, `ErroUsoCLI`, `FalhaParcial`, `ErroIntegracao`) quando a causa se encaixar numa categoria; caso contrário, uma exceção genérica do Python (`ValueError`, `RuntimeError`, `FileNotFoundError`, etc.) cai no código de saída genérico. Ver [ERRORS.md](ERRORS.md) para a tabela completa de códigos e a pergunta prática para escolher a categoria certa.
+- **CLI**: um único handler global, `_executar_com_tratamento_global` (chamado a partir de `run()`, o entry point do pacote), envolve a execução do app inteiro — captura qualquer `ErroScriptHub`/exceção genérica, loga a mensagem final mesclada com o código de saída e termina com `SystemExit(<código>)`. Nenhum outro ponto do código (comandos, `executar_script`, `_carregar_config`) faz esse tratamento — todos só levantam a exceção.
 - **Menu**: invoca o CLI via subprocess (`scripthub <cmd>`), o exit code do processo é exibido ao final
 
 ```python
-# ✅ Correto — função de biblioteca
+# ✅ Correto — função de biblioteca, erro classificado
+from scripthub.services.erros import ErroConfiguracao
+
 def main(config: Config):
     if not arquivo.exists():
-        raise RuntimeError(f"Arquivo não encontrado: {arquivo}")
+        raise ErroConfiguracao(f"Arquivo não encontrado: {arquivo}")
 
 # ❌ Errado — sys.exit dentro de função de biblioteca
 def main(config: Config):
@@ -352,3 +379,6 @@ def test_funcao(entrada, esperado):
 - Geração de PDF com FPDF — instanciar `RelatorioPDF` requer fontes instaladas
 - Google API real — sempre mockar `build`, `Credentials.from_service_account_file`, `gspread.authorize`
 - pentefino Core real — mockar `executar_analise_core`
+- Orquestradores Padrão A/B pesados (ex.: `auditar_softskills/main.py`) cujo `main()`/`ESCOPOS` exigiria mockar
+  muitos serviços externos para pouco ganho — teste os helpers que ele chama isoladamente; o próprio arquivo
+  entra no `omit` de cobertura do `pyproject.toml` quando esse for o caso

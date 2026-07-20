@@ -113,9 +113,13 @@ def test_upload_to_drive_retorna_sem_erro_quando_pasta_inacessivel(tmp_path, moc
     mock_drive = mocker.patch(f"{_PATCH}.GoogleDriveClient").return_value
     mocker.patch(f"{_PATCH}.GoogleSheetsClient")
     mock_drive.metadados.side_effect = RuntimeError("Pasta não acessível")
+    mock_log = mocker.patch(f"{_PATCH}.log")
 
     # Deve retornar sem lançar exceção
     upload_to_drive(str(csv_file), _make_config(tmp_path))
+
+    mock_log.aviso.assert_called_once()
+    mock_log.erro.assert_not_called()
 
 
 def test_upload_to_drive_autentica_com_scopes_corretos(tmp_path, mocker):

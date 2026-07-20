@@ -27,6 +27,7 @@ def instalar() -> None:
         return
     _installed = True
     _patch_rich_utils()
+    _patch_error_panel()
     _patch_typer_core()
     _patch_vendored_click()
     _patch_help_option()
@@ -46,6 +47,42 @@ def _patch_rich_utils() -> None:
     _ru.ERRORS_PANEL_TITLE = "Erro"
     _ru.ABORTED_TEXT = "Abortado."
     _ru.RICH_HELP = "Execute [blue]'{command_path} {help_option}'[/] para obter ajuda."
+
+
+def _patch_error_panel() -> None:
+    import typer.rich_utils as _ru
+    from rich.console import Group
+
+    def _rich_format_error_pt(self) -> None:  # type: ignore[misc]
+        if self.__class__.__name__ == "NoArgsIsHelpError":
+            return
+        console = _ru._get_rich_console(stderr=True)
+        ctx = getattr(self, "ctx", None)
+        partes = []
+        if ctx is not None:
+            partes.append(ctx.get_usage())
+        if ctx is not None and ctx.command.get_help_option(ctx) is not None:
+            partes.append(
+                _ru.Text.from_markup(
+                    _ru.RICH_HELP.format(
+                        command_path=ctx.command_path,
+                        help_option=ctx.help_option_names[0],
+                    ),
+                    style=_ru.STYLE_ERRORS_SUGGESTION,
+                )
+            )
+        mensagem = f"{self.format_message().rstrip('.')}. Código de saída: {self.exit_code}"
+        partes.append(_ru.highlighter(mensagem))
+        console.print(
+            _ru.Panel(
+                Group(*partes),
+                border_style=_ru.STYLE_ERRORS_PANEL_BORDER,
+                title=_ru.ERRORS_PANEL_TITLE,
+                title_align=_ru.ALIGN_ERRORS_PANEL,
+            )
+        )
+
+    _ru.rich_format_error = _rich_format_error_pt
 
 
 def _patch_typer_core() -> None:
@@ -175,6 +212,14 @@ def _patch_vendored_click() -> None:
         _orig_no_such_init(self, option_name, message, possibilities, ctx)
 
     _ce.NoSuchOption.__init__ = _no_such_option_init_pt  # type: ignore[method-assign]
+
+    def _no_such_option_format_pt(self) -> str:  # type: ignore[misc]
+        if not self.possibilities:
+            return self.message
+        possibility_str = ", ".join(sorted(self.possibilities))
+        return f"{self.message} (Opções possíveis: {possibility_str})"
+
+    _ce.NoSuchOption.format_message = _no_such_option_format_pt  # type: ignore[method-assign]
 
 
 def _patch_help_option() -> None:

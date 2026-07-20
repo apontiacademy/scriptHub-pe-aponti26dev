@@ -3,6 +3,7 @@ from pathlib import Path
 from pentefino.services.script import main as executar_analise_core
 
 from scripthub.services import log
+from scripthub.services.erros import ErroIntegracao
 
 from .config import Config
 
@@ -35,9 +36,9 @@ def main(config: Config):
 
     log.passo(f"Injetando argumentos no Core: {' '.join(argumentos_cli)}")
 
+    # Executa a análise do core enviando a lista limpa de strings
     try:
-        # Executa a análise do core enviando a lista limpa de strings
         executar_analise_core(argumentos_cli)
-        log.ok("Escopo 2 finalizado com sucesso!")
-    except Exception as e:
-        log.erro(f"Escopo 2 terminou com falhas: {e}")
+    except SystemExit as e:
+        if e.code:
+            raise ErroIntegracao(f"Análise do pentefino falhou (código de saída {e.code}).") from e

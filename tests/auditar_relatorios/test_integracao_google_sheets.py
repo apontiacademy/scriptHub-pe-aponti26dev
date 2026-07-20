@@ -3,6 +3,7 @@ import pytest
 
 from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.scripts.auditar_relatorios.integracao_google_sheets import main
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
 _PATCH = "scripthub.scripts.auditar_relatorios.integracao_google_sheets"
 
@@ -48,7 +49,7 @@ def _setup_mock(mocker):
 
 
 def test_main_levanta_runtime_sem_csv(config):
-    with pytest.raises(RuntimeError, match="não encontrado"):
+    with pytest.raises(ErroConfiguracao, match="não encontrado"):
         main(config)
 
 
@@ -56,7 +57,7 @@ def test_main_levanta_runtime_sem_credenciais(config):
     _write_csv(config)
     config.gsheets.caminho_json_credenciais.unlink()
 
-    with pytest.raises(RuntimeError, match="credenciais"):
+    with pytest.raises(ErroConfiguracao, match="credenciais"):
         main(config)
 
 
@@ -64,14 +65,14 @@ def test_main_levanta_runtime_sem_id_planilha(config):
     _write_csv(config)
     config.gsheets.id_planilha = ""
 
-    with pytest.raises(RuntimeError, match="id_planilha"):
+    with pytest.raises(ErroConfiguracao, match="id_planilha"):
         main(config)
 
 
 def test_main_levanta_runtime_com_csv_de_menos_colunas(config):
     _write_csv(config, conteudo="Col A,Col B,Col C\nJoao,x,y\n")
 
-    with pytest.raises(RuntimeError, match="menos de 4 colunas"):
+    with pytest.raises(ErroIntegracao, match="menos de 4 colunas"):
         main(config)
 
 
@@ -93,5 +94,5 @@ def test_main_levanta_runtime_se_aba_nao_existir(config, mocker):
     mock_planilha.worksheet.side_effect = gspread.exceptions.WorksheetNotFound
     mock_client.planilha.return_value = mock_planilha
 
-    with pytest.raises(RuntimeError, match="aba"):
+    with pytest.raises(ErroIntegracao, match="aba"):
         main(config)

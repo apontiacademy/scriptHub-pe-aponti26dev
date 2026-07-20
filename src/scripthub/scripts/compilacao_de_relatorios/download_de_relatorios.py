@@ -3,6 +3,7 @@ from pathlib import Path
 import questionary
 
 from scripthub.services import log
+from scripthub.services.erros import ErroConfiguracao
 from scripthub.services.moodle import MoodleSessao, baixar_relatorio
 
 from .config import Config
@@ -42,7 +43,7 @@ def main(config: Config) -> None:
     diretorio_download = config.moodle.caminho_download
 
     if not meses:
-        raise RuntimeError("Nenhum mês configurado em settings.json (moodle.meses)")
+        raise ErroConfiguracao("Nenhum mês configurado em settings.json (moodle.meses)")
 
     diretorio_download.mkdir(parents=True, exist_ok=True)
 
@@ -66,5 +67,3 @@ def main(config: Config) -> None:
             log.passo(f"Relatório {indice}/{len(urls)}")
             caminho_saida = _caminho_relatorio(nome_mes, diretorio_download, indice)
             baixar_relatorio(sessao, url, caminho_saida)
-
-    log.ok("Escopo 1 finalizado com sucesso!")

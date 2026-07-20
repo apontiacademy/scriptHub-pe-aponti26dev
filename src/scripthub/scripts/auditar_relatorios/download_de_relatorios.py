@@ -1,4 +1,4 @@
-from scripthub.services import log
+from scripthub.services.erros import ErroConfiguracao
 from scripthub.services.moodle import MoodleSessao, baixar_relatorio
 
 from .config import Config
@@ -10,7 +10,7 @@ def main(config: Config) -> None:
     diretorio_download = config.moodle.caminho_download_relatorio
 
     if not urls_relatorios:
-        raise RuntimeError("Nenhuma URL de relatório encontrada no settings.json")
+        raise ErroConfiguracao("Nenhuma URL de relatório encontrada no settings.json")
 
     diretorio_download.mkdir(parents=True, exist_ok=True)
 
@@ -24,5 +24,3 @@ def main(config: Config) -> None:
     for indice, url in enumerate(urls_relatorios, start=1):
         caminho_saida = diretorio_download / f"relatorio{indice}.csv"
         baixar_relatorio(sessao, url, caminho_saida)
-
-    log.ok("Escopo 1 finalizado com sucesso!")

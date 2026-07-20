@@ -4,6 +4,7 @@ import pytest
 
 import scripthub.scripts.auditar_frequencias.config as cfg_module
 from scripthub.scripts.auditar_frequencias.config import Config
+from scripthub.services.erros import ErroConfiguracao
 
 
 @pytest.fixture
@@ -52,13 +53,13 @@ def test_load_sem_caminho_json_credenciais_levanta_key_error(tmp_path, monkeypat
         Config.load()
 
 
-def test_load_caminho_json_credenciais_relativo_levanta_value_error(tmp_path, monkeypatch, settings_valido):
+def test_load_caminho_json_credenciais_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, settings_valido):
     settings_valido["gsheets"]["caminhoJsonCredenciais"] = "credentials.json"
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
-    with pytest.raises(ValueError, match="caminhoJsonCredenciais"):
+    with pytest.raises(ErroConfiguracao, match="caminhoJsonCredenciais"):
         Config.load()
 
 
@@ -69,7 +70,7 @@ def test_load_sem_credenciais_levanta_excecao(tmp_path, monkeypatch, settings_va
     monkeypatch.delenv("MOODLE_USUARIO", raising=False)
     monkeypatch.delenv("MOODLE_SENHA", raising=False)
 
-    with pytest.raises(ValueError, match="MOODLE_USUARIO"):
+    with pytest.raises(ErroConfiguracao, match="MOODLE_USUARIO"):
         Config.load()
 
 
@@ -77,5 +78,5 @@ def test_load_sem_settings_levanta_excecao(tmp_path, monkeypatch):
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ErroConfiguracao):
         Config.load()

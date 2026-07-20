@@ -1118,7 +1118,7 @@ wheels = [
 
 [[package]]
 name = "scripthub-pe-aponti26dev"
-version = "0.20.0.dev11"
+version = "0.20.0.dev12"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -1132,6 +1132,7 @@ dependencies = [
     { name = "pentefinocli-pe-aponti26dev" },
     { name = "playwright" },
     { name = "questionary" },
+    { name = "rich" },
     { name = "typer" },
 ]
 
@@ -1156,7 +1157,8 @@ requires-dist = [
     { name = "pentefinocli-pe-aponti26dev", git = "https://github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git?rev=main" },
     { name = "playwright", specifier = ">=1.60.0" },
     { name = "questionary", specifier = ">=2.1.1" },
-    { name = "typer", specifier = ">=0.26.7" },
+    { name = "rich", specifier = ">=13.0.0" },
+    { name = "typer", specifier = ">=0.26.7,<0.27" },
 ]
 
 [package.metadata.requires-dev]

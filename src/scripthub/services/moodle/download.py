@@ -8,6 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from scripthub.services import log
+from scripthub.services.erros import ErroIntegracao
 
 from .sessao import MoodleSessao
 
@@ -15,7 +16,7 @@ from .sessao import MoodleSessao
 def _validar_csv(resp: requests.Response, url: str) -> None:
     content_type = resp.headers.get("Content-Type", "")
     if "csv" not in content_type.lower():
-        raise RuntimeError(
+        raise ErroIntegracao(
             f"Resposta inesperada ({content_type or 'sem Content-Type'}) ao baixar relatório de {url} — esperado CSV"
         )
 
@@ -32,7 +33,7 @@ def _baixar_e_validar(
     resp_download = sessao.baixar(action, caminho_saida, method=method, data=data)
     try:
         _validar_csv(resp_download, url)
-    except RuntimeError:
+    except ErroIntegracao:
         caminho_saida.unlink(missing_ok=True)
         raise
     log.ok(f"Salvo em: {caminho_saida}")
@@ -102,7 +103,7 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
         select_download = form_download.find("select", {"name": "download"})
         opcoes = {opt.get("value", "") for opt in select_download.find_all("option")}
         if "csv" not in opcoes:
-            raise RuntimeError(
+            raise ErroIntegracao(
                 f"Formulário de exportação em {url} não oferece a opção CSV (opções disponíveis: {sorted(opcoes)})"
             )
 
@@ -133,4 +134,4 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
         _baixar_e_validar(sessao, action, caminho_saida, url, method=method, data=data)
         return
 
-    raise RuntimeError(f"Link ou formulário de download não encontrado em {url}")
+    raise ErroIntegracao(f"Link ou formulário de download não encontrado em {url}")

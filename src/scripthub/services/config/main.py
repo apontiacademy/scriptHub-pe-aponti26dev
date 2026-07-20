@@ -1,6 +1,7 @@
 import questionary
 
 from .. import log
+from ..erros import ErroUsoCLI
 from ..menu.main import SCRIPTS_FOLDER, discover_modules
 from .campo import resolver_dependencias
 from .esquemas import ALIASES_CLI, ESQUEMAS
@@ -21,8 +22,7 @@ def config(nome_script: str | None = None) -> None:
         nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
-            log.erro(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
-            raise SystemExit(1)
+            raise ErroUsoCLI(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
@@ -30,7 +30,7 @@ def config(nome_script: str | None = None) -> None:
         ]
 
         if not modulos_com_esquema:
-            log.erro("Nenhum script com configuração disponível foi encontrado.")
+            log.aviso("Nenhum script com configuração disponível foi encontrado.")
             return
 
         nome_script = selecionar_script(modulos_com_esquema)
@@ -66,8 +66,7 @@ def visualizar(nome_script: str | None = None) -> None:
         nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
-            log.erro(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
-            raise SystemExit(1)
+            raise ErroUsoCLI(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
@@ -75,7 +74,7 @@ def visualizar(nome_script: str | None = None) -> None:
         ]
 
         if not modulos_com_esquema:
-            log.erro("Nenhum script com configuração disponível foi encontrado.")
+            log.aviso("Nenhum script com configuração disponível foi encontrado.")
             return
 
         nome_script = selecionar_script(modulos_com_esquema)
@@ -94,8 +93,7 @@ def limpar(nome_script: str | None = None) -> None:
         nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
-            log.erro(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
-            return
+            raise ErroUsoCLI(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
@@ -103,7 +101,7 @@ def limpar(nome_script: str | None = None) -> None:
         ]
 
         if not modulos_com_esquema:
-            log.erro("Nenhum script com configuração disponível foi encontrado.")
+            log.aviso("Nenhum script com configuração disponível foi encontrado.")
             return
 
         nome_script = selecionar_script(modulos_com_esquema)

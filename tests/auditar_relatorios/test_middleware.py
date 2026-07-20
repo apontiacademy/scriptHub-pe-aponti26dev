@@ -4,6 +4,7 @@ import pytest
 
 from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios import main
+from scripthub.services.erros import ErroIntegracao
 
 _PATCH_CORE = "scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios.executar_analise_core"
 
@@ -90,8 +91,21 @@ def test_main_cria_diretorio_pai_do_csv_saida(config, mocker):
     assert config.moodle.csv_saida_analise.parent.exists()
 
 
-def test_main_nao_propaga_excecao_do_core(config, mocker):
+def test_main_propaga_excecao_do_core(config, mocker):
     mocker.patch(_PATCH_CORE, side_effect=RuntimeError("falha no core"))
 
-    # O código atual captura a exceção e faz log.erro — não deve propagar
+    with pytest.raises(RuntimeError, match="falha no core"):
+        main(config)
+
+
+def test_main_converte_system_exit_do_core_em_erro_integracao(config, mocker):
+    mocker.patch(_PATCH_CORE, side_effect=SystemExit(1))
+
+    with pytest.raises(ErroIntegracao, match="código de saída 1"):
+        main(config)
+
+
+def test_main_nao_levanta_erro_para_system_exit_zero(config, mocker):
+    mocker.patch(_PATCH_CORE, side_effect=SystemExit(0))
+
     main(config)

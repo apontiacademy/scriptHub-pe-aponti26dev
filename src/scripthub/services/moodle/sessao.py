@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from scripthub.services import log
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
 _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 
@@ -34,7 +35,7 @@ class MoodleSessao:
     # ── autenticação ──────────────────────────────────────────────────────────
 
     def login(self) -> None:
-        """Autentica no Moodle via POST. Lança RuntimeError se falhar."""
+        """Autentica no Moodle via POST. Lança ErroConfiguracao se falhar."""
         resp = self._session.get(self.url_login)
         soup = BeautifulSoup(resp.text, "html.parser")
         tag = soup.find("input", {"name": "logintoken"})
@@ -50,10 +51,10 @@ class MoodleSessao:
             },
         )
         if "/login/" in post_resp.url:
-            raise RuntimeError("Login falhou: redirecionado para a tela de login")
+            raise ErroConfiguracao("Login falhou: redirecionado para a tela de login")
         post_soup = BeautifulSoup(post_resp.text, "html.parser")
         if post_soup.find("input", {"name": "logintoken"}):
-            raise RuntimeError("Login falhou: credenciais inválidas")
+            raise ErroConfiguracao("Login falhou: credenciais inválidas")
         log.ok("Login OK")
 
     # ── requisições genéricas ─────────────────────────────────────────────────
@@ -65,7 +66,7 @@ class MoodleSessao:
     def get(self, url: str, **kwargs) -> requests.Response:
         resp = self._session.get(url, **kwargs)
         if "/login/" in resp.url:
-            raise RuntimeError(f"Sessão expirada ao acessar: {url}")
+            raise ErroIntegracao(f"Sessão expirada ao acessar: {url}")
         return resp
 
     def post(self, url: str, **kwargs) -> requests.Response:
@@ -83,7 +84,7 @@ class MoodleSessao:
     ) -> requests.Response:
         """Baixa um arquivo para *destino* e retorna a resposta HTTP.
 
-        Lança RuntimeError se a resposta indicar sessão expirada (redirect para /login/).
+        Lança ErroIntegracao se a resposta indicar sessão expirada (redirect para /login/).
         """
         if method == "post":
             resp = self._session.post(url, data=data or {})
@@ -91,7 +92,7 @@ class MoodleSessao:
             resp = self._session.get(url, params=data or None)
 
         if "/login/" in resp.url:
-            raise RuntimeError(f"Sessão expirada ao tentar baixar: {url}")
+            raise ErroIntegracao(f"Sessão expirada ao tentar baixar: {url}")
 
         resp.raise_for_status()
         destino.parent.mkdir(parents=True, exist_ok=True)

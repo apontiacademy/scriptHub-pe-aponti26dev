@@ -1,6 +1,7 @@
 import pandas as pd
 
 from scripthub.services import log
+from scripthub.services.erros import ErroConfiguracao, FalhaParcial
 from scripthub.services.google.sheets import GoogleSheetsClient
 
 from .config import Config
@@ -13,17 +14,17 @@ def main(config: Config) -> None:
     id_planilha = config.gsheets.id_planilha
 
     if not caminho_exportacao.exists():
-        raise RuntimeError(f"Diretório de exportação não encontrado em: {caminho_exportacao}")
+        raise ErroConfiguracao(f"Diretório de exportação não encontrado em: {caminho_exportacao}")
 
     if not caminho_credenciais.exists():
-        raise RuntimeError(f"Arquivo de credenciais do Google não encontrado em: {caminho_credenciais}")
+        raise ErroConfiguracao(f"Arquivo de credenciais do Google não encontrado em: {caminho_credenciais}")
 
     if not id_planilha:
-        raise RuntimeError("id_planilha não configurado no arquivo de configurações.")
+        raise ErroConfiguracao("id_planilha não configurado no arquivo de configurações.")
 
     arquivos_xlsx = list(caminho_exportacao.glob("*.xlsx"))
     if not arquivos_xlsx:
-        raise RuntimeError(
+        raise ErroConfiguracao(
             "Nenhum arquivo XLSX encontrado no diretório de exportação. Certifique-se de rodar o Escopo 1 antes."
         )
 
@@ -55,6 +56,4 @@ def main(config: Config) -> None:
         log.ok(f"Página '{nome_arquivo}' atualizada com sucesso!")
 
     if falhas:
-        raise RuntimeError(f"{len(falhas)} arquivo(s) falharam: {', '.join(falhas)}")
-
-    log.ok("Escopo 2 finalizado com sucesso!")
+        raise FalhaParcial(f"{len(falhas)} arquivo(s) falharam: {', '.join(falhas)}")

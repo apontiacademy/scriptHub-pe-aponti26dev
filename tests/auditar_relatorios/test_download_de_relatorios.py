@@ -4,6 +4,7 @@ import pytest
 
 from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.scripts.auditar_relatorios.download_de_relatorios import baixar_relatorio, main
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
 _PATCH = "scripthub.scripts.auditar_relatorios.download_de_relatorios"
 
@@ -147,10 +148,10 @@ def test_baixar_relatorio_via_link_direto(tmp_path):
     assert "download=csv" in url_baixar
 
 
-def test_baixar_relatorio_sem_form_nem_link_levanta_runtime_error(tmp_path):
+def test_baixar_relatorio_sem_form_nem_link_levanta_erro_integracao(tmp_path):
     sessao = _make_sessao(html=_HTML_SEM_DOWNLOAD)
 
-    with pytest.raises(RuntimeError, match="[Dd]ownload"):
+    with pytest.raises(ErroIntegracao, match="[Dd]ownload"):
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
 
 
@@ -214,7 +215,7 @@ def test_baixar_relatorio_form_feedback_inclui_apenas_primeiro_submit(tmp_path):
 def test_baixar_relatorio_ignora_select_download_em_form_de_login(tmp_path):
     sessao = _make_sessao(html=_HTML_FEEDBACK_SELECT_EM_FORM_LOGIN)
 
-    with pytest.raises(RuntimeError, match="[Dd]ownload"):
+    with pytest.raises(ErroIntegracao, match="[Dd]ownload"):
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
 
 
@@ -262,14 +263,14 @@ _HTML_FEEDBACK_SEM_OPCAO_CSV = """
 def test_baixar_relatorio_levanta_erro_quando_select_nao_oferece_csv(tmp_path):
     sessao = _make_sessao(html=_HTML_FEEDBACK_SEM_OPCAO_CSV)
 
-    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+    with pytest.raises(ErroIntegracao, match="[Cc][Ss][Vv]"):
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
 
 
-def test_baixar_relatorio_levanta_runtime_error_quando_resposta_nao_e_csv(tmp_path):
+def test_baixar_relatorio_levanta_erro_integracao_quando_resposta_nao_e_csv(tmp_path):
     sessao = _make_sessao(download_content_type="text/html")
 
-    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+    with pytest.raises(ErroIntegracao, match="[Cc][Ss][Vv]"):
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
 
 
@@ -278,7 +279,7 @@ def test_baixar_relatorio_apaga_arquivo_quando_validacao_csv_falha(tmp_path):
     caminho_saida = tmp_path / "r.csv"
     caminho_saida.write_bytes(b"<html>lixo</html>")  # simula gravacao ja feita por MoodleSessao.baixar()
 
-    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+    with pytest.raises(ErroIntegracao, match="[Cc][Ss][Vv]"):
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", caminho_saida)
 
     assert not caminho_saida.exists()
@@ -289,7 +290,7 @@ def test_baixar_relatorio_form_feedback_apaga_arquivo_quando_validacao_csv_falha
     caminho_saida = tmp_path / "r.csv"
     caminho_saida.write_bytes(b"<html>lixo</html>")
 
-    with pytest.raises(RuntimeError, match="[Cc][Ss][Vv]"):
+    with pytest.raises(ErroIntegracao, match="[Cc][Ss][Vv]"):
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", caminho_saida)
 
     assert not caminho_saida.exists()
@@ -303,7 +304,7 @@ def test_main_levanta_runtime_error_sem_urls(tmp_path, mocker):
     config.moodle.urls_relatorios = []
     mocker.patch(f"{_PATCH}.MoodleSessao")
 
-    with pytest.raises(RuntimeError, match="[Uu][Rr][Ll]"):
+    with pytest.raises(ErroConfiguracao, match="[Uu][Rr][Ll]"):
         main(config)
 
 
