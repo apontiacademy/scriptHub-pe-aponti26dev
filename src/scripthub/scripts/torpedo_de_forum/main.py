@@ -115,7 +115,7 @@ def _clicar_novo_topico(page) -> None:
     if link.count() > 0:
         link.click()
         return
-    raise RuntimeError("Botão de novo tópico não encontrado na página do fórum.")
+    raise RuntimeError("Botão de novo tópico não encontrado na página do fórum.")  # TODO: usar ErroIntegracao
 
 
 def _definir_conteudo_editor(page, html_content: str) -> None:
@@ -151,7 +151,7 @@ def _definir_conteudo_editor(page, html_content: str) -> None:
     if page.locator("#id_message").count() > 0:
         page.fill("#id_message", html_content)
         return
-    raise RuntimeError("Editor de conteúdo do fórum não encontrado.")
+    raise RuntimeError("Editor de conteúdo do fórum não encontrado.")  # TODO: usar ErroIntegracao
 
 
 def _verificar_conteudo_editor(page) -> bool:
@@ -295,7 +295,7 @@ def _submeter_formulario(page) -> None:
         if loc.count() > 0:
             loc.first.click()
             return
-    raise RuntimeError("Botão de submissão não encontrado.")
+    raise RuntimeError("Botão de submissão não encontrado.")  # TODO: usar ErroIntegracao
 
 
 def publicar_no_forum(

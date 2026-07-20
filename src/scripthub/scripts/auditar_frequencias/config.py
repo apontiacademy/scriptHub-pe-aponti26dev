@@ -51,7 +51,7 @@ class Config:
             raise ValueError(
                 "gsheets.caminhoJsonCredenciais deve ser um caminho absoluto. "
                 "Configure com `scripthub config -s frequencias`."
-            )
+            )  # TODO: utilizar ErroConfiguracao
 
         gsheets_config = GsheetsConfig(
             id_planilha=gsheets_json["idPlanilha"],

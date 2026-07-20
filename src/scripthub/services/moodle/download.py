@@ -17,7 +17,7 @@ def _validar_csv(resp: requests.Response, url: str) -> None:
     if "csv" not in content_type.lower():
         raise RuntimeError(
             f"Resposta inesperada ({content_type or 'sem Content-Type'}) ao baixar relatório de {url} — esperado CSV"
-        )
+        )  # TODO: usar ErroIntegracao
 
 
 def _baixar_e_validar(
@@ -34,7 +34,7 @@ def _baixar_e_validar(
         _validar_csv(resp_download, url)
     except RuntimeError:
         caminho_saida.unlink(missing_ok=True)
-        raise
+        raise  # TODO: usar ErroIntegracao
     log.ok(f"Salvo em: {caminho_saida}")
 
 
@@ -104,7 +104,7 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
         if "csv" not in opcoes:
             raise RuntimeError(
                 f"Formulário de exportação em {url} não oferece a opção CSV (opções disponíveis: {sorted(opcoes)})"
-            )
+            )  # TODO: usar ErroIntegracao
 
         data = _campos_de_form(form_download)
         data["download"] = "csv"
@@ -133,4 +133,4 @@ def baixar_relatorio(sessao: MoodleSessao, url: str, caminho_saida: Path) -> Non
         _baixar_e_validar(sessao, action, caminho_saida, url, method=method, data=data)
         return
 
-    raise RuntimeError(f"Link ou formulário de download não encontrado em {url}")
+    raise RuntimeError(f"Link ou formulário de download não encontrado em {url}")  # TODO: usar ErroIntegracao
