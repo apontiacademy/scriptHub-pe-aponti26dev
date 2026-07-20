@@ -6,7 +6,7 @@ podem decidir o que fazer a partir desse código, sem precisar parsear a
 mensagem de log.
 
 | Código | Categoria | Quando ocorre | Mecanismo |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 0 | Sucesso | Pipeline (ou comando informativo, ex.: `--version`) terminou sem erros | — |
 | 1 | Erro genérico / inesperado | Qualquer exceção não classificada nas categorias abaixo — normalmente indica um bug. Rode com `--debug` para ver o traceback completo no terminal | fallback `except Exception` do handler global |
 | 2 | Configuração inválida ou ausente | `.env`, `settings.json`, credenciais do Google, ou um arquivo/diretório local que um passo anterior do pipeline deveria ter gerado | `scripthub.services.erros.ErroConfiguracao` |
@@ -86,7 +86,8 @@ que carrega o atributo `codigo_saida` e o `dica` opcional).
 Tabela de auditoria de quando o esquema foi introduzido — útil como exemplo
 ao classificar um novo `raise`.
 
-**`ErroConfiguracao` (2)**
+### `ErroConfiguracao` (2)
+
 - `.env`/`settings.json` ausentes ou incompletos: `config.py` de todos os 5 pacotes
 - Precondição de um passo anterior não satisfeita: `auditar_frequencias/integracao_google_sheets.py` (diretório de exportação, XLSX ausentes), `auditar_relatorios/integracao_google_sheets.py` (CSV de auditoria ausente), `compilacao_de_relatorios/compilar_pdfs.py` (nenhum dado de aluno nos CSVs)
 - Credenciais/IDs do Google ausentes: `auditar_frequencias/integracao_google_sheets.py`, `auditar_relatorios/integracao_google_sheets.py`, `auditar_relatorios/backup.py`
@@ -94,12 +95,14 @@ ao classificar um novo `raise`.
 - Falha de autenticação no Moodle (usuário/senha errados no `.env`): `services/moodle/sessao.py` (`MoodleSessao.login`, usado por todos os scripts que baixam do Moodle via HTTP)
 - `settings.json` incompleto para uma combinação específica de opções: `auditar_relatorios/config.py` (`caminhoExportacaoAnalise` ausente quando `exportarAnaliseRelatorio=true`)
 
-**`FalhaParcial` (4)**
+### `FalhaParcial` (4)
+
 - `auditar_frequencias/integracao_google_sheets.py` (N arquivos XLSX falharam)
 - `compilacao_de_relatorios/compilar_pdfs.py` (N PDFs falharam)
 - `torpedo_de_forum/main.py` (N fóruns falharam ao publicar)
 
-**`ErroIntegracao` (5)**
+### `ErroIntegracao` (5)
+
 - Estrutura de página do Moodle inesperada: `auditar_frequencias/exportar_frequencias.py` (formulário não encontrado, resposta que não é um XLSX válido)
 - Sessão do Moodle caiu no meio da execução (já autenticada, sem ser problema de credencial): `services/moodle/sessao.py` (`MoodleSessao.get`/`baixar`, sessão expirada)
 - Dados vindos de fora malformados: `auditar_relatorios/integracao_google_sheets.py` (CSV ilegível ou com menos de 4 colunas, aba não encontrada na planilha)
