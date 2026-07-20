@@ -1158,7 +1158,7 @@ requires-dist = [
     { name = "playwright", specifier = ">=1.60.0" },
     { name = "questionary", specifier = ">=2.1.1" },
     { name = "rich", specifier = ">=13.0.0" },
-    { name = "typer", specifier = ">=0.26.7" },
+    { name = "typer", specifier = ">=0.26.7,<0.27" },
 ]
 
 [package.metadata.requires-dev]
