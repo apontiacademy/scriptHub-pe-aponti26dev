@@ -66,9 +66,9 @@ class Config:
 
         caminho_json_credenciais = Path(gsheets_json["caminhoJsonCredenciais"])
         if not caminho_json_credenciais.is_absolute():
-            raise ValueError(
+            raise ErroConfiguracao(
                 "gsheets.caminhoJsonCredenciais deve ser um caminho absoluto. Configure com `scripthub config -s ra`."
-            )  # TODO: utilizar ErroConfiguracao
+            )
 
         gsheets_config = GsheetsConfig(
             id_planilha=gsheets_json["idPlanilha"],

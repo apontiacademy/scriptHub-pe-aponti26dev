@@ -94,6 +94,7 @@ ao classificar um novo `raise`.
 - Arquivo/URL de entrada do próprio script ausente: `auditar_frequencias/exportar_frequencias.py` (URLs de frequência), `auditar_relatorios/download_de_relatorios.py` (URLs de relatório), `compilacao_de_relatorios/download_de_relatorios.py` (meses), `torpedo_de_forum/main.py` (post `.md`, URLs de fórum, título do `.md`, imagem de override)
 - Falha de autenticação no Moodle (usuário/senha errados no `.env`): `services/moodle/sessao.py` (`MoodleSessao.login`, usado por todos os scripts que baixam do Moodle via HTTP)
 - `settings.json` incompleto para uma combinação específica de opções: `auditar_relatorios/config.py` (`caminhoExportacaoAnalise` ausente quando `exportarAnaliseRelatorio=true`)
+- `gsheets.caminhoJsonCredenciais` não é um caminho absoluto: `auditar_frequencias/config.py`, `auditar_relatorios/config.py`
 
 ### `FalhaParcial` (4)
 
@@ -109,3 +110,5 @@ ao classificar um novo `raise`.
 - Planilha do Google Sheets não encontrada pelo ID configurado: `services/google/sheets.py` (`GoogleSheetsClient.planilha`)
 - `pentefino` (biblioteca externa) falhou: `auditar_relatorios/middleware_analise_de_relatorios.py`
 - Google Drive falhou ao gerar o backup: `auditar_relatorios/backup.py`
+- Relatório do Moodle baixado via HTTP não é um CSV válido, ou nenhum link/formulário de download foi encontrado na página: `services/moodle/download.py` (`baixar_relatorio`, usado por `auditar_relatorios` e `compilacao_de_relatorios`)
+- Elemento esperado da página do fórum não encontrado (botão de novo tópico, editor de conteúdo, botão de submissão): `torpedo_de_forum/main.py`

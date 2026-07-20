@@ -5,7 +5,7 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 from scripthub.services import log
-from scripthub.services.erros import ErroConfiguracao, FalhaParcial
+from scripthub.services.erros import ErroConfiguracao, ErroIntegracao, FalhaParcial
 from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
@@ -115,7 +115,7 @@ def _clicar_novo_topico(page) -> None:
     if link.count() > 0:
         link.click()
         return
-    raise RuntimeError("Botão de novo tópico não encontrado na página do fórum.")  # TODO: usar ErroIntegracao
+    raise ErroIntegracao("Botão de novo tópico não encontrado na página do fórum.")
 
 
 def _definir_conteudo_editor(page, html_content: str) -> None:
@@ -151,7 +151,7 @@ def _definir_conteudo_editor(page, html_content: str) -> None:
     if page.locator("#id_message").count() > 0:
         page.fill("#id_message", html_content)
         return
-    raise RuntimeError("Editor de conteúdo do fórum não encontrado.")  # TODO: usar ErroIntegracao
+    raise ErroIntegracao("Editor de conteúdo do fórum não encontrado.")
 
 
 def _verificar_conteudo_editor(page) -> bool:
@@ -295,7 +295,7 @@ def _submeter_formulario(page) -> None:
         if loc.count() > 0:
             loc.first.click()
             return
-    raise RuntimeError("Botão de submissão não encontrado.")  # TODO: usar ErroIntegracao
+    raise ErroIntegracao("Botão de submissão não encontrado.")
 
 
 def publicar_no_forum(
@@ -353,7 +353,7 @@ def publicar_no_forum(
         return True
     except PlaywrightTimeoutError as exc:
         log.erro(f"[TIMEOUT] {exc}")
-    except RuntimeError as exc:
+    except ErroIntegracao as exc:
         log.erro(f"[ERRO] {exc}")
     except Exception as exc:
         log.erro(f"[ERRO inesperado] {exc}")
