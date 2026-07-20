@@ -10,7 +10,35 @@ O histórico de 0.1.0 a 0.19.1 foi reconstruído a partir do `git log` de `main`
 
 ## [Unreleased]
 
-Nenhuma mudança promovida de `dev` para `nightly` ainda. O trabalho em andamento em `dev` (ainda não consolidado) é acompanhado em [SNAPSHOTS.md](SNAPSHOTS.md).
+### Added
+- `MoodleSessao` e `services/moodle/download.py` (cliente HTTP para Moodle); `GoogleSheetsClient` e `GoogleDriveClient` compartilhados (`services/google/`) (#51)
+- `CHANGELOG.md`, `SNAPSHOTS.md` e `CONTRIBUTING.md`, documentando o fluxo `dev` → `nightly` → `main` e o protocolo de versionamento/changelog; flag `--version`/`-V` no CLI (#64)
+- Logging de debug opcional em `get_quiz_ids` para diagnosticar turmas sem atividades encontradas (#52)
+- Validação da assinatura ZIP do arquivo baixado (`_e_xlsx_valido`) em `auditar_frequencias`, para falhar cedo com erro claro caso o Moodle devolva HTML em vez do XLSX esperado (#82)
+- Campo `gsheets.caminhoJsonCredenciais` ao esquema de config de `auditar_frequencias` e `auditar_relatorios`, seguindo o padrão já usado em `auditar_softskills`; suporte genérico a caminhos que exigem valor absoluto (`Campo.caminho_absoluto`) (#92)
+- Validação de Content-Type (`_validar_csv`) na resposta de download de relatórios, com erro claro em vez de gravar HTML silenciosamente como `.csv` (#98)
+- `ERRORS.md`, documentando o esquema de 6 códigos de saída (0-5); handler global único de erros (`_executar_com_tratamento_global`); nível de log `sucesso`, usado uma única vez ao fim de cada pipeline (#66)
+
+### Changed
+- `auditar_frequencias`, `auditar_relatorios` e `auditar_softskills` migrados de Playwright para requisições HTTP (#51)
+- `integracao_drive.py` usa `batch_clear` restrito às colunas do próprio CSV em vez de limpar a planilha inteira; mensagens de erro de configuração mais claras; suporte a `moodle.urlBase` com fallback para `moodle.url` (legado) (#52)
+- `caminhoExportacaoAnalise` passa a ser obrigatório quando `exportarAnaliseRelatorio=true`; suporte genérico a campos condicionalmente obrigatórios (`resolver_dependencias()`) (#65)
+- `dev` passa a usar squash manual (mesmo mecanismo de `nightly`/`main`) em vez de merge queue automática (#83)
+- `caminho_json_credenciais` deixa de ser fixo em `DIRETORIO_BASE / "credentials.json"` e passa a ser lido obrigatoriamente de `settings.json`; caminhos relativos são rejeitados. **Breaking change**: quem já tem `settings.json` configurado precisa rodar `scripthub config -s frequencias`/`-s relatorios` para definir o novo campo (#92)
+- `uv.lock` atualizado para alinhar `dev` ao hotfix já aplicado em `main` (`pentefinocli-pe-aponti26dev` 0.1.0 → 0.2.1) (#97)
+- `ErroConfiguracao`/`ErroUsoCLI`/`FalhaParcial`/`ErroIntegracao` substituem exceções genéricas em vários pontos dos scripts; `--debug` mostra traceback completo só para erros não classificados; mensagens de conclusão específicas de cada script removidas em favor de uma mensagem final única e padronizada; `typer` travado em `<0.27` (#66)
+- Limpeza das violações de `ruff` restantes em `dev` (#76)
+
+### Fixed
+- `caminhoExportacaoAnalise` configurado via `scripthub config -s ra` deixava de ser respeitado; com `exportarAnaliseRelatorio=false`, Escopo 2 volta a usar o caminho padrão silenciosamente em vez de travar no prompt interativo; `persistir()` remove do `settings.json` a chave de um campo opcional limpo pelo usuário (Closes #55) (#65)
+- `exportar_frequencia` (Escopo 1 de `auditar_frequencias`) deixava de enviar o campo `format` e podia postar no formulário errado, fazendo o Moodle devolver HTML em vez de XLSX; checkboxes marcados por padrão no Moodle via atributo booleano `checked` "bare" deixavam de ser detectados (Closes #80) (#82)
+- `_injetar_cookies` (`torpedo_de_forum`) montava cada cookie com `url` e `path` simultaneamente, o que o Playwright rejeita — quebrava 100% das execuções de `uv run scripthub t` logo após o login (Closes #84) (#85)
+- `baixar_relatorio()` falhava contra páginas reais `mod/feedback/show_entries.php`, pegando o form errado da página em vez do form de exportação; forms com `action` para `/login/` deixam de ser elegíveis; `download=csv` deixa de ser forçado sem checar se a opção está disponível (#98)
+- Painel de erro duplicado ao validar `--passo` inválido; `scripthub config --limpar -s script-inexistente` deixa de retornar silenciosamente com código 0; falha individual de geração de PDF em `compilacao_de_relatorios` volta a ser logada como erro; `SystemExit(0)` do `pentefino` deixa de ser convertido incorretamente em erro (#66)
+
+### Removed
+- Campo de configuração `headless` dos módulos migrados para HTTP (#51)
+- Ruleset "dev merge queue" no GitHub; trigger `merge_group` para `dev` em `.github/workflows/ci.yml` (#83)
 
 ## [0.19.2] - 2026-07-07
 
