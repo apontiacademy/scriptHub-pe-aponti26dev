@@ -103,3 +103,9 @@ def test_main_converte_system_exit_do_core_em_erro_integracao(config, mocker):
 
     with pytest.raises(ErroIntegracao, match="código de saída 1"):
         main(config)
+
+
+def test_main_nao_levanta_erro_para_system_exit_zero(config, mocker):
+    mocker.patch(_PATCH_CORE, side_effect=SystemExit(0))
+
+    main(config)

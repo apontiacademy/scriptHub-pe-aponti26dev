@@ -40,4 +40,5 @@ def main(config: Config):
     try:
         executar_analise_core(argumentos_cli)
     except SystemExit as e:
-        raise ErroIntegracao(f"Análise do pentefino falhou (código de saída {e.code}).") from e
+        if e.code:
+            raise ErroIntegracao(f"Análise do pentefino falhou (código de saída {e.code}).") from e
