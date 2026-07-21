@@ -4,7 +4,7 @@ Baixa os relatórios mensais de residência do Moodle e compila um PDF individua
 
 ## Pipeline
 
-```
+```plaintext
 Etapa 1 — Download dos relatórios por mês (Moodle, via HTTP)
     ↓
 Etapa 2 — Compilação de um PDF por aluno
@@ -40,11 +40,11 @@ cp settings.example.json settings.json
 ```
 
 | Chave | Descrição |
-|---|---|
+| --- | --- |
 | `moodle.urlLogin` | URL de login do Moodle |
 | `moodle.meses` | Dicionário `{ "Nome do Mês": ["URL do relatório semana 1", "URL semana 2", ...] }` |
 | `pdf.caminhoSaida` | Pasta onde os PDFs serão salvos |
-| `pdf.csvResidentes` | CSV com CPF dos residentes (colunas `residente`, `cpf_residente`), usado para preencher o PDF |
+| `pdf.csvResidentes` | CSV com dados dos residentes |
 
 Exemplo de `meses`:
 
@@ -62,7 +62,7 @@ Exemplo de `meses`:
 
 ## Estrutura de saída
 
-```
+```plaintext
 compilacao_de_relatorios/
 └── dados/
     └── relatorios/
@@ -79,7 +79,7 @@ compilacao_de_relatorios/
 ## Dependências
 
 | Pacote | Uso |
-|---|---|
+| --- | --- |
 | `requests` + `beautifulsoup4` | Login e download dos relatórios via HTTP (sem navegador) |
 | `pandas` | Leitura dos CSVs semanais e do CSV de residentes |
 | `fpdf2` | Geração dos PDFs |

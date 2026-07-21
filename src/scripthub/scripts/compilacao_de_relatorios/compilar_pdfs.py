@@ -69,7 +69,6 @@ class DadosAluno:
     estado: str
     empresa: str
     cnpj: str
-    cpf: str = ""
     meses: dict[str, dict[str, dict[str, str]]] = field(default_factory=dict)
     # Structure: {month: {question: {week: answer}}}
 
@@ -217,22 +216,6 @@ def _extrair_colunas_perguntas(df: pd.DataFrame) -> list[str]:
     return [col for col in df.columns if re.match(r"^\d+\.", col.strip())]
 
 
-def _carregar_cpfs(csv_residentes: Path) -> dict[str, str]:
-    """Retorna dict {nome_norm: cpf} a partir do residentes.csv."""
-    if not csv_residentes.exists():
-        log.aviso(f"{csv_residentes} não encontrado. CPF ficará em branco.")
-        return {}
-
-    df = pd.read_csv(csv_residentes, dtype=str).fillna("")
-    cpfs: dict[str, str] = {}
-    for _, row in df.iterrows():
-        nome_norm = normalizar_nome(row.get("residente", ""))
-        cpf = row.get("cpf_residente", "").strip()
-        if nome_norm:
-            cpfs[nome_norm] = cpf
-    return cpfs
-
-
 def _carregar_relatorios(
     meses: dict[str, list[str]],
     caminho_download: Path,
@@ -308,7 +291,6 @@ def _gerar_pdf(aluno: DadosAluno, caminho_saida: Path):
 
     pdf.secao("Dados do Aluno")
     pdf.campo("Nome", aluno.nome)
-    pdf.campo("CPF", aluno.cpf)
     pdf.campo("E-mail", aluno.email)
     pdf.campo("Núcleo", aluno.estado)
     pdf.ln(4)
@@ -335,14 +317,6 @@ def main(config: Config):
         raise ErroConfiguracao("Nenhum dado de aluno encontrado nos CSVs.")
 
     log.ok(f"{len(alunos)} aluno(s) encontrado(s).")
-
-    log.passo("Carregando CPFs do residentes.csv...")
-    cpfs = _carregar_cpfs(config.pdf.csv_residentes)
-    for nome_norm, cpf in cpfs.items():
-        if nome_norm in alunos:
-            alunos[nome_norm].cpf = cpf
-
-    log.ok(f"{len(cpfs)} CPF(s) carregado(s).")
 
     log.passo("Gerando PDFs...")
     gerados = 0

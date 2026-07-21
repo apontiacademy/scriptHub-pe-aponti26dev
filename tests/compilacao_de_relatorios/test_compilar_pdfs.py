@@ -38,7 +38,6 @@ def test_main_levanta_runtime_error_informando_gerados_e_falhas(tmp_path, mocker
         f"{_PATCH}._carregar_relatorios",
         return_value={"aluno ok": aluno_ok, "aluno falha": aluno_falha},
     )
-    mocker.patch(f"{_PATCH}._carregar_cpfs", return_value={})
     mocker.patch(f"{_PATCH}._gerar_pdf", side_effect=[None, Exception("falha ao gerar")])
 
     with pytest.raises(
@@ -55,7 +54,6 @@ def test_main_falha_individual_de_pdf_loga_erro_nao_aviso(tmp_path, mocker):
         f"{_PATCH}._carregar_relatorios",
         return_value={"aluno ok": aluno_ok, "aluno falha": aluno_falha},
     )
-    mocker.patch(f"{_PATCH}._carregar_cpfs", return_value={})
     mocker.patch(f"{_PATCH}._gerar_pdf", side_effect=[None, Exception("falha ao gerar")])
     mock_log = mocker.patch(f"{_PATCH}.log")
 
@@ -69,7 +67,6 @@ def test_main_falha_individual_de_pdf_loga_erro_nao_aviso(tmp_path, mocker):
 def test_main_caminho_sucesso_loga_resumo_agregado_de_pdfs_gerados(tmp_path, mocker):
     aluno = DadosAluno(nome="Aluno Teste", email="a@a.com", estado="SP", empresa="Empresa", cnpj="123")
     mocker.patch(f"{_PATCH}._carregar_relatorios", return_value={"aluno teste": aluno})
-    mocker.patch(f"{_PATCH}._carregar_cpfs", return_value={})
     mocker.patch(f"{_PATCH}._gerar_pdf")
     mock_log = mocker.patch(f"{_PATCH}.log")
 
