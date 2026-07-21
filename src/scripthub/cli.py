@@ -1,11 +1,19 @@
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _pkg_version
 from typing import Annotated
 
 import typer
 
 from ._i18n import instalar as _instalar_i18n
 from .services import log
+from .services.erros import ErroConfiguracao, ErroScriptHub, ErroUsoCLI
 
 _instalar_i18n()
+
+try:
+    _VERSAO = _pkg_version("scriptHub-pe-aponti26dev")
+except PackageNotFoundError:
+    _VERSAO = "(versão desconhecida)"
 
 from .scripts import (
     auditar_frequencias,
@@ -24,16 +32,31 @@ app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 
+_DEBUG = False
+
 
 @app.callback(invoke_without_command=True)
 def _callback(
     ctx: typer.Context,
+    versao: Annotated[
+        bool,
+        typer.Option("--version", "-V", help="Exibir a versão instalada.", is_eager=True),
+    ] = False,
     aliases: Annotated[
         bool,
         typer.Option("--aliases", "-a", help="Exibir aliases de cada comando."),
     ] = False,
+    debug: Annotated[
+        bool,
+        typer.Option("--debug", help="Exibir traceback completo em erros inesperados (código de saída 1)."),
+    ] = False,
 ):
-    if aliases:
+    global _DEBUG
+    _DEBUG = debug
+    if versao:
+        typer.echo(f"scripthub {_VERSAO}")
+        raise typer.Exit()
+    elif aliases:
         _ALIASES = [
             ("scripthub frequencias", "f"),
             ("scripthub relatorios auditar", "r auditar, ra"),
@@ -52,8 +75,23 @@ def _callback(
         raise typer.Exit()
 
 
+def _executar_com_tratamento_global(fn) -> None:
+    try:
+        fn()
+    except ErroScriptHub as exc:
+        log.erro(f"{str(exc).rstrip('.')}. Código de saída: {exc.codigo_saida}")
+        if exc.dica:
+            log.passo(exc.dica)
+        raise SystemExit(exc.codigo_saida) from exc
+    except Exception as exc:
+        log.erro(f"Erro inesperado: {str(exc).rstrip('.')}. Código de saída: 1")
+        if _DEBUG:
+            log.traceback()
+        raise SystemExit(1) from exc
+
+
 def run():
-    app()
+    _executar_com_tratamento_global(app)
 
 
 @app.command("menu", hidden=True)
@@ -66,10 +104,15 @@ def menu_cmd():
 def _carregar_config(fn, nome_script: str):
     try:
         return fn()
-    except (FileNotFoundError, ValueError, KeyError) as e:
-        typer.echo(f"❌ Configuração inválida para {nome_script}: {e}", err=True)
-        typer.echo(f"   Execute: scripthub config -s {nome_script}", err=True)
-        raise typer.Exit(1) from e
+    except ErroConfiguracao as e:
+        if e.dica is None:
+            e.dica = f"Execute: scripthub config -s {nome_script}"
+        raise
+    except KeyError as e:
+        raise ErroConfiguracao(
+            f"Configuração inválida para {nome_script}: {e}",
+            dica=f"Execute: scripthub config -s {nome_script}",
+        ) from e
 
 
 def _help_passo(escopos) -> str:
@@ -109,10 +152,10 @@ def relatorios(
             executar_script(config, auditar_relatorios.ESCOPOS, passo, "AUDITORIA DE RELATÓRIOS")
         case "compilar":
             if passo:
-                raise ValueError('O modo compilar não aceita "passo".')
-            compilacao_de_relatorios.main()
+                raise ErroUsoCLI('O modo compilar não aceita "passo"')
+            _executar_pipeline_simples(compilacao_de_relatorios.main)
         case _:
-            raise ValueError('Modo deve ser "auditar" ou "compilar".')
+            raise ErroUsoCLI('Modo deve ser "auditar" ou "compilar"')
 
 
 @app.command("ra", hidden=True)
@@ -130,7 +173,7 @@ def relatorios_auditar(
 @app.command("rc", hidden=True)
 def relatorios_compilar():
     """Alias para 'scripthub relatorios compilar'."""
-    compilacao_de_relatorios.main()
+    _executar_pipeline_simples(compilacao_de_relatorios.main)
 
 
 # TODO: reimplementar utilizando padrões dos scripts anteriores
@@ -138,7 +181,7 @@ def relatorios_compilar():
 @app.command("s", hidden=True)
 def softskills():
     """Baixa as notas de soft skills do Moodle e envia ao Google Drive."""
-    auditar_softskills.main()
+    _executar_pipeline_simples(auditar_softskills.main)
 
 
 # TODO: reimplementar utilizando padrões dos scripts anteriores
@@ -146,7 +189,7 @@ def softskills():
 @app.command("t", hidden=True)
 def torpedo():
     """Posta tópicos em fóruns do Moodle a partir de arquivos Markdown."""
-    torpedo_de_forum.main()
+    _executar_pipeline_simples(torpedo_de_forum.main)
 
 
 @app.command()
@@ -167,8 +210,7 @@ def config(
 ):
     """Configurar interativamente as opções de um script."""
     if apenas_visualizar and limpar:
-        log.erro("--opcoes e --limpar não podem ser usados juntos.")
-        raise typer.Exit(1)
+        raise ErroUsoCLI("--opcoes e --limpar não podem ser usados juntos")
     if limpar:
         limpar_config(script)
     elif apenas_visualizar:
@@ -181,27 +223,28 @@ def executar_script(config, escopos, passo: str | None, titulo: str):
     log.secao(titulo)
     total = len(escopos)
 
-    try:
-        if passo is None:
-            for i, e in enumerate(escopos, 1):
-                log.secao(f"PASSO {i}/{total} — {e.nome}")
-                e.func(config)
-        else:
-            match = next(
-                ((i + 1, e) for i, e in enumerate(escopos) if passo in (e.slug, *e.aliases)),
-                None,
-            )
-            if match is None:
-                disponiveis = " | ".join(f"{e.slug} ({', '.join(e.aliases)})" if e.aliases else e.slug for e in escopos)
-                log.erro(f"Passo '{passo}' inválido. Disponíveis: {disponiveis}")
-                raise typer.Exit(1)
-            i, e = match
+    match = None
+    if passo is not None:
+        match = next(
+            ((i + 1, e) for i, e in enumerate(escopos) if passo in (e.slug, *e.aliases)),
+            None,
+        )
+        if match is None:
+            disponiveis = " | ".join(f"{e.slug} ({', '.join(e.aliases)})" if e.aliases else e.slug for e in escopos)
+            raise ErroUsoCLI(f"Passo '{passo}' inválido. Disponíveis: {disponiveis}")
+
+    if passo is None:
+        for i, e in enumerate(escopos, 1):
             log.secao(f"PASSO {i}/{total} — {e.nome}")
             e.func(config)
-    except (typer.Exit, SystemExit):
-        raise
-    except Exception as exc:
-        log.erro(f"Erro durante execução: {exc}")
-        raise typer.Exit(1) from exc
+    else:
+        i, e = match
+        log.secao(f"PASSO {i}/{total} — {e.nome}")
+        e.func(config)
 
-    log.ok("PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")
+    log.sucesso("Script finalizado com sucesso. Código de saída: 0")
+
+
+def _executar_pipeline_simples(fn) -> None:
+    fn()
+    log.sucesso("Script finalizado com sucesso. Código de saída: 0")

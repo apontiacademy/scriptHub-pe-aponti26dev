@@ -1,6 +1,6 @@
 {
   "moodle": {
-    "url": "https://moodle.example.com",
+    "urlBase": "https://moodle.example.com",
     "bootcampCatId": "xxxx",
     "aprovadosCatId": "xxxx"
   },

@@ -5,6 +5,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from scripthub.services.erros import ErroConfiguracao
+
 DIRETORIO_BASE = Path(__file__).resolve().parent
 
 
@@ -13,13 +15,11 @@ class MoodleConfig:
     usuario: str
     senha: str
     caminho_download_relatorio: Path
-    headless: bool
     csv_residentes: Path
     csv_saida_analise: Path
     url_login: str
     urls_relatorios: list[str]
     exportar_analise_relatorio: bool
-    caminho_exportacao_analise: Path | None
 
 
 @dataclass
@@ -43,28 +43,38 @@ class Config:
         moodle_json = dados_settings.get("moodle", {})
         gsheets_json = dados_settings.get("gsheets", {})
 
+        exportar_analise = moodle_json.get("exportarAnaliseRelatorio", False)
+        caminho_exportacao = moodle_json.get("caminhoExportacaoAnalise")
+
+        if exportar_analise and not caminho_exportacao:
+            raise ErroConfiguracao(
+                "caminhoExportacaoAnalise deve ser definido em settings.json quando exportarAnaliseRelatorio=true"
+            )
+
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
             caminho_download_relatorio=DIRETORIO_BASE / "dados" / "relatorios",
-            headless=moodle_json.get("headless", True),
             csv_residentes=Path(moodle_json.get("csvResidentes", str(DIRETORIO_BASE / "dados" / "residentes.csv"))),
-            csv_saida_analise=DIRETORIO_BASE / "dados" / "resultado_analise.csv",
+            csv_saida_analise=(
+                Path(caminho_exportacao) if exportar_analise else DIRETORIO_BASE / "dados" / "resultado_analise.csv"
+            ),
             url_login=moodle_json["urlLogin"],
             urls_relatorios=[i.strip() for i in moodle_json["urlsRelatorios"]],
-            exportar_analise_relatorio=moodle_json.get("exportarAnaliseRelatorio", False),
-            caminho_exportacao_analise=(
-                Path(moodle_json["caminhoExportacaoAnalise"])
-                if moodle_json["exportarAnaliseRelatorio"] and moodle_json.get("caminhoExportacaoAnalise")
-                else None
-            ),
+            exportar_analise_relatorio=exportar_analise,
         )
+
+        caminho_json_credenciais = Path(gsheets_json["caminhoJsonCredenciais"])
+        if not caminho_json_credenciais.is_absolute():
+            raise ErroConfiguracao(
+                "gsheets.caminhoJsonCredenciais deve ser um caminho absoluto. Configure com `scripthub config -s ra`."
+            )
 
         gsheets_config = GsheetsConfig(
             id_planilha=gsheets_json["idPlanilha"],
             nome_aba=gsheets_json["nomeAba"],
             caminho_backup_local=Path(gsheets_json["caminhoBackupLocal"]),
-            caminho_json_credenciais=DIRETORIO_BASE / "credentials.json",
+            caminho_json_credenciais=caminho_json_credenciais,
         )
 
         return Config(moodle=moodle_config, gsheets=gsheets_config)
@@ -79,7 +89,7 @@ class Config:
         }
 
         if not dados["moodle_usuario"] or not dados["moodle_senha"]:
-            raise ValueError("MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env")
+            raise ErroConfiguracao("MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env")
         return dados
 
     @staticmethod
@@ -87,7 +97,7 @@ class Config:
         caminho_settings = DIRETORIO_BASE / "settings.json"
 
         if not caminho_settings.exists():
-            raise FileNotFoundError(f"O arquivo {caminho_settings} não foi encontrado.")
+            raise ErroConfiguracao(f"O arquivo {caminho_settings} não foi encontrado.")
 
         with open(caminho_settings, encoding="utf-8") as f:
             dados = json.load(f)
