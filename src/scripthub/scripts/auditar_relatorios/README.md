@@ -1,4 +1,4 @@
-# auditar_relatorios
+# automacao_de_relatorios
 
 Pipeline completo de automação de relatórios do Moodle: baixa as respostas dos alunos, analisa quem enviou ou não, sincroniza com o Google Sheets e gera um backup local.
 
@@ -34,13 +34,17 @@ uv run scripthub relatorios auditar -p s              # só faz backup
 
 ## Como rodar
 
+> Na primeira vez, instale o navegador do Playwright:
+>
+> ```bash
+> playwright install chromium
+> ```
+
 ```bash
 uv run scripthub relatorios auditar
 ```
 
 ## Configuração
-
-> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config -s auditar_relatorios` configura essas mesmas opções interativamente.
 
 ### 1. Variáveis de ambiente
 
@@ -67,40 +71,36 @@ cp settings.example.json settings.json
 |---|---|
 | `moodle.urlLogin` | URL de login do Moodle |
 | `moodle.urlsRelatorios` | Lista de URLs dos formulários de relatório |
+| `moodle.headless` | `true` para rodar o navegador sem interface gráfica (use `false` para debug) |
 | `moodle.exportarAnaliseRelatorio` | `true` para exportar análise em CSV |
-| `moodle.caminhoExportacaoAnalise` | Caminho de saída da análise (obrigatório quando `exportarAnaliseRelatorio=true`) |
-| `moodle.csvResidentes` | Caminho do CSV de residentes usado na análise |
+| `moodle.caminhoExportacaoAnalise` | Caminho de saída da análise |
 | `gsheets.idPlanilha` | ID da planilha do Google Sheets |
 | `gsheets.nomeAba` | Nome da aba a ser atualizada |
 | `gsheets.caminhoBackupLocal` | Pasta onde o backup `.xlsx` será salvo |
-| `gsheets.caminhoJsonCredenciais` | Caminho absoluto para o `credentials.json` da conta de serviço Google |
 
 ### 3. credentials.json
 
-Necessário para integração com Google Sheets e backup no Drive. O caminho é definido pela chave `gsheets.caminhoJsonCredenciais` em `settings.json` (ou via `scripthub config -s auditar_relatorios` / `-s ra`) e deve ser um **caminho absoluto** — caminhos relativos são rejeitados.
+Necessário para integração com Google Sheets e backup no Drive. Coloque o arquivo de credenciais da conta de serviço na raiz do projeto.
 
 > A planilha deve ser compartilhada com o e-mail da conta de serviço.
 
 ## Estrutura de saída
 
 ```
-auditar_relatorios/
+automacao_de_relatorios/
 └── dados/
     ├── relatorios/          # CSVs baixados do Moodle
     ├── residentes.csv       # Lista de alunos
     └── resultado_analise.csv
-
-<caminhoBackupLocal>/
-└── [BACKUP AAAA-MM-DD HH-MM] <nome da aba>.xlsx
 ```
 
 ## Dependências
 
 | Pacote | Uso |
 |---|---|
-| `requests` + `beautifulsoup4` | Login e download dos relatórios via HTTP (sem navegador) |
-| `pentefinocli-pe-aponti26dev` (pacote privado) | Análise pente-fino de quem enviou ou não os relatórios |
-| `gspread` + `pandas` | Escrita no Google Sheets |
+| `playwright` | Automação do navegador para login e download |
+| `beautifulsoup4` | Parsing de HTML |
+| `gspread` | Escrita no Google Sheets |
 | `google-api-python-client` | Export e backup via Google Drive API |
 | `google-auth` | Autenticação com conta de serviço |
 | `python-dotenv` | Leitura do `.env` |

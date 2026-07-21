@@ -5,8 +5,6 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 from scripthub.services import log
-from scripthub.services.erros import ErroConfiguracao, ErroIntegracao, FalhaParcial
-from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
 
@@ -26,7 +24,7 @@ _IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 def carregar_conteudo(filepath: Path) -> tuple[str, str]:
     """Lê o arquivo .md e retorna (titulo, html_conteudo)."""
     if not filepath.exists():
-        raise ErroConfiguracao(f"Arquivo não encontrado: {filepath}")
+        raise FileNotFoundError(f"Arquivo não encontrado: {filepath}")
     text = filepath.read_text(encoding="utf-8").strip()
     lines = text.splitlines()
     title = ""
@@ -37,7 +35,7 @@ def carregar_conteudo(filepath: Path) -> tuple[str, str]:
             body_start = i + 1
             break
     if not title:
-        raise ErroConfiguracao(
+        raise ValueError(
             "O arquivo .md deve ter um título na primeira linha com '#'. Exemplo: # Semana 10 - Relatórios"
         )
     body = "\n".join(lines[body_start:]).strip()
@@ -50,7 +48,7 @@ def encontrar_imagem(pasta: Path, override: str | None = None) -> str | None:
     if override:
         path = Path(override).resolve()
         if not path.exists():
-            raise ErroConfiguracao(f"Arquivo de imagem não encontrado: {override}")
+            raise FileNotFoundError(f"Arquivo de imagem não encontrado: {override}")
         return str(path)
     for ext in _IMAGE_EXTENSIONS:
         matches = sorted(pasta.glob(f"*{ext}"))
@@ -84,11 +82,15 @@ def _md_para_html(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _injetar_cookies(contexto, sessao: MoodleSessao) -> None:
-    """Transfere cookies da sessão HTTP para o contexto do Playwright."""
-    cookies = [{"name": c.name, "value": c.value, "domain": c.domain, "path": c.path or "/"} for c in sessao.cookies]
-    if cookies:
-        contexto.add_cookies(cookies)
+def fazer_login(page, login_url: str, username: str, password: str) -> None:
+    page.goto(login_url, timeout=30_000)
+    page.fill("#username", username)
+    page.fill("#password", password)
+    page.click("[type=submit]")
+    page.wait_for_function(
+        "() => !window.location.href.includes('/login')",
+        timeout=30_000,
+    )
 
 
 def _sessao_expirada(page) -> bool:
@@ -115,7 +117,7 @@ def _clicar_novo_topico(page) -> None:
     if link.count() > 0:
         link.click()
         return
-    raise ErroIntegracao("Botão de novo tópico não encontrado na página do fórum.")
+    raise RuntimeError("Botão de novo tópico não encontrado na página do fórum.")
 
 
 def _definir_conteudo_editor(page, html_content: str) -> None:
@@ -151,7 +153,7 @@ def _definir_conteudo_editor(page, html_content: str) -> None:
     if page.locator("#id_message").count() > 0:
         page.fill("#id_message", html_content)
         return
-    raise ErroIntegracao("Editor de conteúdo do fórum não encontrado.")
+    raise RuntimeError("Editor de conteúdo do fórum não encontrado.")
 
 
 def _verificar_conteudo_editor(page) -> bool:
@@ -295,7 +297,7 @@ def _submeter_formulario(page) -> None:
         if loc.count() > 0:
             loc.first.click()
             return
-    raise ErroIntegracao("Botão de submissão não encontrado.")
+    raise RuntimeError("Botão de submissão não encontrado.")
 
 
 def publicar_no_forum(
@@ -304,15 +306,15 @@ def publicar_no_forum(
     title: str,
     html_content: str,
     image_path: str | None,
-    sessao: MoodleSessao,
+    login_url: str,
+    username: str,
+    password: str,
 ) -> bool:
     try:
         page.goto(forum_url, timeout=30_000)
         if _sessao_expirada(page):
             log.passo("Sessão expirada — refazendo login...")
-            sessao.login()
-            page.context.clear_cookies()
-            _injetar_cookies(page.context, sessao)
+            fazer_login(page, login_url, username, password)
             page.goto(forum_url, timeout=30_000)
         log.passo("Clicando em 'Novo tópico'...")
         _clicar_novo_topico(page)
@@ -353,7 +355,7 @@ def publicar_no_forum(
         return True
     except PlaywrightTimeoutError as exc:
         log.erro(f"[TIMEOUT] {exc}")
-    except ErroIntegracao as exc:
+    except RuntimeError as exc:
         log.erro(f"[ERRO] {exc}")
     except Exception as exc:
         log.erro(f"[ERRO inesperado] {exc}")
@@ -381,10 +383,10 @@ def main() -> None:
     post_file = config.moodle.caminho_post_file
 
     if not post_file.exists():
-        raise ErroConfiguracao(f"Arquivo de post não encontrado em: {post_file}")
+        raise FileNotFoundError(f"Arquivo de post não encontrado em: {post_file}")
 
     if not forum_urls:
-        raise ErroConfiguracao("Nenhuma URL de fórum encontrada no settings.json")
+        raise ValueError("Nenhuma URL de fórum encontrada no settings.json")
 
     log.passo(f"Carregando conteúdo: {post_file.name}")
     title, html_content = carregar_conteudo(post_file)
@@ -399,16 +401,13 @@ def main() -> None:
 
     resultados: dict[str, bool] = {}
 
-    log.passo(f"Fazendo login em {login_url}...")
-    sessao = MoodleSessao(login_url, username, password)
-    sessao.login()
-    log.ok("Login realizado com sucesso.")
-
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=headless)
-        context = browser.new_context()
-        _injetar_cookies(context, sessao)
-        page = context.new_page()
+        page = browser.new_page()
+
+        log.passo(f"Fazendo login em {login_url}...")
+        fazer_login(page, login_url, username, password)
+        log.ok("Login realizado com sucesso.")
 
         for i, url in enumerate(forum_urls, 1):
             log.passo(f"[{i}/{len(forum_urls)}] {url}")
@@ -418,7 +417,9 @@ def main() -> None:
                 title,
                 html_content,
                 image_path,
-                sessao,
+                login_url,
+                username,
+                password,
             )
             resultados[url] = sucesso
             if sucesso:
@@ -436,8 +437,10 @@ def main() -> None:
 
     log.ok(f"Resumo: {ok_count}/{len(resultados)} fóruns publicados com sucesso.")
     if falhou:
-        log.erro(f"{falhou} fórum(s) com falha:")
+        log.aviso(f"{falhou} fórum(s) com falha:")
         for url, sucesso in resultados.items():
             if not sucesso:
                 log.passo(f"  - {url}")
-        raise FalhaParcial(f"{falhou} fórum(s) falharam ao publicar.")
+        raise RuntimeError(f"{falhou} fórum(s) falharam ao publicar.")
+
+    log.ok("AUTOMAÇÃO DE FÓRUNS CONCLUÍDA COM SUCESSO!")

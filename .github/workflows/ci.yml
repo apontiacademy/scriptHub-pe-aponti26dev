@@ -5,6 +5,8 @@ on:
     branches: [main, dev, nightly]
   push:
     branches: [main, dev, nightly]
+  merge_group:
+    branches: [dev]
   workflow_dispatch: {}
 
 concurrency:

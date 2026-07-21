@@ -1,5 +1,4 @@
 import re
-from pathlib import Path
 from typing import Any
 
 from .campo import Campo
@@ -24,8 +23,6 @@ def validar_campo(campo: Campo, valor: Any) -> tuple[bool, str]:
             return False, "Deve ser uma URL válida começando com http:// ou https://"
 
         case "caminho":
-            if campo.caminho_absoluto and not Path(str(valor)).is_absolute():
-                return False, "Deve ser um caminho absoluto"
             return True, ""
 
         case "bool":
