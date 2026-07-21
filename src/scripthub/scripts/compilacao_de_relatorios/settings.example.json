@@ -16,6 +16,7 @@
       ]
     }
   },
+  "headless": true,
   "pdf": {
     "caminhoSaida": "/home/you/relatorios-pdf",
     "csvResidentes": "/home/you/residentes.csv"

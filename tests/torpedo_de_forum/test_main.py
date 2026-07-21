@@ -1,13 +1,10 @@
 import pytest
 
 from scripthub.scripts.torpedo_de_forum.main import (
-    _injetar_cookies,
     _md_para_html,
     carregar_conteudo,
     encontrar_imagem,
 )
-from scripthub.services.erros import ErroConfiguracao
-from scripthub.services.moodle import MoodleSessao
 
 # ── carregar_conteudo ─────────────────────────────────────────────────────────
 
@@ -32,16 +29,16 @@ def test_carregar_conteudo_sem_body_retorna_html_vazio(tmp_path):
     assert html == ""
 
 
-def test_carregar_conteudo_arquivo_inexistente_levanta_erro_configuracao(tmp_path):
-    with pytest.raises(ErroConfiguracao):
+def test_carregar_conteudo_arquivo_inexistente_levanta_file_not_found(tmp_path):
+    with pytest.raises(FileNotFoundError):
         carregar_conteudo(tmp_path / "nao_existe.md")
 
 
-def test_carregar_conteudo_sem_titulo_levanta_erro_configuracao(tmp_path):
+def test_carregar_conteudo_sem_titulo_levanta_value_error(tmp_path):
     md = tmp_path / "post.md"
     md.write_text("Sem título aqui.\n\nApenas parágrafos.", encoding="utf-8")
 
-    with pytest.raises(ErroConfiguracao, match="título"):
+    with pytest.raises(ValueError, match="título"):
         carregar_conteudo(md)
 
 
@@ -94,8 +91,8 @@ def test_encontrar_imagem_override_existente(tmp_path):
     assert caminho == str(img)
 
 
-def test_encontrar_imagem_override_inexistente_levanta_erro_configuracao(tmp_path):
-    with pytest.raises(ErroConfiguracao):
+def test_encontrar_imagem_override_inexistente_levanta_file_not_found(tmp_path):
+    with pytest.raises(FileNotFoundError):
         encontrar_imagem(tmp_path, override=str(tmp_path / "nao_existe.png"))
 
 
@@ -112,35 +109,3 @@ def test_encontrar_imagem_sem_imagens_retorna_none(tmp_path):
     resultado = encontrar_imagem(tmp_path, override=None)
 
     assert resultado is None
-
-
-# ── _injetar_cookies ──────────────────────────────────────────────────────────
-
-
-def test_injetar_cookies_injeta_cookies_no_contexto(mocker):
-    mock_session = mocker.MagicMock()
-    mock_cookie = mocker.MagicMock()
-    mock_cookie.name = "MoodleSession"
-    mock_cookie.value = "abc123"
-    mock_cookie.domain = "moodle.example.com"
-    mock_cookie.path = "/"
-    mock_session.cookies = [mock_cookie]
-    sessao = MoodleSessao("https://moodle.example.com/login/index.php", "u", "p", _session=mock_session)
-    mock_contexto = mocker.MagicMock()
-
-    _injetar_cookies(mock_contexto, sessao)
-
-    mock_contexto.add_cookies.assert_called_once_with(
-        [{"name": "MoodleSession", "value": "abc123", "domain": "moodle.example.com", "path": "/"}]
-    )
-
-
-def test_injetar_cookies_sem_cookies_nao_chama_add_cookies(mocker):
-    mock_session = mocker.MagicMock()
-    mock_session.cookies = []
-    sessao = MoodleSessao("https://moodle.example.com/login/index.php", "u", "p", _session=mock_session)
-    mock_contexto = mocker.MagicMock()
-
-    _injetar_cookies(mock_contexto, sessao)
-
-    mock_contexto.add_cookies.assert_not_called()
