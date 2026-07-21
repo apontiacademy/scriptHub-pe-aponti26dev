@@ -81,8 +81,8 @@ O commit de squash que chega em `dev`, `nightly` ou `main` deve possuir o códig
 Ciclo de vida de uma mudança:
 
 1. Mergeada em `dev` (squash) → entra em `SNAPSHOTS.md` como snapshot
-2. Promovida (merge) de `dev` para `nightly` → sai de `SNAPSHOTS.md`, entra em `[Unreleased]` no `CHANGELOG.md`
-3. `nightly` mergeada em `main` (release) → `[Unreleased]` vira `## [x.y.z] - data`, e `pyproject.toml` em `main`/`nightly`/`docs/geral` reflete essa versão
+2. Promovida de `dev` para `nightly` **e para o próprio `dev`** (mesmo diff, duas PRs) → sai de `SNAPSHOTS.md`, entra no `CHANGELOG.md` de ambos os branches como `### [x.y.z] - data` aninhado em `[Unreleased]`
+3. `nightly` mergeada em `main`, com o mesmo diff ecoado em `nightly` e em `dev` (release) → `### [x.y.z] - data` deixa de estar aninhado em `[Unreleased]` e vira seção de topo `## [x.y.z] - data` nos três branches, e `pyproject.toml` em `main`/`nightly`/`docs/geral` reflete essa versão
 
 Toda vez que a versão em `pyproject.toml` muda (novo snapshot, promoção `dev → nightly` ou release `nightly → main`), rode `uv sync` (ou `uv lock`) e commite o `uv.lock` atualizado junto — ele fixa a própria versão do pacote (`scripthub-pe-aponti26dev`) e fica desatualizado silenciosamente se o lock não for regenerado.
 
@@ -92,6 +92,8 @@ Toda vez que a versão em `pyproject.toml` muda (novo snapshot, promoção `dev 
 
 - **Título**: trocar o prefixo de tipo (`tipo(escopo):`) pela versão — `[vX.Y.Z(.devN)] título (#pr)`, com `x.y.z.devN` em `dev` e `x.y.z` em `nightly`/`main`. O `(#pr)` só vem preenchido sozinho na sugestão inicial da caixa; ao editar o título, é preciso digitar `(#pr)` de volta manualmente.
 - **Descrição**: o texto da entrada correspondente — a entrada nova em `SNAPSHOTS.md` (merge em `dev`) ou em `CHANGELOG.md` (merge em `nightly`/`main`).
+
+Quando uma branch de promoção abre mais de uma PR (uma por branch de destino — ver "Promoção `dev → nightly`" e "Promoção `nightly → main`" em "Commits de changelog/release" abaixo), cada PR é squash-merged independentemente, seguindo esse mesmo padrão de título/descrição, só que para o seu próprio destino.
 
 Sem merge queue serializando os merges, quem mergeia em `dev` precisa se atentar manualmente à ordem: mergear PRs aprovadas fora de ordem pode gerar dois commits com o mesmo `devN` ou pular a sequência.
 
@@ -106,12 +108,13 @@ chore(changelog): promover snapshots para nightly    # dev → nightly
 chore(release): 0.20.0                                 # nightly → main
 ```
 
+O mesmo commit pode virar PR contra mais de um branch de destino ao mesmo tempo — ver os bullets "Promoção `dev → nightly`" e "Promoção `nightly → main`" logo abaixo.
+
 `dev`, `nightly` e `main` são protegidas por ruleset — só aceitam mudança via PR, nunca commit direto. Isso também vale para esses commits, mas o mecanismo muda dependendo do caso:
 
 - **Snapshot de cada PR** (entrada em `SNAPSHOTS.md` + versão `x.y.z.devN` em `pyproject.toml`) — não é um evento separado nem precisa de branch/PR dedicada: é adicionado como último commit da própria branch de feature, depois que a PR contra `dev` é aprovada e imediatamente antes do squash (ver "Squash manual em dev/nightly/main" acima).
-- **Promoção `dev → nightly`** — branch dedicada a partir de `dev`, levando as mudanças de código da versão + o commit `chore(changelog)`, que consolida `[Unreleased]` em `CHANGELOG.md` e troca a versão em `pyproject.toml` do formato de snapshot para a versão plana (`x.y.z.devN` → `x.y.z`). PR contra `nightly`. Essa branch **não** limpa `SNAPSHOTS.md`.
-- **Limpeza de `SNAPSHOTS.md`** — branch separada, também a partir de `dev`, com PR de volta contra o próprio `dev`, removendo as entradas já consolidadas em `[Unreleased]`. `SNAPSHOTS.md` é bookkeeping exclusivo de `dev`: essa limpeza nunca chega em `nightly` nem em `main`.
-- **Promoção `nightly → main`** — branch dedicada a partir de `nightly`, com o commit `chore(release)`, que fecha `[Unreleased]` em `## [x.y.z] - data`. A versão em `pyproject.toml` já está correta desde a promoção anterior, não muda de novo aqui. PR contra `main`.
+- **Promoção `dev → nightly`** — branch dedicada a partir de `dev`, com o commit `chore(changelog)` que: (1) remove de `SNAPSHOTS.md` as entradas da versão sendo promovida; (2) adiciona esse mesmo conteúdo ao `CHANGELOG.md`, como `### [x.y.z] - data` aninhado dentro do `## [Unreleased]` (Keep a Changelog permite agrupar por versão mesmo dentro de "não lançado" — é assim que uma versão em `nightly` aparece documentada antes de virar release oficial em `main`); e (3) troca a versão em `pyproject.toml`/`uv.lock` do formato de snapshot para a versão plana (`x.y.z.devN` → `x.y.z`). Essa branch abre **duas PRs com o mesmo diff**: uma contra `nightly` e uma contra `dev` — as duas ficam sincronizadas quanto ao que já foi promovido (sem a PR contra `dev`, `CHANGELOG.md`/`SNAPSHOTS.md` de `dev` ficam defasados indefinidamente).
+- **Promoção `nightly → main`** — branch dedicada a partir de `nightly`, que promove a entrada `### [x.y.z] - data` de dentro do `## [Unreleased]` para uma seção própria de topo, `## [x.y.z] - data` (os `####` de Added/Changed/Fixed/Removed dentro dela sobem para `###`), mantendo um `## [Unreleased]` vazio acima para a próxima leva. Corrige `pyproject.toml`/`uv.lock` para `x.y.z` quando aplicável (sempre em `main`; conferido/corrigido em `nightly` se necessário; `dev` normalmente não muda aqui, já que costuma estar adiantado no `devN` da próxima versão). Essa branch abre **três PRs com o mesmo diff**: contra `main` (release oficial), contra `nightly` e contra `dev` — os três ficam com o `CHANGELOG.md` sincronizado quanto a essa versão já ter sido oficialmente lançada.
 
 ## Estrutura do projeto
 
