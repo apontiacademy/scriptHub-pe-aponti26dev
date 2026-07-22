@@ -80,7 +80,7 @@ compilacao_de_relatorios/
 | Pacote | Uso |
 | --- | --- |
 | `requests` + `beautifulsoup4` | Login e download dos relatórios via HTTP (sem navegador) |
-| `pandas` | Leitura dos CSVs semanais e do CSV de residentes |
+| `pandas` | Leitura dos CSVs semanais |
 | `fpdf2` | Geração dos PDFs |
 | `questionary` | Confirmação interativa para rebaixar relatórios já existentes |
 | `python-dotenv` | Leitura do `.env` |
