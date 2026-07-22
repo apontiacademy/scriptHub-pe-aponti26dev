@@ -17,7 +17,6 @@
     }
   },
   "pdf": {
-    "caminhoSaida": "/home/you/relatorios-pdf",
-    "csvResidentes": "/home/you/residentes.csv"
+    "caminhoSaida": "/home/you/relatorios-pdf"
   }
 }

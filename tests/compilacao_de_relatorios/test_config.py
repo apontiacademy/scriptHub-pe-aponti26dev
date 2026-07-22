@@ -19,7 +19,6 @@ def settings_valido(tmp_path):
         },
         "pdf": {
             "caminhoSaida": str(tmp_path / "pdfs"),
-            "csvResidentes": str(tmp_path / "residentes.csv"),
         },
     }
 
@@ -37,7 +36,6 @@ def test_load_retorna_config_completa(tmp_path, monkeypatch, settings_valido):
     assert "Janeiro" in config.moodle.meses
     assert len(config.moodle.meses["Janeiro"]) == 2
     assert config.pdf.caminho_saida == tmp_path / "pdfs"
-    assert config.pdf.csv_residentes == tmp_path / "residentes.csv"
 
 
 def test_load_sem_credenciais_levanta_value_error(tmp_path, monkeypatch, settings_valido):

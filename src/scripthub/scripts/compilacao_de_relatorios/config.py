@@ -22,7 +22,6 @@ class MoodleConfig:
 @dataclass
 class PdfConfig:
     caminho_saida: Path
-    csv_residentes: Path
 
 
 @dataclass
@@ -50,7 +49,6 @@ class Config:
 
         pdf_config = PdfConfig(
             caminho_saida=Path(pdf_json["caminhoSaida"]),
-            csv_residentes=Path(pdf_json["csvResidentes"]),
         )
 
         return Config(moodle=moodle_config, pdf=pdf_config)
