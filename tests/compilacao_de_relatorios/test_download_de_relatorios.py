@@ -72,7 +72,6 @@ def _make_config(tmp_path):
         ),
         pdf=PdfConfig(
             caminho_saida=tmp_path / "pdfs",
-            csv_residentes=tmp_path / "residentes.csv",
         ),
     )
 

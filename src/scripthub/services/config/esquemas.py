@@ -272,14 +272,6 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Diretório onde os PDFs compilados serão salvos",
             json_chaves=["pdf", "caminhoSaida"],
         ),
-        Campo(
-            chave="pdf_csv_residentes",
-            rotulo="CSV de residentes",
-            tipo="caminho",
-            origem="settings",
-            descricao="Caminho para o arquivo CSV com a lista de residentes/alunos",
-            json_chaves=["pdf", "csvResidentes"],
-        ),
     ],
     "torpedo_de_forum": [
         Campo(

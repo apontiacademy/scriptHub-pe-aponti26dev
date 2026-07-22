@@ -44,7 +44,6 @@ cp settings.example.json settings.json
 | `moodle.urlLogin` | URL de login do Moodle |
 | `moodle.meses` | Dicionário `{ "Nome do Mês": ["URL do relatório semana 1", "URL semana 2", ...] }` |
 | `pdf.caminhoSaida` | Pasta onde os PDFs serão salvos |
-| `pdf.csvResidentes` | CSV com dados dos residentes |
 
 Exemplo de `meses`:
 
