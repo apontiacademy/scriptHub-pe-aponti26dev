@@ -22,3 +22,7 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 ### 0.21.0.dev2 - 2026-07-23 - (PR#107)
 
 - **Removed**: comandos `scripthub menu`/`m` e o pacote `services/menu` (depreciados) — a descoberta de scripts usada por `scripthub config` foi preservada em `services/config/main.py` (Closes #106)
+
+### 0.21.0.dev3 - 2026-07-23 - (PR#108)
+
+- **Changed**: seção "Comandos úteis" de `CLAUDE.md` — remove a referência obsoleta a `scripthub menu` (removido em #107) e adiciona os comandos de teste/lint do checklist de PR
