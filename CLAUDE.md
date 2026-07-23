@@ -12,8 +12,15 @@ Antes de abrir qualquer PR, releia as seções "Fluxo de contribuição" e "Vers
 
 ```bash
 uv run scripthub --help
-uv run scripthub menu
 uv run scripthub frequencias --help
+
+# Testes, lint e formatação (ver checklist completo em CONTRIBUTING.md)
+uv run pytest                              # suíte completa, cobertura mínima 80%
+uv run pytest --no-cov                     # mais rápido para iteração
+uv run pytest --no-cov tests/services/     # um módulo específico
+uv run pytest --no-cov tests/services/test_log.py::test_ok   # um teste específico
+uv run ruff check .
+uv run ruff format --check .
 
 # Logs de execução
 tail -f logs/scripthub.log
