@@ -25,7 +25,6 @@ from .scripts import (
 from .services.config import config as config_service
 from .services.config import limpar as limpar_config
 from .services.config import visualizar as visualizar_config
-from .services.menu import menu as _menu
 
 app = typer.Typer(
     help="Hub de automações para operações do bootcamp Aponti PE.",
@@ -64,7 +63,6 @@ def _callback(
             ("scripthub softskills", "s"),
             ("scripthub torpedo", "t"),
             ("scripthub config", "c"),
-            ("scripthub menu", "m  [depreciado]"),
         ]
         typer.echo("Aliases disponíveis:\n")
         for cmd, alias in _ALIASES:
@@ -92,13 +90,6 @@ def _executar_com_tratamento_global(fn) -> None:
 
 def run():
     _executar_com_tratamento_global(app)
-
-
-@app.command("menu", hidden=True)
-@app.command("m", hidden=True)
-def menu_cmd():
-    """[DEPRECATED] Menu interativo. Prefira usar os comandos do CLI: scripthub --help"""
-    _menu()
 
 
 def _carregar_config(fn, nome_script: str):

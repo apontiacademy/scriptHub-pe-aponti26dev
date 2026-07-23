@@ -1,13 +1,57 @@
+import ast
+import re
+from pathlib import Path
+
 import questionary
+
+import scripthub
 
 from .. import log
 from ..erros import ErroUsoCLI
-from ..menu.main import SCRIPTS_FOLDER, discover_modules
 from .campo import resolver_dependencias
 from .esquemas import ALIASES_CLI, ESQUEMAS
 from .persistencia import _script_dir, carregar_valores, persistir
 from .ui import STYLE, exibir_campos, obter_input, selecionar_campos, selecionar_script
 from .validacao import validar_campo
+
+SCRIPTS_FOLDER = Path(scripthub.__file__).resolve().parent / "scripts"
+
+
+def _read_cli_cmd(init_py: Path) -> tuple[str, ...] | None:
+    src = init_py.read_text(encoding="utf-8")
+    match = re.search(r"^CLI_CMD\s*=\s*(.+)$", src, re.MULTILINE)
+    if not match:
+        return None
+    try:
+        return tuple(ast.literal_eval(match.group(1).strip()))
+    except (ValueError, SyntaxError):
+        return None
+
+
+def read_docstring(main_py: Path) -> str:
+    src = main_py.read_text(encoding="utf-8")
+    stripped = src.lstrip()
+    for quote in ('"""', "'''"):
+        if stripped.startswith(quote):
+            rest = stripped[len(quote) :]
+            end = rest.find(quote)
+            if end != -1:
+                lines = rest[:end].strip().splitlines()
+                return lines[0] if lines else ""
+    return ""
+
+
+def discover_modules(scripts_folder: Path) -> list[tuple[str, tuple[str, ...], str]]:
+    modules = []
+    for directory in sorted(scripts_folder.iterdir()):
+        if not directory.is_dir() or not (directory / "__init__.py").exists():
+            continue
+        command = _read_cli_cmd(directory / "__init__.py")
+        if command is None:
+            continue
+        description = read_docstring(directory / "main.py") if (directory / "main.py").exists() else ""
+        modules.append((directory.name, command, description))
+    return modules
 
 
 def _tem_pendencias(nome_script: str) -> bool:

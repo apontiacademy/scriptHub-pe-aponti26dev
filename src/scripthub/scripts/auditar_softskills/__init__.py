@@ -1,6 +1,6 @@
 """Módulo de automação de download e análise de soft skills do Bootcamp FAP."""
 
-MENU_CMD = ("softskills",)
+CLI_CMD = ("softskills",)
 
 from .main import main
 

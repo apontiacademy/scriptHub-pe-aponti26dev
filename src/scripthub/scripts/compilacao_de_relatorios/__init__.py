@@ -1,5 +1,5 @@
 # TODO: add docstring to the module
-MENU_CMD = ("relatorios", "compilar")
+CLI_CMD = ("relatorios", "compilar")
 
 from .main import main
 

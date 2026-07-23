@@ -35,9 +35,6 @@ uv run scripthub relatorios auditar
 uv run scripthub relatorios compilar
 uv run scripthub softskills
 uv run scripthub torpedo
-
-# Menu interativo (depreciado — prefira os comandos acima)
-uv run scripthub menu
 ```
 
 Para ver a ajuda e os aliases disponíveis:
@@ -52,7 +49,6 @@ uv run scripthub --version   # ou: scripthub -V
 
 | Comando | Alias | Descrição |
 |---|---|---|
-| `scripthub menu` | `m` | **Depreciado.** Menu interativo — prefira usar os comandos da CLI diretamente |
 | `scripthub frequencias [-p slug]` | `f` | Exporta frequências de presença do Moodle para o Google Sheets |
 | `scripthub relatorios auditar [-p slug]` | `r auditar` | Pipeline completo: download → análise → Google Sheets → backup |
 | `scripthub relatorios compilar` | `r compilar` | Compila relatórios em PDF |
