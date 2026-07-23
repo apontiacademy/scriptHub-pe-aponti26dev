@@ -19,8 +19,12 @@ from .scripts import (
     auditar_frequencias,
     auditar_relatorios,
     compilacao_de_relatorios,
-    softskills,
-    torpedo,
+)
+from .scripts import (
+    softskills as softskills_script,
+)
+from .scripts import (
+    torpedo as torpedo_script,
 )
 from .services.config import config as config_service
 from .services.config import limpar as limpar_config
@@ -172,7 +176,7 @@ def relatorios_compilar():
 @app.command("s", hidden=True)
 def softskills():
     """Baixa as notas de soft skills do Moodle e envia ao Google Drive."""
-    _executar_pipeline_simples(softskills.main)
+    _executar_pipeline_simples(softskills_script.main)
 
 
 # TODO: reimplementar utilizando padrões dos scripts anteriores
@@ -180,7 +184,7 @@ def softskills():
 @app.command("t", hidden=True)
 def torpedo():
     """Posta tópicos em fóruns do Moodle a partir de arquivos Markdown."""
-    _executar_pipeline_simples(torpedo.main)
+    _executar_pipeline_simples(torpedo_script.main)
 
 
 @app.command()
