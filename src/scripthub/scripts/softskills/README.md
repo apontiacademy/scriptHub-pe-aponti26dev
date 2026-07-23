@@ -1,4 +1,4 @@
-# auditar_softskills
+# softskills
 
 Baixa as notas de soft skills do bootcamp no Moodle, cruza com a lista de aprovados e envia a planilha consolidada para o Google Drive.
 
@@ -81,7 +81,7 @@ Credenciais de conta de serviço do Google. O caminho é definido por `drive.cre
 ## Estrutura de saída
 
 ```
-auditar_softskills/
+softskills/
 ├── bootcamps/
 │   ├── turma_01/
 │   │   ├── gestao_de_tempo.csv
