@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 
 from bs4 import BeautifulSoup
 
-from scripthub.scripts.auditar_softskills.config import Config, DriveConfig, MoodleConfig
-from scripthub.scripts.auditar_softskills.download_softskills import (
+from scripthub.scripts.softskills.config import Config, DriveConfig, MoodleConfig
+from scripthub.scripts.softskills.download_softskills import (
     carregar_aprovados_do_backup,
     download_csv,
     extract_participant_name,
@@ -225,7 +225,7 @@ def test_get_quiz_ids_nao_duplica_mesmo_id():
 
 
 def test_get_quiz_ids_debug_false_nao_loga(mocker):
-    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    mock_log = mocker.patch("scripthub.scripts.softskills.download_softskills.log")
     session = _mock_session_get('<html><body><a href="/outro">link</a></body></html>')
 
     get_quiz_ids(session, "/course/view.php?id=10", debug=False)
@@ -234,7 +234,7 @@ def test_get_quiz_ids_debug_false_nao_loga(mocker):
 
 
 def test_get_quiz_ids_debug_true_com_atividades_nao_loga(mocker):
-    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    mock_log = mocker.patch("scripthub.scripts.softskills.download_softskills.log")
     html = '<html><body><a href="/mod/quiz/view.php?id=1">Gestão de Tempo</a></body></html>'
     session = _mock_session_get(html)
 
@@ -244,7 +244,7 @@ def test_get_quiz_ids_debug_true_com_atividades_nao_loga(mocker):
 
 
 def test_get_quiz_ids_debug_true_sem_atividades_loga_links_quiz(mocker):
-    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    mock_log = mocker.patch("scripthub.scripts.softskills.download_softskills.log")
     html = (
         '<html><head><title>Curso X</title></head><body><a href="/mod/quiz/view.php?id=99">Outro Quiz</a></body></html>'
     )
@@ -258,7 +258,7 @@ def test_get_quiz_ids_debug_true_sem_atividades_loga_links_quiz(mocker):
 
 
 def test_get_quiz_ids_debug_true_loga_sub_cursos(mocker):
-    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    mock_log = mocker.patch("scripthub.scripts.softskills.download_softskills.log")
     html = '<html><body><a href="/course/view.php?id=5">Sub-curso</a></body></html>'
     session = _mock_session_get(html)
 
@@ -270,7 +270,7 @@ def test_get_quiz_ids_debug_true_loga_sub_cursos(mocker):
 
 
 def test_get_quiz_ids_debug_true_sem_titulo_nao_lanca_excecao(mocker):
-    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    mock_log = mocker.patch("scripthub.scripts.softskills.download_softskills.log")
     html = '<html><body><a href="/mod/quiz/view.php?id=99">Outro Quiz</a></body></html>'
     session = _mock_session_get(html)
 
@@ -281,7 +281,7 @@ def test_get_quiz_ids_debug_true_sem_titulo_nao_lanca_excecao(mocker):
 
 
 def test_get_quiz_ids_debug_true_fallback_primeiros_hrefs(mocker):
-    mock_log = mocker.patch("scripthub.scripts.auditar_softskills.download_softskills.log")
+    mock_log = mocker.patch("scripthub.scripts.softskills.download_softskills.log")
     html = '<html><body><a href="/outro/link">Nada relevante</a></body></html>'
     session = _mock_session_get(html)
 

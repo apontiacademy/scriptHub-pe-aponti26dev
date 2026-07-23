@@ -31,7 +31,7 @@ uv run scripthub menu
 
 ## Configuração
 
-> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config -s auditar_softskills` configura essas mesmas opções interativamente.
+> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config softskills` configura essas mesmas opções interativamente.
 
 ### 1. Variáveis de ambiente
 

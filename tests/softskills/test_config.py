@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-import scripthub.scripts.auditar_softskills.config as cfg_module
-from scripthub.scripts.auditar_softskills.config import Config
+import scripthub.scripts.softskills.config as cfg_module
+from scripthub.scripts.softskills.config import Config
 from scripthub.services.erros import ErroConfiguracao
 
 

@@ -18,8 +18,8 @@ except PackageNotFoundError:
 from .scripts import (
     auditar_frequencias,
     auditar_relatorios,
-    auditar_softskills,
     compilacao_de_relatorios,
+    softskills,
     torpedo_de_forum,
 )
 from .services.config import config as config_service
@@ -172,7 +172,7 @@ def relatorios_compilar():
 @app.command("s", hidden=True)
 def softskills():
     """Baixa as notas de soft skills do Moodle e envia ao Google Drive."""
-    _executar_pipeline_simples(auditar_softskills.main)
+    _executar_pipeline_simples(softskills.main)
 
 
 # TODO: reimplementar utilizando padrões dos scripts anteriores

@@ -1,7 +1,7 @@
-from scripthub.scripts.auditar_softskills.config import Config, DriveConfig, MoodleConfig
-from scripthub.scripts.auditar_softskills.integracao_drive import upload_to_drive
+from scripthub.scripts.softskills.config import Config, DriveConfig, MoodleConfig
+from scripthub.scripts.softskills.integracao_drive import upload_to_drive
 
-_PATCH = "scripthub.scripts.auditar_softskills.integracao_drive"
+_PATCH = "scripthub.scripts.softskills.integracao_drive"
 
 
 def _make_config(tmp_path):

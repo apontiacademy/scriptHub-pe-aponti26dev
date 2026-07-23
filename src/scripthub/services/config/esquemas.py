@@ -7,8 +7,8 @@ ALIASES_CLI: dict[str, str] = {
     "r": "auditar_relatorios",
     "ra": "auditar_relatorios",
     "rc": "compilacao_de_relatorios",
-    "softskills": "auditar_softskills",
-    "s": "auditar_softskills",
+    "softskills": "softskills",
+    "s": "softskills",
     "torpedo": "torpedo_de_forum",
     "t": "torpedo_de_forum",
 }
@@ -162,7 +162,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             caminho_absoluto=True,
         ),
     ],
-    "auditar_softskills": [
+    "softskills": [
         Campo(
             chave="moodle_usuario",
             rotulo="Usuário do Moodle",

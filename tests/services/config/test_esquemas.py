@@ -7,7 +7,7 @@ def _campo(chave_modulo, chave_campo):
 
 
 def test_esquema_moodle_url_usa_chave_urlbase():
-    campo = _campo("auditar_softskills", "moodle_url")
+    campo = _campo("softskills", "moodle_url")
 
     assert campo.json_chaves == ["moodle", "urlBase"]
 
