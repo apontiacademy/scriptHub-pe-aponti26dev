@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-import scripthub.scripts.auditar_frequencias.config as cfg_module
-from scripthub.scripts.auditar_frequencias.config import Config
+import scripthub.scripts.frequencias.config as cfg_module
+from scripthub.scripts.frequencias.config import Config
 from scripthub.services.erros import ErroConfiguracao
 
 

@@ -1,8 +1,8 @@
 from .campo import Campo
 
 ALIASES_CLI: dict[str, str] = {
-    "frequencias": "auditar_frequencias",
-    "f": "auditar_frequencias",
+    "frequencias": "frequencias",
+    "f": "frequencias",
     "relatorios": "auditar_relatorios",
     "r": "auditar_relatorios",
     "ra": "auditar_relatorios",
@@ -14,7 +14,7 @@ ALIASES_CLI: dict[str, str] = {
 }
 
 ESQUEMAS: dict[str, list[Campo]] = {
-    "auditar_frequencias": [
+    "frequencias": [
         Campo(
             chave="moodle_usuario",
             rotulo="Usuário do Moodle",

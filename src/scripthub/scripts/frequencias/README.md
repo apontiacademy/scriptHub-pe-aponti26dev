@@ -1,4 +1,4 @@
-# auditar_frequencias
+# frequencias
 
 Extrai dados de frequência do Moodle e exporta um arquivo `.xlsx` por turma.
 
@@ -33,7 +33,7 @@ uv run scripthub frequencias
 
 ## Configuração
 
-> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config -s auditar_frequencias` configura essas mesmas opções interativamente.
+> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config frequencias` configura essas mesmas opções interativamente.
 
 ### 1. Variáveis de ambiente
 
@@ -71,7 +71,7 @@ Exemplo de `urlsFrequencias`:
 
 ### 3. credentials.json
 
-Necessário para a integração com Google Sheets. O caminho é definido pela chave `gsheets.caminhoJsonCredenciais` em `settings.json` (ou via `scripthub config -s auditar_frequencias`) e deve ser um **caminho absoluto** — caminhos relativos são rejeitados.
+Necessário para a integração com Google Sheets. O caminho é definido pela chave `gsheets.caminhoJsonCredenciais` em `settings.json` (ou via `scripthub config frequencias`) e deve ser um **caminho absoluto** — caminhos relativos são rejeitados.
 
 > A planilha deve ser compartilhada com o e-mail da conta de serviço.
 

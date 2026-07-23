@@ -13,7 +13,7 @@ def test_esquema_moodle_url_usa_chave_urlbase():
 
 
 def test_esquema_frequencias_caminho_json_credenciais_exige_absoluto():
-    campo = _campo("auditar_frequencias", "gsheets_caminho_json_credenciais")
+    campo = _campo("frequencias", "gsheets_caminho_json_credenciais")
 
     assert campo.caminho_absoluto is True
 

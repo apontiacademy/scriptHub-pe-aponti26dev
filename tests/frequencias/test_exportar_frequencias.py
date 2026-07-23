@@ -2,11 +2,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from scripthub.scripts.auditar_frequencias.config import Config, GsheetsConfig, MoodleConfig
-from scripthub.scripts.auditar_frequencias.exportar_frequencias import exportar_frequencia, main
+from scripthub.scripts.frequencias.config import Config, GsheetsConfig, MoodleConfig
+from scripthub.scripts.frequencias.exportar_frequencias import exportar_frequencia, main
 from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
-_PATCH = "scripthub.scripts.auditar_frequencias.exportar_frequencias"
+_PATCH = "scripthub.scripts.frequencias.exportar_frequencias"
 
 _FORM_EDITMODE_DECOY = """
 <form action="https://moodle.example.com/editmode.php" method="post" class="editmode-switch-form">

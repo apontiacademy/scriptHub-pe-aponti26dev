@@ -16,10 +16,10 @@ except PackageNotFoundError:
     _VERSAO = "(versão desconhecida)"
 
 from .scripts import (
-    auditar_frequencias,
     auditar_relatorios,
     compilacao_de_relatorios,
 )
+from .scripts import frequencias as frequencias_script
 from .scripts import (
     softskills as softskills_script,
 )
@@ -120,12 +120,12 @@ def _help_passo(escopos) -> str:
 def frequencias(
     passo: Annotated[
         str | None,
-        typer.Option("--passo", "-p", help=_help_passo(auditar_frequencias.ESCOPOS)),
+        typer.Option("--passo", "-p", help=_help_passo(frequencias_script.ESCOPOS)),
     ] = None,
 ):
     """Exporta frequências de presença do Moodle para o Google Sheets."""
-    config = _carregar_config(auditar_frequencias.get_config, "auditar_frequencias")
-    executar_script(config, auditar_frequencias.ESCOPOS, passo, "AUDITORIA DE FREQUÊNCIAS")
+    config = _carregar_config(frequencias_script.get_config, "auditar_frequencias")
+    executar_script(config, frequencias_script.ESCOPOS, passo, "AUDITORIA DE FREQUÊNCIAS")
 
 
 @app.command()
