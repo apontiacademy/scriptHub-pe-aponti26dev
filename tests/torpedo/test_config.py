@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-import scripthub.scripts.torpedo_de_forum.config as cfg_module
-from scripthub.scripts.torpedo_de_forum.config import Config
+import scripthub.scripts.torpedo.config as cfg_module
+from scripthub.scripts.torpedo.config import Config
 from scripthub.services.erros import ErroConfiguracao
 
 

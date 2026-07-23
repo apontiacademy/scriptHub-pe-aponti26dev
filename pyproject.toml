@@ -42,7 +42,7 @@ markers = [
 [tool.coverage.run]
 omit = [
     # Automação Playwright — requer browser real
-    "src/scripthub/scripts/torpedo_de_forum/main.py",
+    "src/scripthub/scripts/torpedo/main.py",
     # Padrão B (depreciado) — orquestração não testada diretamente, só helpers
     "src/scripthub/scripts/softskills/main.py",
     # FPDF — requer fontes e renderização

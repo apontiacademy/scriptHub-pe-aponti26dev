@@ -20,7 +20,7 @@ from .scripts import (
     auditar_relatorios,
     compilacao_de_relatorios,
     softskills,
-    torpedo_de_forum,
+    torpedo,
 )
 from .services.config import config as config_service
 from .services.config import limpar as limpar_config
@@ -180,7 +180,7 @@ def softskills():
 @app.command("t", hidden=True)
 def torpedo():
     """Posta tópicos em fóruns do Moodle a partir de arquivos Markdown."""
-    _executar_pipeline_simples(torpedo_de_forum.main)
+    _executar_pipeline_simples(torpedo.main)
 
 
 @app.command()

@@ -1,4 +1,4 @@
-# torpedo_de_forum
+# torpedo
 
 Posta tópicos em fóruns do Moodle a partir de um arquivo Markdown. Suporta múltiplos fóruns e upload de imagem opcional.
 
@@ -18,7 +18,7 @@ O arquivo de conteúdo e a imagem (opcional) são lidos do `settings.json` (`moo
 
 ## Configuração
 
-> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config -s torpedo_de_forum` configura essas mesmas opções interativamente.
+> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config torpedo` configura essas mesmas opções interativamente.
 
 ### 1. Variáveis de ambiente
 

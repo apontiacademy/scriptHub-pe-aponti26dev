@@ -9,8 +9,8 @@ ALIASES_CLI: dict[str, str] = {
     "rc": "compilacao_de_relatorios",
     "softskills": "softskills",
     "s": "softskills",
-    "torpedo": "torpedo_de_forum",
-    "t": "torpedo_de_forum",
+    "torpedo": "torpedo",
+    "t": "torpedo",
 }
 
 ESQUEMAS: dict[str, list[Campo]] = {
@@ -273,7 +273,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             json_chaves=["pdf", "caminhoSaida"],
         ),
     ],
-    "torpedo_de_forum": [
+    "torpedo": [
         Campo(
             chave="moodle_usuario",
             rotulo="Usuário do Moodle",

@@ -1,6 +1,6 @@
 import pytest
 
-from scripthub.scripts.torpedo_de_forum.main import (
+from scripthub.scripts.torpedo.main import (
     _injetar_cookies,
     _md_para_html,
     carregar_conteudo,
