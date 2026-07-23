@@ -50,7 +50,6 @@ omit = [
     # Questionary UI interativa
     "src/scripthub/services/config/ui.py",
     "src/scripthub/services/config/main.py",
-    "src/scripthub/services/menu/main.py",
     # CLI e i18n — patching de Typer/Click
     "src/scripthub/cli.py",
     "src/scripthub/_i18n.py",
@@ -100,4 +99,3 @@ line-ending = "auto"
 
 [tool.uv.sources]
 pentefinocli-pe-aponti26dev = { git = "https://github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git", rev = "main" }
-
