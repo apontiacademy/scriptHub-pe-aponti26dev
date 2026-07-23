@@ -18,3 +18,7 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 ### 0.21.0.dev1 - 2026-07-22 - (PR#105)
 
 - **Removed**: campo CPF do PDF de relatório de residência (`compilacao_de_relatorios`) — dado não disponível na origem (Moodle/CSV); configuração órfã `pdf.csvResidentes`/`PdfConfig.csv_residentes`, que ficou sem nenhum leitor após a remoção do único consumidor (`_carregar_cpfs()`) (Closes #100)
+
+### 0.21.0.dev2 - 2026-07-23 - (PR#107)
+
+- **Removed**: comandos `scripthub menu`/`m` e o pacote `services/menu` (depreciados) — a descoberta de scripts usada por `scripthub config` foi preservada em `services/config/main.py` (Closes #106)
