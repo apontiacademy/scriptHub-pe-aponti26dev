@@ -1,6 +1,6 @@
 """Módulo de automação de extração e processamento."""
 
-MENU_CMD = ("relatorios", "auditar")
+CLI_CMD = ("relatorios", "auditar")
 
 from .main import ESCOPOS, get_config
 

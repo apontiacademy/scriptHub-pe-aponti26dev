@@ -130,21 +130,20 @@ src/scripthub/
 │   └── torpedo_de_forum/
 └── services/
     ├── config/             # Configuração interativa (scripthub config)
-    ├── log.py              # Helpers de output unificados
-    └── menu/               # Menu interativo (scripthub menu)
+    └── log.py              # Helpers de output unificados
 ```
 
 Cada pacote de script segue um dos dois padrões:
 
 **Padrão A — pipeline por escopos** (`auditar_frequencias`, `auditar_relatorios`):
-- `__init__.py` — declara `MENU_CMD`, exporta `ESCOPOS` e `get_config`
+- `__init__.py` — declara `CLI_CMD`, exporta `ESCOPOS` e `get_config`
 - `ESCOPOS`: lista de `Escopo(slug, nome, func, aliases)` — ver `services/escopo.py`
 - `get_config()`: retorna a dataclass de configuração (carrega `.env` + `settings.json`)
 - O CLI usa `executar_script()` para iterar os escopos com log por passo e captura de exceção
 - O `--passo <slug>` (ou alias de uma letra) executa apenas o passo correspondente
 
 **Padrão B — função main** (`auditar_softskills`, `compilacao_de_relatorios`, `torpedo_de_forum`) — **DEPRECIADO**:
-- `__init__.py` — declara `MENU_CMD`, exporta apenas `main`
+- `__init__.py` — declara `CLI_CMD`, exporta apenas `main`
 - `main()` carrega configuração internamente e executa o pipeline diretamente
 - Não crie novos scripts com este padrão. Os existentes devem ser migrados para o Padrão A o quanto antes.
 
@@ -152,10 +151,10 @@ Cada pacote de script segue um dos dois padrões:
 
 1. Criar pasta em `src/scripthub/scripts/<nome>/`
 2. Arquivos obrigatórios: `__init__.py`, `main.py`, `config.py`
-3. No `__init__.py`, declarar `MENU_CMD` e exportar `ESCOPOS` + `get_config` (Padrão A):
+3. No `__init__.py`, declarar `CLI_CMD` e exportar `ESCOPOS` + `get_config` (Padrão A):
 
 ```python
-MENU_CMD = ("meu_script",)
+CLI_CMD = ("meu_script",)
 from .main import ESCOPOS
 from .config import get_config
 ```
@@ -179,7 +178,7 @@ Slugs devem ser verbos no infinitivo. Aliases são letras únicas para uso rápi
 5. Adicionar campos configuráveis em `services/config/esquemas.py` (ver "Sistema de configuração" abaixo)
 6. Seguir o padrão de output (log helpers) e o contrato de erros abaixo — consultar [ERRORS.md](ERRORS.md) ao decidir que exceção levantar
 7. Registrar o comando em `src/scripthub/cli.py`
-8. Escrever os testes antes ou junto da implementação (ver "TDD e testes" abaixo) — o menu detecta automaticamente novos scripts que tenham `MENU_CMD` no `__init__.py`, não precisa de registro manual ali
+8. Escrever os testes antes ou junto da implementação (ver "TDD e testes" abaixo) — o comando `config` detecta automaticamente novos scripts que tenham `CLI_CMD` no `__init__.py`, não precisa de registro manual ali
 
 ## Padrão de output dos scripts
 

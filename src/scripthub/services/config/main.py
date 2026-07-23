@@ -4,6 +4,8 @@ from pathlib import Path
 
 import questionary
 
+import scripthub
+
 from .. import log
 from ..erros import ErroUsoCLI
 from .campo import resolver_dependencias
@@ -12,12 +14,12 @@ from .persistencia import _script_dir, carregar_valores, persistir
 from .ui import STYLE, exibir_campos, obter_input, selecionar_campos, selecionar_script
 from .validacao import validar_campo
 
-SCRIPTS_FOLDER = Path(__file__).resolve().parents[2] / "scripts"
+SCRIPTS_FOLDER = Path(scripthub.__file__).resolve().parent / "scripts"
 
 
-def _read_menu_cmd(init_py: Path) -> tuple[str, ...] | None:
+def _read_cli_cmd(init_py: Path) -> tuple[str, ...] | None:
     src = init_py.read_text(encoding="utf-8")
-    match = re.search(r"^MENU_CMD\s*=\s*(.+)$", src, re.MULTILINE)
+    match = re.search(r"^CLI_CMD\s*=\s*(.+)$", src, re.MULTILINE)
     if not match:
         return None
     try:
@@ -44,7 +46,7 @@ def discover_modules(scripts_folder: Path) -> list[tuple[str, tuple[str, ...], s
     for directory in sorted(scripts_folder.iterdir()):
         if not directory.is_dir() or not (directory / "__init__.py").exists():
             continue
-        command = _read_menu_cmd(directory / "__init__.py")
+        command = _read_cli_cmd(directory / "__init__.py")
         if command is None:
             continue
         description = read_docstring(directory / "main.py") if (directory / "main.py").exists() else ""

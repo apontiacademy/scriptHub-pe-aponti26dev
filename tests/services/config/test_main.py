@@ -30,7 +30,7 @@ def test_read_docstring_sem_docstring_retorna_vazio(tmp_path):
 def test_discover_modules_encontra_modulo_valido(tmp_path):
     modulo = tmp_path / "meu_modulo"
     modulo.mkdir()
-    (modulo / "__init__.py").write_text('MENU_CMD = ("meu_modulo",)\n', encoding="utf-8")
+    (modulo / "__init__.py").write_text('CLI_CMD = ("meu_modulo",)\n', encoding="utf-8")
     (modulo / "main.py").write_text('"""Faz algo útil."""\n', encoding="utf-8")
 
     assert discover_modules(tmp_path) == [("meu_modulo", ("meu_modulo",), "Faz algo útil.")]
@@ -44,8 +44,8 @@ def test_discover_modules_ignora_dir_sem_init(tmp_path):
     assert discover_modules(tmp_path) == []
 
 
-def test_discover_modules_ignora_dir_sem_menu_cmd(tmp_path):
-    modulo = tmp_path / "sem_menu_cmd"
+def test_discover_modules_ignora_dir_sem_cli_cmd(tmp_path):
+    modulo = tmp_path / "sem_cli_cmd"
     modulo.mkdir()
     (modulo / "__init__.py").write_text("from .main import main\n", encoding="utf-8")
 
@@ -56,7 +56,7 @@ def test_discover_modules_ordem_alfabetica(tmp_path):
     for nome in ["zzz", "aaa", "mmm"]:
         modulo = tmp_path / nome
         modulo.mkdir()
-        (modulo / "__init__.py").write_text(f'MENU_CMD = ("{nome}",)\n', encoding="utf-8")
+        (modulo / "__init__.py").write_text(f'CLI_CMD = ("{nome}",)\n', encoding="utf-8")
 
     assert [modulo[0] for modulo in discover_modules(tmp_path)] == ["aaa", "mmm", "zzz"]
 
