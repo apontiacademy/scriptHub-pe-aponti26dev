@@ -1,12 +1,14 @@
 from types import SimpleNamespace
 
 import pytest
+from typer.testing import CliRunner
 
 import scripthub.cli as cli_module
 from scripthub.cli import (
     _carregar_config,
     _executar_com_tratamento_global,
     _executar_pipeline_simples,
+    app,
     config,
     executar_script,
     relatorios,
@@ -17,6 +19,23 @@ from scripthub.services.escopo import Escopo
 
 def _escopo(slug="baixar", nome="Baixar", func=None, aliases=()):
     return Escopo(slug, nome, func or (lambda config: None), aliases)
+
+
+runner = CliRunner()
+
+
+def test_aliases_nao_lista_menu_interativo():
+    result = runner.invoke(app, ["--aliases"])
+
+    assert result.exit_code == 0
+    assert "scripthub menu" not in result.output
+    assert "[depreciado]" not in result.output
+
+
+def test_menu_interativo_nao_e_um_comando_registrado():
+    nomes = {comando.name for comando in app.registered_commands}
+
+    assert nomes.isdisjoint({"menu", "m"})
 
 
 # --- executar_script / _executar_pipeline_simples: só executam e propagam, sem logar/converter ---
