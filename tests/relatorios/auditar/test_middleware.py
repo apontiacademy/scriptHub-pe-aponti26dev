@@ -2,11 +2,11 @@ import dataclasses
 
 import pytest
 
-from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
-from scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios import main
+from scripthub.scripts.relatorios.auditar.config import Config, GsheetsConfig, MoodleConfig
+from scripthub.scripts.relatorios.auditar.middleware_analise_de_relatorios import main
 from scripthub.services.erros import ErroIntegracao
 
-_PATCH_CORE = "scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios.executar_analise_core"
+_PATCH_CORE = "scripthub.scripts.relatorios.auditar.middleware_analise_de_relatorios.executar_analise_core"
 
 
 @pytest.fixture

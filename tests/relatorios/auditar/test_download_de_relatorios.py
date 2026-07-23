@@ -2,11 +2,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
-from scripthub.scripts.auditar_relatorios.download_de_relatorios import baixar_relatorio, main
+from scripthub.scripts.relatorios.auditar.config import Config, GsheetsConfig, MoodleConfig
+from scripthub.scripts.relatorios.auditar.download_de_relatorios import baixar_relatorio, main
 from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
-_PATCH = "scripthub.scripts.auditar_relatorios.download_de_relatorios"
+_PATCH = "scripthub.scripts.relatorios.auditar.download_de_relatorios"
 
 _HTML_FORM_DOWNLOAD = """
 <html><body>

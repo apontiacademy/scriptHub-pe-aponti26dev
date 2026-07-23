@@ -1,5 +1,5 @@
-import scripthub.scripts.compilacao_de_relatorios.compilar_pdfs as compilar_pdfs
-import scripthub.scripts.compilacao_de_relatorios.download_de_relatorios as download_de_relatorios
+import scripthub.scripts.relatorios.compilar.compilar_pdfs as compilar_pdfs
+import scripthub.scripts.relatorios.compilar.download_de_relatorios as download_de_relatorios
 from scripthub.services import log
 
 from .config import Config

@@ -1,10 +1,10 @@
 import pytest
 
-from scripthub.scripts.auditar_relatorios.backup import main, realizar_backup_xlsx_local
-from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
+from scripthub.scripts.relatorios.auditar.backup import main, realizar_backup_xlsx_local
+from scripthub.scripts.relatorios.auditar.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
-_PATCH = "scripthub.scripts.auditar_relatorios.backup"
+_PATCH = "scripthub.scripts.relatorios.auditar.backup"
 
 
 def _make_config(tmp_path, id_planilha="planilha-id-123"):

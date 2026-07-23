@@ -1,11 +1,11 @@
 import gspread
 import pytest
 
-from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
-from scripthub.scripts.auditar_relatorios.integracao_google_sheets import main
+from scripthub.scripts.relatorios.auditar.config import Config, GsheetsConfig, MoodleConfig
+from scripthub.scripts.relatorios.auditar.integracao_google_sheets import main
 from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
-_PATCH = "scripthub.scripts.auditar_relatorios.integracao_google_sheets"
+_PATCH = "scripthub.scripts.relatorios.auditar.integracao_google_sheets"
 
 
 @pytest.fixture

@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from scripthub.services.erros import ErroConfiguracao
 
 DIRETORIO_BASE = Path(__file__).resolve().parent
+DIRETORIO_DOMINIO = DIRETORIO_BASE.parent
 
 
 @dataclass
@@ -55,7 +56,7 @@ class Config:
 
     @staticmethod
     def __carregar_env() -> dict:
-        load_dotenv(dotenv_path=DIRETORIO_BASE / ".env")
+        load_dotenv(dotenv_path=DIRETORIO_DOMINIO / ".env")
 
         dados = {
             "moodle_usuario": os.getenv("MOODLE_USUARIO"),
@@ -68,7 +69,7 @@ class Config:
 
     @staticmethod
     def __carregar_settings_json() -> dict:
-        caminho_settings = DIRETORIO_BASE / "settings.json"
+        caminho_settings = DIRETORIO_DOMINIO / "settings.json"
 
         if not caminho_settings.exists():
             raise ErroConfiguracao(f"O arquivo {caminho_settings} não foi encontrado.")

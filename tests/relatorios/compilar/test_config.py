@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-import scripthub.scripts.compilacao_de_relatorios.config as cfg_module
-from scripthub.scripts.compilacao_de_relatorios.config import Config
+import scripthub.scripts.relatorios.compilar.config as cfg_module
+from scripthub.scripts.relatorios.compilar.config import Config
 from scripthub.services.erros import ErroConfiguracao
 
 
@@ -27,6 +27,7 @@ def test_load_retorna_config_completa(tmp_path, monkeypatch, settings_valido):
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+    monkeypatch.setattr(cfg_module, "DIRETORIO_DOMINIO", tmp_path)
 
     config = Config.load()
 
@@ -42,6 +43,7 @@ def test_load_sem_credenciais_levanta_value_error(tmp_path, monkeypatch, setting
     (tmp_path / ".env").write_text("")
     (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+    monkeypatch.setattr(cfg_module, "DIRETORIO_DOMINIO", tmp_path)
     monkeypatch.delenv("MOODLE_USUARIO", raising=False)
     monkeypatch.delenv("MOODLE_SENHA", raising=False)
 
@@ -52,6 +54,7 @@ def test_load_sem_credenciais_levanta_value_error(tmp_path, monkeypatch, setting
 def test_load_sem_settings_levanta_file_not_found(tmp_path, monkeypatch):
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+    monkeypatch.setattr(cfg_module, "DIRETORIO_DOMINIO", tmp_path)
 
     with pytest.raises(ErroConfiguracao):
         Config.load()
@@ -62,6 +65,7 @@ def test_meses_normaliza_urls_com_strip(tmp_path, monkeypatch, settings_valido):
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+    monkeypatch.setattr(cfg_module, "DIRETORIO_DOMINIO", tmp_path)
 
     config = Config.load()
 

@@ -46,7 +46,7 @@ omit = [
     # Padrão B (depreciado) — orquestração não testada diretamente, só helpers
     "src/scripthub/scripts/softskills/main.py",
     # FPDF — requer fontes e renderização
-    "src/scripthub/scripts/compilacao_de_relatorios/compilar_pdfs.py",
+    "src/scripthub/scripts/relatorios/compilar/compilar_pdfs.py",
     # Questionary UI interativa
     "src/scripthub/services/config/ui.py",
     "src/scripthub/services/config/main.py",

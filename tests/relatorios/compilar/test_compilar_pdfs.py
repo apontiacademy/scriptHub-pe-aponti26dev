@@ -1,6 +1,6 @@
 import pytest
 
-from scripthub.scripts.compilacao_de_relatorios.compilar_pdfs import (
+from scripthub.scripts.relatorios.compilar.compilar_pdfs import (
     DadosAluno,
     _carregar_relatorios,
     _para_latin1,
@@ -9,10 +9,10 @@ from scripthub.scripts.compilacao_de_relatorios.compilar_pdfs import (
     parsear_grupos,
     sanitizar_caminho,
 )
-from scripthub.scripts.compilacao_de_relatorios.config import Config, MoodleConfig, PdfConfig
+from scripthub.scripts.relatorios.compilar.config import Config, MoodleConfig, PdfConfig
 from scripthub.services.erros import FalhaParcial
 
-_PATCH = "scripthub.scripts.compilacao_de_relatorios.compilar_pdfs"
+_PATCH = "scripthub.scripts.relatorios.compilar.compilar_pdfs"
 
 
 def _make_config(tmp_path):

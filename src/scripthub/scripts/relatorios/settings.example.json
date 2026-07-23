@@ -1,6 +1,12 @@
 {
   "moodle": {
     "urlLogin": "https://moodle.yourinstitution.edu/login/index.php",
+    "urlsRelatorios": [
+      "https://moodle.yourinstitution.edu/mod/feedback/show_entries.php?id=1111",
+      "https://moodle.yourinstitution.edu/mod/feedback/show_entries.php?id=2222"
+    ],
+    "exportarAnaliseRelatorio": true,
+    "caminhoExportacaoAnalise": "/home/you/Downloads",
     "meses": {
       "Abril 2026": [
         "https://moodle.aponti.org.br/mod/feedback/show_entries.php?id=10000",
@@ -15,6 +21,12 @@
         "https://moodle.aponti.org.br/mod/feedback/show_entries.php?id=10366"
       ]
     }
+  },
+  "gsheets": {
+    "idPlanilha": "abcdefghijklmnopqrstuvwxyz1234567890",
+    "nomeAba": "Spreadsheet1",
+    "caminhoBackupLocal": "/home/you/Downloads",
+    "caminhoJsonCredenciais": "/home/you/credentials.json"
   },
   "pdf": {
     "caminhoSaida": "/home/you/relatorios-pdf"

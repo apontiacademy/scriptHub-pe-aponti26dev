@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from scripthub.scripts.compilacao_de_relatorios.config import Config, MoodleConfig, PdfConfig
-from scripthub.scripts.compilacao_de_relatorios.download_de_relatorios import (
+from scripthub.scripts.relatorios.compilar.config import Config, MoodleConfig, PdfConfig
+from scripthub.scripts.relatorios.compilar.download_de_relatorios import (
     _caminho_relatorio,
     _todos_relatorios_existem,
     baixar_relatorio,
@@ -11,7 +11,7 @@ from scripthub.scripts.compilacao_de_relatorios.download_de_relatorios import (
 )
 from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
 
-_PATCH = "scripthub.scripts.compilacao_de_relatorios.download_de_relatorios"
+_PATCH = "scripthub.scripts.relatorios.compilar.download_de_relatorios"
 
 _HTML_FORM = """
 <html><body>

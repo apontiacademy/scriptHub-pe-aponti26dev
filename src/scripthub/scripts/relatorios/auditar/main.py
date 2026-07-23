@@ -1,7 +1,7 @@
-import scripthub.scripts.auditar_relatorios.backup as backup
-import scripthub.scripts.auditar_relatorios.download_de_relatorios as download_de_relatorios
-import scripthub.scripts.auditar_relatorios.integracao_google_sheets as integracao_google_sheets
-import scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios as middleware_analise_de_relatorios
+import scripthub.scripts.relatorios.auditar.backup as backup
+import scripthub.scripts.relatorios.auditar.download_de_relatorios as download_de_relatorios
+import scripthub.scripts.relatorios.auditar.integracao_google_sheets as integracao_google_sheets
+import scripthub.scripts.relatorios.auditar.middleware_analise_de_relatorios as middleware_analise_de_relatorios
 from scripthub.services.escopo import Escopo
 
 from .config import Config
