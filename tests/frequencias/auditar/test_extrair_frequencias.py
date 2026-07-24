@@ -1,5 +1,3 @@
-from unittest.mock import MagicMock
-
 import pytest
 
 from scripthub.scripts.frequencias.auditar.config import Config, GsheetsConfig, MoodleConfig
