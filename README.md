@@ -60,6 +60,8 @@ uv run scripthub --version   # ou: scripthub -V
 
 A opção `--passo <slug>` (ou `-p`) executa apenas um passo do pipeline. Disponível nos comandos `frequencias auditar` e `relatorios auditar`. Os passos mais usados isoladamente (extração) também têm um subcomando próprio (`extrair`), que não exige saber o slug:
 
+Em `frequencias`, o subcomando `extrair` corresponde ao passo interno `exportar` (nome escolhido por consistência com `relatorios extrair`, que já bate com seu próprio slug).
+
 | Comando | Passos disponíveis |
 |---|---|
 | `scripthub frequencias auditar` | `exportar` (`e`), `integrar` (`i`) |

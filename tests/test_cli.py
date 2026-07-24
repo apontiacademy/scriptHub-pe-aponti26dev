@@ -462,3 +462,52 @@ def test_f_e_encadeia_alias_de_dominio_e_de_script(mocker):
 
     assert result.exit_code == 0
     mock_executar.assert_called_once_with(None, mocker.ANY, "exportar", "AUDITORIA DE FREQUÊNCIAS")
+
+
+# --- validação de integração: slugs reais resolvem sem mocks de executar_script ---
+
+
+def test_relatorios_extrair_resolve_passo_real_nos_escopos(mocker):
+    from dataclasses import replace
+    from scripthub.scripts.relatorios.auditar.main import ESCOPOS as ESCOPOS_AUDITAR
+
+    # Mock a config
+    mock_config = mocker.MagicMock()
+    mocker.patch("scripthub.cli._carregar_config", return_value=mock_config)
+
+    # Substituir o Escopo "extrair" na lista (índice 0) por um com função mockada
+    mock_func = mocker.MagicMock()
+    original_escopo = ESCOPOS_AUDITAR[0]
+    ESCOPOS_AUDITAR[0] = replace(original_escopo, func=mock_func)
+
+    try:
+        result = runner.invoke(app, ["relatorios", "extrair"])
+
+        assert result.exit_code == 0
+        mock_func.assert_called_once_with(mock_config)
+    finally:
+        # Restaurar o Escopo original
+        ESCOPOS_AUDITAR[0] = original_escopo
+
+
+def test_frequencias_extrair_resolve_passo_real_nos_escopos(mocker):
+    from dataclasses import replace
+    from scripthub.scripts.frequencias.main import ESCOPOS as ESCOPOS_FREQ
+
+    # Mock a config
+    mock_config = mocker.MagicMock()
+    mocker.patch("scripthub.cli._carregar_config", return_value=mock_config)
+
+    # Substituir o Escopo "exportar" na lista (índice 0) por um com função mockada
+    mock_func = mocker.MagicMock()
+    original_escopo = ESCOPOS_FREQ[0]
+    ESCOPOS_FREQ[0] = replace(original_escopo, func=mock_func)
+
+    try:
+        result = runner.invoke(app, ["frequencias", "extrair"])
+
+        assert result.exit_code == 0
+        mock_func.assert_called_once_with(mock_config)
+    finally:
+        # Restaurar o Escopo original
+        ESCOPOS_FREQ[0] = original_escopo
