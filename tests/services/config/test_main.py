@@ -1,6 +1,14 @@
 import pytest
 
-from scripthub.services.config.main import config, discover_modules, limpar, read_docstring, visualizar
+from scripthub.services.config.campo import Campo
+from scripthub.services.config.main import (
+    _priorizar_por_script,
+    config,
+    discover_modules,
+    limpar,
+    read_docstring,
+    visualizar,
+)
 from scripthub.services.erros import ErroUsoCLI
 
 _PATCH = "scripthub.services.config.main"
@@ -121,3 +129,39 @@ def test_limpar_sem_scripts_com_esquema_loga_aviso_nao_erro(mocker):
 
     mock_log.aviso.assert_any_call("Nenhum script com configuração disponível foi encontrado.")
     mock_log.erro.assert_not_called()
+
+
+def test_priorizar_por_script_none_mantem_ordem_original():
+    campos = [
+        Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("compilar",)),
+        Campo(chave="b", rotulo="B", tipo="texto", origem="env"),
+    ]
+
+    assert _priorizar_por_script(campos, None) == campos
+
+
+def test_priorizar_por_script_coloca_campos_do_script_primeiro():
+    comum = Campo(chave="comum", rotulo="Comum", tipo="texto", origem="env")
+    so_compilar = Campo(chave="c", rotulo="C", tipo="texto", origem="env", scripts=("compilar",))
+    so_auditar = Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("auditar",))
+
+    resultado = _priorizar_por_script([so_compilar, comum, so_auditar], "auditar")
+
+    assert [c.chave for c in resultado] == ["a", "comum", "c"]
+
+
+def test_config_com_script_prioriza_campos_na_selecao(mocker):
+    campos = [
+        Campo(chave="c", rotulo="C", tipo="texto", origem="env", scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("auditar",)),
+    ]
+    mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
+    mocker.patch(f"{_PATCH}.carregar_valores", return_value={})
+    mocker.patch(f"{_PATCH}.persistir")
+    selecionar_campos_mock = mocker.patch(f"{_PATCH}.selecionar_campos", return_value=[])
+    mocker.patch(f"{_PATCH}.log")
+
+    config("relatorios", script="auditar")
+
+    campos_passados = selecionar_campos_mock.call_args[0][0]
+    assert [c.chave for c in campos_passados] == ["a", "c"]

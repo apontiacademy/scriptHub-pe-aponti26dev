@@ -8,7 +8,7 @@ import scripthub
 
 from .. import log
 from ..erros import ErroUsoCLI
-from .campo import resolver_dependencias
+from .campo import Campo, resolver_dependencias
 from .esquemas import ALIASES_CLI, ESQUEMAS
 from .persistencia import _script_dir, carregar_valores, persistir
 from .ui import STYLE, exibir_campos, obter_input, selecionar_campos, selecionar_script
@@ -61,12 +61,26 @@ def _tem_pendencias(nome_script: str) -> bool:
     return not all(validar_campo(c, valores.get(c.chave))[0] for c in campos)
 
 
-def config(nome_script: str | None = None) -> None:
+def _priorizar_por_script(campos: list[Campo], script: str | None) -> list[Campo]:
+    if script is None:
+        return campos
+
+    def prioridade(campo: Campo) -> int:
+        if script in campo.scripts:
+            return 0
+        if not campo.scripts:
+            return 1
+        return 2
+
+    return sorted(campos, key=prioridade)
+
+
+def config(nome_script: str | None = None, script: str | None = None) -> None:
     if nome_script is not None:
         nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
-            raise ErroUsoCLI(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
+            raise ErroUsoCLI(f"Domínio '{nome_script}' não encontrado. Domínios disponíveis: {nomes}")
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
@@ -85,7 +99,8 @@ def config(nome_script: str | None = None) -> None:
     valores = carregar_valores(nome_script, campos)
 
     print()
-    selecionados = selecionar_campos(resolver_dependencias(campos, valores), valores)
+    campos_resolvidos = _priorizar_por_script(resolver_dependencias(campos, valores), script)
+    selecionados = selecionar_campos(campos_resolvidos, valores)
 
     if not selecionados:
         log.aviso("Nenhum campo selecionado. Nada foi alterado.")
@@ -105,12 +120,12 @@ def config(nome_script: str | None = None) -> None:
     log.ok(f"Configuração de {nome_script} salva com sucesso!")
 
 
-def visualizar(nome_script: str | None = None) -> None:
+def visualizar(nome_script: str | None = None, script: str | None = None) -> None:
     if nome_script is not None:
         nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
-            raise ErroUsoCLI(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
+            raise ErroUsoCLI(f"Domínio '{nome_script}' não encontrado. Domínios disponíveis: {nomes}")
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
@@ -129,7 +144,7 @@ def visualizar(nome_script: str | None = None) -> None:
     valores = carregar_valores(nome_script, campos)
 
     log.passo(f"Configuração atual de {nome_script}:")
-    exibir_campos(resolver_dependencias(campos, valores), valores)
+    exibir_campos(_priorizar_por_script(resolver_dependencias(campos, valores), script), valores)
 
 
 def limpar(nome_script: str | None = None) -> None:
@@ -137,7 +152,7 @@ def limpar(nome_script: str | None = None) -> None:
         nome_script = ALIASES_CLI.get(nome_script, nome_script)
         if nome_script not in ESQUEMAS:
             nomes = ", ".join(sorted(ESQUEMAS.keys()))
-            raise ErroUsoCLI(f"Script '{nome_script}' não encontrado. Scripts disponíveis: {nomes}")
+            raise ErroUsoCLI(f"Domínio '{nome_script}' não encontrado. Domínios disponíveis: {nomes}")
     else:
         modulos = discover_modules(SCRIPTS_FOLDER)
         modulos_com_esquema = [
