@@ -390,11 +390,66 @@ def test_relatorios_e_e_alias_de_extrair(mocker):
     mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "AUDITORIA DE RELATÓRIOS")
 
 
-def test_frequencias_sem_subcomando_executa_callback(mocker):
+def test_frequencias_sem_subcomando_da_erro_comando_nao_fornecido():
+    result = runner.invoke(app, ["frequencias"])
+
+    assert result.exit_code == 2
+    assert "Comando não fornecido" in result.output
+
+
+def test_frequencias_help_lista_subcomandos_auditar_e_extrair():
+    result = runner.invoke(app, ["frequencias", "--help"])
+
+    assert result.exit_code == 0
+    assert "auditar" in result.output
+    assert "extrair" in result.output
+
+
+def test_frequencias_auditar_chama_executar_script(mocker):
     mocker.patch("scripthub.cli._carregar_config", return_value=None)
     mock_executar = mocker.patch("scripthub.cli.executar_script")
 
-    result = runner.invoke(app, ["frequencias"])
+    result = runner.invoke(app, ["frequencias", "auditar"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, None, "AUDITORIA DE FREQUÊNCIAS")
+
+
+def test_frequencias_auditar_aceita_passo(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["frequencias", "auditar", "--passo", "exportar"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, "exportar", "AUDITORIA DE FREQUÊNCIAS")
+
+
+def test_f_a_encadeia_alias_de_dominio_e_de_script(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["f", "a"])
 
     assert result.exit_code == 0
     mock_executar.assert_called_once()
+
+
+def test_frequencias_extrair_chama_executar_script_com_passo_fixo(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["frequencias", "extrair"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, "exportar", "AUDITORIA DE FREQUÊNCIAS")
+
+
+def test_f_e_encadeia_alias_de_dominio_e_de_script(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["f", "e"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, "exportar", "AUDITORIA DE FREQUÊNCIAS")
