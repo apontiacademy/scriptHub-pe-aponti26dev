@@ -89,26 +89,26 @@ ao classificar um novo `raise`.
 ### `ErroConfiguracao` (2)
 
 - `.env`/`settings.json` ausentes ou incompletos: `config.py` de todos os 5 pacotes
-- Precondição de um passo anterior não satisfeita: `auditar_frequencias/integracao_google_sheets.py` (diretório de exportação, XLSX ausentes), `auditar_relatorios/integracao_google_sheets.py` (CSV de auditoria ausente), `compilacao_de_relatorios/compilar_pdfs.py` (nenhum dado de aluno nos CSVs)
-- Credenciais/IDs do Google ausentes: `auditar_frequencias/integracao_google_sheets.py`, `auditar_relatorios/integracao_google_sheets.py`, `auditar_relatorios/backup.py`
-- Arquivo/URL de entrada do próprio script ausente: `auditar_frequencias/exportar_frequencias.py` (URLs de frequência), `auditar_relatorios/download_de_relatorios.py` (URLs de relatório), `compilacao_de_relatorios/download_de_relatorios.py` (meses), `torpedo_de_forum/main.py` (post `.md`, URLs de fórum, título do `.md`, imagem de override)
+- Precondição de um passo anterior não satisfeita: `frequencias/integracao_google_sheets.py` (diretório de exportação, XLSX ausentes), `relatorios/auditar/integracao_google_sheets.py` (CSV de auditoria ausente), `relatorios/compilar/compilar_pdfs.py` (nenhum dado de aluno nos CSVs)
+- Credenciais/IDs do Google ausentes: `frequencias/integracao_google_sheets.py`, `relatorios/auditar/integracao_google_sheets.py`, `relatorios/auditar/backup.py`
+- Arquivo/URL de entrada do próprio script ausente: `frequencias/exportar_frequencias.py` (URLs de frequência), `relatorios/auditar/download_de_relatorios.py` (URLs de relatório), `relatorios/compilar/download_de_relatorios.py` (meses), `torpedo/main.py` (post `.md`, URLs de fórum, título do `.md`, imagem de override)
 - Falha de autenticação no Moodle (usuário/senha errados no `.env`): `services/moodle/sessao.py` (`MoodleSessao.login`, usado por todos os scripts que baixam do Moodle via HTTP)
-- `settings.json` incompleto para uma combinação específica de opções: `auditar_relatorios/config.py` (`caminhoExportacaoAnalise` ausente quando `exportarAnaliseRelatorio=true`)
-- `gsheets.caminhoJsonCredenciais` não é um caminho absoluto: `auditar_frequencias/config.py`, `auditar_relatorios/config.py`
+- `settings.json` incompleto para uma combinação específica de opções: `relatorios/auditar/config.py` (`caminhoExportacaoAnalise` ausente quando `exportarAnaliseRelatorio=true`)
+- `gsheets.caminhoJsonCredenciais` não é um caminho absoluto: `frequencias/config.py`, `relatorios/auditar/config.py`
 
 ### `FalhaParcial` (4)
 
-- `auditar_frequencias/integracao_google_sheets.py` (N arquivos XLSX falharam)
-- `compilacao_de_relatorios/compilar_pdfs.py` (N PDFs falharam)
-- `torpedo_de_forum/main.py` (N fóruns falharam ao publicar)
+- `frequencias/integracao_google_sheets.py` (N arquivos XLSX falharam)
+- `relatorios/compilar/compilar_pdfs.py` (N PDFs falharam)
+- `torpedo/main.py` (N fóruns falharam ao publicar)
 
 ### `ErroIntegracao` (5)
 
-- Estrutura de página do Moodle inesperada: `auditar_frequencias/exportar_frequencias.py` (formulário não encontrado, resposta que não é um XLSX válido)
+- Estrutura de página do Moodle inesperada: `frequencias/exportar_frequencias.py` (formulário não encontrado, resposta que não é um XLSX válido)
 - Sessão do Moodle caiu no meio da execução (já autenticada, sem ser problema de credencial): `services/moodle/sessao.py` (`MoodleSessao.get`/`baixar`, sessão expirada)
-- Dados vindos de fora malformados: `auditar_relatorios/integracao_google_sheets.py` (CSV ilegível ou com menos de 4 colunas, aba não encontrada na planilha)
+- Dados vindos de fora malformados: `relatorios/auditar/integracao_google_sheets.py` (CSV ilegível ou com menos de 4 colunas, aba não encontrada na planilha)
 - Planilha do Google Sheets não encontrada pelo ID configurado: `services/google/sheets.py` (`GoogleSheetsClient.planilha`)
-- `pentefino` (biblioteca externa) falhou: `auditar_relatorios/middleware_analise_de_relatorios.py`
-- Google Drive falhou ao gerar o backup: `auditar_relatorios/backup.py`
-- Relatório do Moodle baixado via HTTP não é um CSV válido, ou nenhum link/formulário de download foi encontrado na página: `services/moodle/download.py` (`baixar_relatorio`, usado por `auditar_relatorios` e `compilacao_de_relatorios`)
-- Elemento esperado da página do fórum não encontrado (botão de novo tópico, editor de conteúdo, botão de submissão): `torpedo_de_forum/main.py`
+- `pentefino` (biblioteca externa) falhou: `relatorios/auditar/middleware_analise_de_relatorios.py`
+- Google Drive falhou ao gerar o backup: `relatorios/auditar/backup.py`
+- Relatório do Moodle baixado via HTTP não é um CSV válido, ou nenhum link/formulário de download foi encontrado na página: `services/moodle/download.py` (`baixar_relatorio`, usado por `relatorios/auditar` e `relatorios/compilar`)
+- Elemento esperado da página do fórum não encontrado (botão de novo tópico, editor de conteúdo, botão de submissão): `torpedo/main.py`
