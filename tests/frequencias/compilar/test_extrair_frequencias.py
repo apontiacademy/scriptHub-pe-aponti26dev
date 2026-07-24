@@ -1,7 +1,7 @@
 import pytest
 
 from scripthub.scripts.frequencias.compilar.config import AtasConfig, Config, MoodleConfig
-from scripthub.scripts.frequencias.compilar.extrair_frequencias import DIRETORIO_DOWNLOAD, main
+from scripthub.scripts.frequencias.compilar.extrair_frequencias import main
 from scripthub.services.erros import ErroConfiguracao
 
 _PATCH = "scripthub.scripts.frequencias.compilar.extrair_frequencias"
