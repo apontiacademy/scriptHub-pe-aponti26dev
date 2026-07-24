@@ -2,6 +2,7 @@ import pytest
 
 from scripthub.services.config.campo import Campo
 from scripthub.services.config.main import (
+    _escopar_por_script,
     _priorizar_por_script,
     config,
     discover_modules,
@@ -165,3 +166,58 @@ def test_config_com_script_prioriza_campos_na_selecao(mocker):
 
     campos_passados = selecionar_campos_mock.call_args[0][0]
     assert [c.chave for c in campos_passados] == ["a", "c"]
+
+
+def test_escopar_por_script_none_mantem_obrigatorio_original():
+    campos = [
+        Campo(chave="a", rotulo="A", tipo="texto", origem="env", obrigatorio=True, scripts=("auditar",)),
+        Campo(chave="b", rotulo="B", tipo="texto", origem="env", obrigatorio=True),
+    ]
+
+    assert _escopar_por_script(campos, None) == campos
+
+
+def test_escopar_por_script_torna_nao_obrigatorio_campo_de_outro_script():
+    so_auditar = Campo(chave="a", rotulo="A", tipo="texto", origem="env", obrigatorio=True, scripts=("auditar",))
+    so_compilar = Campo(chave="c", rotulo="C", tipo="texto", origem="env", obrigatorio=True, scripts=("compilar",))
+    comum = Campo(chave="comum", rotulo="Comum", tipo="texto", origem="env", obrigatorio=True)
+
+    resultado = _escopar_por_script([so_auditar, so_compilar, comum], "auditar")
+
+    por_chave = {c.chave: c.obrigatorio for c in resultado}
+    assert por_chave == {"a": True, "c": False, "comum": True}
+
+
+def test_config_com_script_nao_marca_campo_de_outro_script_como_obrigatorio(mocker):
+    campos = [
+        Campo(chave="c", rotulo="C", tipo="texto", origem="env", obrigatorio=True, scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="env", obrigatorio=True, scripts=("auditar",)),
+    ]
+    mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
+    mocker.patch(f"{_PATCH}.carregar_valores", return_value={})
+    mocker.patch(f"{_PATCH}.persistir")
+    selecionar_campos_mock = mocker.patch(f"{_PATCH}.selecionar_campos", return_value=[])
+    mocker.patch(f"{_PATCH}.log")
+
+    config("relatorios", script="auditar")
+
+    campos_passados = selecionar_campos_mock.call_args[0][0]
+    por_chave = {c.chave: c.obrigatorio for c in campos_passados}
+    assert por_chave == {"a": True, "c": False}
+
+
+def test_visualizar_com_script_nao_marca_campo_de_outro_script_como_obrigatorio(mocker):
+    campos = [
+        Campo(chave="c", rotulo="C", tipo="texto", origem="env", obrigatorio=True, scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="env", obrigatorio=True, scripts=("auditar",)),
+    ]
+    mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
+    mocker.patch(f"{_PATCH}.carregar_valores", return_value={})
+    exibir_campos_mock = mocker.patch(f"{_PATCH}.exibir_campos")
+    mocker.patch(f"{_PATCH}.log")
+
+    visualizar("relatorios", script="auditar")
+
+    campos_passados = exibir_campos_mock.call_args[0][0]
+    por_chave = {c.chave: c.obrigatorio for c in campos_passados}
+    assert por_chave == {"a": True, "c": False}

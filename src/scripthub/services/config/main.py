@@ -1,4 +1,5 @@
 import ast
+import dataclasses
 import re
 from pathlib import Path
 
@@ -61,6 +62,18 @@ def _tem_pendencias(nome_script: str) -> bool:
     return not all(validar_campo(c, valores.get(c.chave))[0] for c in campos)
 
 
+def _escopar_por_script(campos: list[Campo], script: str | None) -> list[Campo]:
+    """Torna não-obrigatório qualquer campo marcado para outro(s) script(s) que
+    não o informado — evita que um domínio fique permanentemente `⚠️ pendente`
+    para quem só usa um dos scripts que o compõem."""
+    if script is None:
+        return campos
+    return [
+        dataclasses.replace(campo, obrigatorio=False) if campo.scripts and script not in campo.scripts else campo
+        for campo in campos
+    ]
+
+
 def _priorizar_por_script(campos: list[Campo], script: str | None) -> list[Campo]:
     if script is None:
         return campos
@@ -99,7 +112,9 @@ def config(nome_script: str | None = None, script: str | None = None) -> None:
     valores = carregar_valores(nome_script, campos)
 
     print()
-    campos_resolvidos = _priorizar_por_script(resolver_dependencias(campos, valores), script)
+    campos_resolvidos = _priorizar_por_script(
+        _escopar_por_script(resolver_dependencias(campos, valores), script), script
+    )
     selecionados = selecionar_campos(campos_resolvidos, valores)
 
     if not selecionados:
@@ -144,7 +159,10 @@ def visualizar(nome_script: str | None = None, script: str | None = None) -> Non
     valores = carregar_valores(nome_script, campos)
 
     log.passo(f"Configuração atual de {nome_script}:")
-    exibir_campos(_priorizar_por_script(resolver_dependencias(campos, valores), script), valores)
+    campos_resolvidos = _priorizar_por_script(
+        _escopar_por_script(resolver_dependencias(campos, valores), script), script
+    )
+    exibir_campos(campos_resolvidos, valores)
 
 
 def limpar(nome_script: str | None = None) -> None:
