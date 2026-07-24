@@ -31,6 +31,15 @@ def test_aliases_nao_lista_menu_interativo():
     assert "[depreciado]" not in result.output
 
 
+def test_aliases_lista_extrair_e_frequencias_auditar():
+    result = runner.invoke(app, ["--aliases"])
+
+    assert result.exit_code == 0
+    assert "scripthub relatorios extrair" in result.output
+    assert "scripthub frequencias auditar" in result.output
+    assert "scripthub frequencias extrair" in result.output
+
+
 def test_menu_interativo_nao_e_um_comando_registrado():
     nomes = {comando.name for comando in app.registered_commands}
 

@@ -56,7 +56,9 @@ def _callback(
         _ALIASES = [
             ("scripthub relatorios auditar", "r auditar, relatorios a, r a"),
             ("scripthub relatorios compilar", "r compilar, relatorios c, r c"),
-            ("scripthub frequencias", "f"),
+            ("scripthub relatorios extrair", "r extrair, relatorios e, r e"),
+            ("scripthub frequencias auditar", "f auditar, frequencias a, f a"),
+            ("scripthub frequencias extrair", "f extrair, frequencias e, f e"),
             ("scripthub softskills", "s"),
             ("scripthub torpedo", "t"),
             ("scripthub config", "c"),
