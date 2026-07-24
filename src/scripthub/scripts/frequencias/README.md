@@ -12,7 +12,14 @@ Passo 2 — integrar: Integração (Google Sheets)
 
 ## Execução parcial
 
-Use `--passo` (ou `-p`) para executar apenas um passo do pipeline:
+O passo `exportar` tem um subcomando próprio, `extrair` (alias `e`), por ser o mais comumente rodado isolado:
+
+```bash
+uv run scripthub frequencias extrair   # só baixa do Moodle (equivalente a auditar --passo exportar)
+uv run scripthub frequencias e         # idem, forma curta
+```
+
+Os demais passos continuam acessíveis via `--passo`/`-p` dentro de `auditar`:
 
 | Slug | Alias | Descrição |
 |---|---|---|
@@ -20,15 +27,15 @@ Use `--passo` (ou `-p`) para executar apenas um passo do pipeline:
 | `integrar` | `i` | Envia os dados ao Google Sheets |
 
 ```bash
-uv run scripthub frequencias --passo exportar   # só baixa do Moodle
-uv run scripthub frequencias -p e               # idem, forma curta
-uv run scripthub frequencias --passo integrar   # só integra com Sheets
+uv run scripthub frequencias auditar --passo exportar   # só baixa do Moodle
+uv run scripthub frequencias auditar -p e               # idem, forma curta
+uv run scripthub frequencias auditar --passo integrar   # só integra com Sheets
 ```
 
 ## Como rodar
 
 ```bash
-uv run scripthub frequencias
+uv run scripthub frequencias auditar
 ```
 
 ## Configuração

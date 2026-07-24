@@ -56,7 +56,9 @@ def _callback(
         _ALIASES = [
             ("scripthub relatorios auditar", "r auditar, relatorios a, r a"),
             ("scripthub relatorios compilar", "r compilar, relatorios c, r c"),
-            ("scripthub frequencias", "f"),
+            ("scripthub relatorios extrair", "r extrair, relatorios e, r e"),
+            ("scripthub frequencias auditar", "f auditar, frequencias a, f a"),
+            ("scripthub frequencias extrair", "f extrair, frequencias e, f e"),
             ("scripthub softskills", "s"),
             ("scripthub torpedo", "t"),
             ("scripthub config", "c"),
@@ -166,28 +168,43 @@ def relatorios_compilar():
     _executar_pipeline_simples(relatorios_compilar_script.main)
 
 
-# --- frequencias / softskills / torpedo: subapps de script único (callback direto) ---
+@relatorios_app.command("extrair")
+@relatorios_app.command("e", hidden=True)
+def relatorios_extrair():
+    """Executa somente a extração de relatórios (equivalente a `auditar --passo extrair`)."""
+    config = _carregar_config(relatorios_auditar_script.get_config, "relatorios")
+    executar_script(config, relatorios_auditar_script.ESCOPOS, "extrair", "AUDITORIA DE RELATÓRIOS")
 
-frequencias_app = typer.Typer(
-    help="Exporta frequências de presença do Moodle para o Google Sheets.",
-    invoke_without_command=True,
-)
+
+# --- frequencias: subapp com 2 comandos (auditar/extrair), mesmo padrão de relatorios ---
+
+frequencias_app = typer.Typer(help="Exporta frequências de presença do Moodle para o Google Sheets.")
 app.add_typer(frequencias_app, name="frequencias")
 app.add_typer(frequencias_app, name="f", hidden=True)
 
 
-@frequencias_app.callback(invoke_without_command=True)
-def _frequencias_callback(
-    ctx: typer.Context,
+@frequencias_app.command("auditar")
+@frequencias_app.command("a", hidden=True)
+def frequencias_auditar(
     passo: Annotated[
         str | None,
         typer.Option("--passo", "-p", help=_help_passo(frequencias_script.ESCOPOS)),
     ] = None,
 ):
-    if ctx.invoked_subcommand is not None:
-        return
+    """Pipeline completo de auditoria de frequências (extração, integração)."""
     config = _carregar_config(frequencias_script.get_config, "frequencias")
     executar_script(config, frequencias_script.ESCOPOS, passo, "AUDITORIA DE FREQUÊNCIAS")
+
+
+@frequencias_app.command("extrair")
+@frequencias_app.command("e", hidden=True)
+def frequencias_extrair():
+    """Executa somente a extração de frequências (equivalente a `auditar --passo exportar`)."""
+    config = _carregar_config(frequencias_script.get_config, "frequencias")
+    executar_script(config, frequencias_script.ESCOPOS, "exportar", "AUDITORIA DE FREQUÊNCIAS")
+
+
+# --- softskills / torpedo: subapps de script único (callback direto) ---
 
 
 softskills_app = typer.Typer(
