@@ -74,6 +74,19 @@ def _escopar_por_script(campos: list[Campo], script: str | None) -> list[Campo]:
     ]
 
 
+def _validar_script(nome_script: str, script: str | None, campos: list[Campo]) -> None:
+    """Levanta `ErroUsoCLI` se `script` não corresponder a nenhum dos scripts
+    internos declarados em `Campo.scripts` para este domínio — evita que um
+    typo em `--script` seja silenciosamente ignorado (viraria `obrigatorio=False`
+    para todo campo escopado, sem nenhum aviso)."""
+    if script is None:
+        return
+    scripts_validos = {s for campo in campos for s in campo.scripts}
+    if script not in scripts_validos:
+        nomes = ", ".join(sorted(scripts_validos)) if scripts_validos else "nenhum"
+        raise ErroUsoCLI(f"Script '{script}' não encontrado em '{nome_script}'. Scripts disponíveis: {nomes}")
+
+
 def _priorizar_por_script(campos: list[Campo], script: str | None) -> list[Campo]:
     if script is None:
         return campos
@@ -109,6 +122,7 @@ def config(nome_script: str | None = None, script: str | None = None) -> None:
             return
 
     campos = ESQUEMAS[nome_script]
+    _validar_script(nome_script, script, campos)
     valores = carregar_valores(nome_script, campos)
 
     print()
@@ -156,6 +170,7 @@ def visualizar(nome_script: str | None = None, script: str | None = None) -> Non
             return
 
     campos = ESQUEMAS[nome_script]
+    _validar_script(nome_script, script, campos)
     valores = carregar_valores(nome_script, campos)
 
     log.passo(f"Configuração atual de {nome_script}:")

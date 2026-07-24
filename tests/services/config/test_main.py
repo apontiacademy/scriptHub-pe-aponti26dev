@@ -221,3 +221,59 @@ def test_visualizar_com_script_nao_marca_campo_de_outro_script_como_obrigatorio(
     campos_passados = exibir_campos_mock.call_args[0][0]
     por_chave = {c.chave: c.obrigatorio for c in campos_passados}
     assert por_chave == {"a": True, "c": False}
+
+
+def test_config_script_invalido_levanta_erro_uso_cli(mocker):
+    campos = [
+        Campo(chave="c", rotulo="C", tipo="texto", origem="env", scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("auditar",)),
+    ]
+    mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
+    mock_log = mocker.patch(f"{_PATCH}.log")
+
+    with pytest.raises(ErroUsoCLI) as exc_info:
+        config("relatorios", script="auditra")
+
+    assert exc_info.value.codigo_saida == 3
+    mock_log.erro.assert_not_called()
+
+
+def test_visualizar_script_invalido_levanta_erro_uso_cli(mocker):
+    campos = [
+        Campo(chave="c", rotulo="C", tipo="texto", origem="env", scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("auditar",)),
+    ]
+    mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
+    mock_log = mocker.patch(f"{_PATCH}.log")
+
+    with pytest.raises(ErroUsoCLI) as exc_info:
+        visualizar("relatorios", script="auditra")
+
+    assert exc_info.value.codigo_saida == 3
+    mock_log.erro.assert_not_called()
+
+
+def test_config_script_valido_nao_levanta_erro(mocker):
+    campos = [
+        Campo(chave="c", rotulo="C", tipo="texto", origem="env", scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("auditar",)),
+    ]
+    mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
+    mocker.patch(f"{_PATCH}.carregar_valores", return_value={})
+    mocker.patch(f"{_PATCH}.persistir")
+    mocker.patch(f"{_PATCH}.selecionar_campos", return_value=[])
+    mocker.patch(f"{_PATCH}.log")
+
+    config("relatorios", script="auditar")
+
+
+def test_config_script_em_dominio_sem_scripts_internos_levanta_erro(mocker):
+    campos = [Campo(chave="x", rotulo="X", tipo="texto", origem="env")]
+    mocker.patch(f"{_PATCH}.ESQUEMAS", {"frequencias": campos})
+    mock_log = mocker.patch(f"{_PATCH}.log")
+
+    with pytest.raises(ErroUsoCLI) as exc_info:
+        config("frequencias", script="qualquer")
+
+    assert exc_info.value.codigo_saida == 3
+    mock_log.erro.assert_not_called()
