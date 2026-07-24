@@ -370,6 +370,26 @@ def test_relatorios_compilar_chama_pipeline_simples(mocker):
     mock_pipeline.assert_called_once()
 
 
+def test_relatorios_extrair_chama_executar_script_com_passo_fixo(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["relatorios", "extrair"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "AUDITORIA DE RELATÓRIOS")
+
+
+def test_relatorios_e_e_alias_de_extrair(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["r", "e"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "AUDITORIA DE RELATÓRIOS")
+
+
 def test_frequencias_sem_subcomando_executa_callback(mocker):
     mocker.patch("scripthub.cli._carregar_config", return_value=None)
     mock_executar = mocker.patch("scripthub.cli.executar_script")

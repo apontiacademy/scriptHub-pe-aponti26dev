@@ -166,6 +166,14 @@ def relatorios_compilar():
     _executar_pipeline_simples(relatorios_compilar_script.main)
 
 
+@relatorios_app.command("extrair")
+@relatorios_app.command("e", hidden=True)
+def relatorios_extrair():
+    """Executa somente a extração de relatórios (equivalente a `auditar --passo extrair`)."""
+    config = _carregar_config(relatorios_auditar_script.get_config, "relatorios")
+    executar_script(config, relatorios_auditar_script.ESCOPOS, "extrair", "AUDITORIA DE RELATÓRIOS")
+
+
 # --- frequencias / softskills / torpedo: subapps de script único (callback direto) ---
 
 frequencias_app = typer.Typer(
