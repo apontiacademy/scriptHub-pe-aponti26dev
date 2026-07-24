@@ -469,6 +469,7 @@ def test_f_e_encadeia_alias_de_dominio_e_de_script(mocker):
 
 def test_relatorios_extrair_resolve_passo_real_nos_escopos(mocker):
     from dataclasses import replace
+
     from scripthub.scripts.relatorios.auditar.main import ESCOPOS as ESCOPOS_AUDITAR
 
     # Mock a config
@@ -492,6 +493,7 @@ def test_relatorios_extrair_resolve_passo_real_nos_escopos(mocker):
 
 def test_frequencias_extrair_resolve_passo_real_nos_escopos(mocker):
     from dataclasses import replace
+
     from scripthub.scripts.frequencias.main import ESCOPOS as ESCOPOS_FREQ
 
     # Mock a config
