@@ -1,6 +1,6 @@
 [project]
 name = "scriptHub-pe-aponti26dev"
-version = "0.21.0.dev3"
+version = "0.21.0.dev4"
 description = "Central de scripts de automação da Aponti Academy"
 readme = "README.md"
 requires-python = ">3.12"
@@ -42,11 +42,11 @@ markers = [
 [tool.coverage.run]
 omit = [
     # Automação Playwright — requer browser real
-    "src/scripthub/scripts/torpedo_de_forum/main.py",
+    "src/scripthub/scripts/torpedo/main.py",
     # Padrão B (depreciado) — orquestração não testada diretamente, só helpers
-    "src/scripthub/scripts/auditar_softskills/main.py",
+    "src/scripthub/scripts/softskills/main.py",
     # FPDF — requer fontes e renderização
-    "src/scripthub/scripts/compilacao_de_relatorios/compilar_pdfs.py",
+    "src/scripthub/scripts/relatorios/compilar/compilar_pdfs.py",
     # Questionary UI interativa
     "src/scripthub/services/config/ui.py",
     "src/scripthub/services/config/main.py",

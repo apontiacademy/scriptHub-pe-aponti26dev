@@ -123,11 +123,12 @@ src/scripthub/
 ├── cli.py                  # Ponto de entrada: comandos Typer
 ├── _i18n.py                # Traduções pt-BR para Typer/Click
 ├── scripts/                # Módulos de automação (um por pasta)
-│   ├── auditar_frequencias/
-│   ├── auditar_relatorios/
-│   ├── auditar_softskills/
-│   ├── compilacao_de_relatorios/
-│   └── torpedo_de_forum/
+│   ├── frequencias/
+│   ├── relatorios/
+│   │   ├── auditar/
+│   │   └── compilar/
+│   ├── softskills/
+│   └── torpedo/
 └── services/
     ├── config/             # Configuração interativa (scripthub config)
     └── log.py              # Helpers de output unificados
@@ -135,14 +136,14 @@ src/scripthub/
 
 Cada pacote de script segue um dos dois padrões:
 
-**Padrão A — pipeline por escopos** (`auditar_frequencias`, `auditar_relatorios`):
+**Padrão A — pipeline por escopos** (`frequencias`, `relatorios/auditar`):
 - `__init__.py` — declara `CLI_CMD`, exporta `ESCOPOS` e `get_config`
 - `ESCOPOS`: lista de `Escopo(slug, nome, func, aliases)` — ver `services/escopo.py`
 - `get_config()`: retorna a dataclass de configuração (carrega `.env` + `settings.json`)
 - O CLI usa `executar_script()` para iterar os escopos com log por passo e captura de exceção
 - O `--passo <slug>` (ou alias de uma letra) executa apenas o passo correspondente
 
-**Padrão B — função main** (`auditar_softskills`, `compilacao_de_relatorios`, `torpedo_de_forum`) — **DEPRECIADO**:
+**Padrão B — função main** (`softskills`, `relatorios/compilar`, `torpedo`) — **DEPRECIADO**:
 - `__init__.py` — declara `CLI_CMD`, exporta apenas `main`
 - `main()` carrega configuração internamente e executa o pipeline diretamente
 - Não crie novos scripts com este padrão. Os existentes devem ser migrados para o Padrão A o quanto antes.
@@ -317,21 +318,22 @@ Antes de criar qualquer arquivo em `services/`, escreva `tests/services/test_<no
 tests/
 ├── conftest.py                          # Fixture compartilhada: moodle_env(tmp_path)
 ├── menu/test_menu.py
-├── auditar_frequencias/
+├── frequencias/
 │   ├── test_config.py
 │   └── test_exportar_frequencias.py
-├── auditar_relatorios/
-│   ├── test_config.py
-│   ├── test_backup.py
-│   └── test_middleware.py
-├── auditar_softskills/
+├── relatorios/
+│   ├── auditar/
+│   │   ├── test_config.py
+│   │   ├── test_backup.py
+│   │   └── test_middleware.py
+│   └── compilar/
+│       ├── test_config.py
+│       └── test_compilar_pdfs.py
+├── softskills/
 │   ├── test_config.py
 │   ├── test_download_softskills.py
 │   └── test_integracao_drive.py
-├── compilacao_de_relatorios/
-│   ├── test_config.py
-│   └── test_compilar_pdfs.py
-├── torpedo_de_forum/
+├── torpedo/
 │   ├── test_config.py
 │   └── test_main.py
 └── services/
@@ -381,6 +383,6 @@ def test_funcao(entrada, esperado):
 - Geração de PDF com FPDF — instanciar `RelatorioPDF` requer fontes instaladas
 - Google API real — sempre mockar `build`, `Credentials.from_service_account_file`, `gspread.authorize`
 - pentefino Core real — mockar `executar_analise_core`
-- Orquestradores Padrão A/B pesados (ex.: `auditar_softskills/main.py`) cujo `main()`/`ESCOPOS` exigiria mockar
+- Orquestradores Padrão A/B pesados (ex.: `softskills/main.py`) cujo `main()`/`ESCOPOS` exigiria mockar
   muitos serviços externos para pouco ganho — teste os helpers que ele chama isoladamente; o próprio arquivo
   entra no `omit` de cobertura do `pyproject.toml` quando esse for o caso

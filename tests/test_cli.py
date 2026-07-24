@@ -11,7 +11,6 @@ from scripthub.cli import (
     app,
     config,
     executar_script,
-    relatorios,
 )
 from scripthub.services.erros import ErroConfiguracao, ErroIntegracao, ErroUsoCLI, FalhaParcial
 from scripthub.services.escopo import Escopo
@@ -149,7 +148,7 @@ def test_carregar_config_key_error_vira_erro_configuracao_com_dica():
         _carregar_config(carregar, "meu_script")
 
     assert "meu_script" in str(exc_info.value)
-    assert exc_info.value.dica == "Execute: scripthub config -s meu_script"
+    assert exc_info.value.dica == "Execute: scripthub config meu_script"
 
 
 def test_carregar_config_erro_configuracao_sem_dica_recebe_dica_padrao():
@@ -159,7 +158,7 @@ def test_carregar_config_erro_configuracao_sem_dica_recebe_dica_padrao():
     with pytest.raises(ErroConfiguracao) as exc_info:
         _carregar_config(carregar, "meu_script")
 
-    assert exc_info.value.dica == "Execute: scripthub config -s meu_script"
+    assert exc_info.value.dica == "Execute: scripthub config meu_script"
 
 
 def test_carregar_config_erro_configuracao_com_dica_propria_nao_e_sobrescrita():
@@ -309,31 +308,73 @@ def test_callback_debug_flag_seta_modulo_global():
 # --- validações de uso da CLI viram ErroUsoCLI, sem log/typer.Exit direto ---
 
 
-def test_relatorios_modo_invalido_levanta_erro_uso_cli(mocker):
-    mock_log = mocker.patch("scripthub.cli.log")
-
-    with pytest.raises(ErroUsoCLI) as exc_info:
-        relatorios(modo="invalido", passo=None)
-
-    assert exc_info.value.codigo_saida == 3
-    mock_log.erro.assert_not_called()
-
-
-def test_relatorios_compilar_com_passo_levanta_erro_uso_cli(mocker):
-    mock_log = mocker.patch("scripthub.cli.log")
-
-    with pytest.raises(ErroUsoCLI) as exc_info:
-        relatorios(modo="compilar", passo="baixar")
-
-    assert exc_info.value.codigo_saida == 3
-    mock_log.erro.assert_not_called()
-
-
 def test_config_opcoes_e_limpar_juntos_levanta_erro_uso_cli(mocker):
     mock_log = mocker.patch("scripthub.cli.log")
 
     with pytest.raises(ErroUsoCLI) as exc_info:
-        config(script=None, apenas_visualizar=True, limpar=True)
+        config(dominio=None, apenas_visualizar=True, limpar=True)
 
     assert exc_info.value.codigo_saida == 3
     mock_log.erro.assert_not_called()
+
+
+# --- subapps: registro duplo (nome cheio + alias) resolve para o mesmo comando ---
+
+
+def test_relatorios_subapp_registrado_com_nome_cheio_e_alias():
+    nomes = {t.name for t in app.registered_groups}
+
+    assert {"relatorios", "r"}.issubset(nomes)
+
+
+def test_frequencias_subapp_registrado_com_nome_cheio_e_alias():
+    nomes = {t.name for t in app.registered_groups}
+
+    assert {"frequencias", "f"}.issubset(nomes)
+
+
+def test_relatorios_help_lista_subcomandos_auditar_e_compilar():
+    result = runner.invoke(app, ["relatorios", "--help"])
+
+    assert result.exit_code == 0
+    assert "auditar" in result.output
+    assert "compilar" in result.output
+
+
+def test_relatorios_a_e_alias_de_auditar(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["relatorios", "a"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once()
+
+
+def test_r_a_encadeia_alias_de_dominio_e_de_script(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["r", "a"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once()
+
+
+def test_relatorios_compilar_chama_pipeline_simples(mocker):
+    mock_pipeline = mocker.patch("scripthub.cli._executar_pipeline_simples")
+
+    result = runner.invoke(app, ["relatorios", "compilar"])
+
+    assert result.exit_code == 0
+    mock_pipeline.assert_called_once()
+
+
+def test_frequencias_sem_subcomando_executa_callback(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["frequencias"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once()

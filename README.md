@@ -79,11 +79,11 @@ Cada script tem suas próprias opções configuráveis (URLs do Moodle, credenci
 uv run scripthub config
 
 # Ir direto para as opções de um script específico
-uv run scripthub config -s auditar_frequencias
+uv run scripthub config frequencias
 
 # Apenas visualizar o estado atual das opções (sem editar)
 uv run scripthub config --opcoes
-uv run scripthub config -o -s torpedo_de_forum
+uv run scripthub config torpedo --opcoes
 ```
 
 O comando exibe cada opção com um ícone de status:
