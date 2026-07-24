@@ -15,8 +15,8 @@ try:
 except PackageNotFoundError:
     _VERSAO = "(versão desconhecida)"
 
-from .scripts import frequencias as frequencias_script
 from .scripts import softskills, torpedo
+from .scripts.frequencias import auditar as frequencias_auditar_script
 from .scripts.relatorios import auditar as relatorios_auditar_script
 from .scripts.relatorios import compilar as relatorios_compilar_script
 from .services.config import config as config_service
@@ -188,20 +188,20 @@ app.add_typer(frequencias_app, name="f", hidden=True)
 def frequencias_auditar(
     passo: Annotated[
         str | None,
-        typer.Option("--passo", "-p", help=_help_passo(frequencias_script.ESCOPOS)),
+        typer.Option("--passo", "-p", help=_help_passo(frequencias_auditar_script.ESCOPOS)),
     ] = None,
 ):
     """Pipeline completo de auditoria de frequências (extração, integração)."""
-    config = _carregar_config(frequencias_script.get_config, "frequencias")
-    executar_script(config, frequencias_script.ESCOPOS, passo, "AUDITORIA DE FREQUÊNCIAS")
+    config = _carregar_config(frequencias_auditar_script.get_config, "frequencias")
+    executar_script(config, frequencias_auditar_script.ESCOPOS, passo, "AUDITORIA DE FREQUÊNCIAS")
 
 
 @frequencias_app.command("extrair")
 @frequencias_app.command("e", hidden=True)
 def frequencias_extrair():
-    """Executa somente a extração de frequências (equivalente a `auditar --passo exportar`)."""
-    config = _carregar_config(frequencias_script.get_config, "frequencias")
-    executar_script(config, frequencias_script.ESCOPOS, "exportar", "AUDITORIA DE FREQUÊNCIAS")
+    """Executa somente a extração de frequências (equivalente a `auditar --passo extrair`)."""
+    config = _carregar_config(frequencias_auditar_script.get_config, "frequencias")
+    executar_script(config, frequencias_auditar_script.ESCOPOS, "extrair", "AUDITORIA DE FREQUÊNCIAS")
 
 
 # --- softskills / torpedo: subapps de script único (callback direto) ---
