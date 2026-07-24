@@ -3,10 +3,8 @@ from .campo import Campo
 ALIASES_CLI: dict[str, str] = {
     "frequencias": "frequencias",
     "f": "frequencias",
-    "relatorios": "auditar_relatorios",
-    "r": "auditar_relatorios",
-    "ra": "auditar_relatorios",
-    "rc": "compilacao_de_relatorios",
+    "relatorios": "relatorios",
+    "r": "relatorios",
     "softskills": "softskills",
     "s": "softskills",
     "torpedo": "torpedo",
@@ -73,7 +71,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             caminho_absoluto=True,
         ),
     ],
-    "auditar_relatorios": [
+    "relatorios": [
         Campo(
             chave="moodle_usuario",
             rotulo="Usuário do Moodle",
@@ -102,6 +100,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Lista de URLs das páginas de feedback do Moodle",
             json_chaves=["moodle", "urlsRelatorios"],
+            scripts=("auditar",),
         ),
         Campo(
             chave="moodle_exportar_analise",
@@ -111,6 +110,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Se verdadeiro, exporta o resultado da análise para um arquivo local (padrão: não)",
             obrigatorio=False,
             json_chaves=["moodle", "exportarAnaliseRelatorio"],
+            scripts=("auditar",),
         ),
         Campo(
             chave="moodle_caminho_exportacao_analise",
@@ -121,6 +121,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             obrigatorio=False,
             json_chaves=["moodle", "caminhoExportacaoAnalise"],
             depende_de="moodle_exportar_analise",
+            scripts=("auditar",),
         ),
         Campo(
             chave="moodle_csv_residentes",
@@ -129,6 +130,16 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Caminho para o arquivo CSV com a lista de residentes",
             json_chaves=["moodle", "csvResidentes"],
+            scripts=("auditar",),
+        ),
+        Campo(
+            chave="moodle_meses",
+            rotulo="URLs dos relatórios por mês",
+            tipo="dict_str_lista_url",
+            origem="settings",
+            descricao="Mapeamento de nome do mês → lista de URLs semanais de feedback",
+            json_chaves=["moodle", "meses"],
+            scripts=("compilar",),
         ),
         Campo(
             chave="gsheets_id_planilha",
@@ -136,6 +147,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="texto",
             origem="settings",
             json_chaves=["gsheets", "idPlanilha"],
+            scripts=("auditar",),
         ),
         Campo(
             chave="gsheets_nome_aba",
@@ -143,6 +155,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="texto",
             origem="settings",
             json_chaves=["gsheets", "nomeAba"],
+            scripts=("auditar",),
         ),
         Campo(
             chave="gsheets_caminho_backup",
@@ -151,6 +164,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Diretório onde o backup XLSX da planilha será salvo",
             json_chaves=["gsheets", "caminhoBackupLocal"],
+            scripts=("auditar",),
         ),
         Campo(
             chave="gsheets_caminho_json_credenciais",
@@ -160,6 +174,16 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Caminho para o arquivo credentials.json da conta de serviço Google",
             json_chaves=["gsheets", "caminhoJsonCredenciais"],
             caminho_absoluto=True,
+            scripts=("auditar",),
+        ),
+        Campo(
+            chave="pdf_caminho_saida",
+            rotulo="Caminho de saída dos PDFs",
+            tipo="caminho",
+            origem="settings",
+            descricao="Diretório onde os PDFs compilados serão salvos",
+            json_chaves=["pdf", "caminhoSaida"],
+            scripts=("compilar",),
         ),
     ],
     "softskills": [
@@ -232,45 +256,6 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Diretório onde os CSVs dos aprovados serão salvos (padrão: aprovados)",
             json_chaves=["aprovadosDir"],
-        ),
-    ],
-    "compilacao_de_relatorios": [
-        Campo(
-            chave="moodle_usuario",
-            rotulo="Usuário do Moodle",
-            tipo="texto",
-            origem="env",
-            env_var="MOODLE_USUARIO",
-        ),
-        Campo(
-            chave="moodle_senha",
-            rotulo="Senha do Moodle",
-            tipo="senha",
-            origem="env",
-            env_var="MOODLE_SENHA",
-        ),
-        Campo(
-            chave="moodle_url_login",
-            rotulo="URL de login do Moodle",
-            tipo="url",
-            origem="settings",
-            json_chaves=["moodle", "urlLogin"],
-        ),
-        Campo(
-            chave="moodle_meses",
-            rotulo="URLs dos relatórios por mês",
-            tipo="dict_str_lista_url",
-            origem="settings",
-            descricao="Mapeamento de nome do mês → lista de URLs semanais de feedback",
-            json_chaves=["moodle", "meses"],
-        ),
-        Campo(
-            chave="pdf_caminho_saida",
-            rotulo="Caminho de saída dos PDFs",
-            tipo="caminho",
-            origem="settings",
-            descricao="Diretório onde os PDFs compilados serão salvos",
-            json_chaves=["pdf", "caminhoSaida"],
         ),
     ],
     "torpedo": [
