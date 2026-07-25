@@ -180,7 +180,7 @@ def relatorios_extrair():
 
 # --- frequencias: subapp com 3 comandos (auditar/extrair/compilar), mesmo padrão de relatorios ---
 
-frequencias_app = typer.Typer(help="Exporta frequências de presença do Moodle para o Google Sheets.")
+frequencias_app = typer.Typer(help="Processa frequências do Moodle: auditoria completa ou compilação de atas em PDF.")
 app.add_typer(frequencias_app, name="frequencias")
 app.add_typer(frequencias_app, name="f", hidden=True)
 
