@@ -17,6 +17,7 @@ except PackageNotFoundError:
 
 from .scripts import softskills, torpedo
 from .scripts.frequencias import auditar as frequencias_auditar_script
+from .scripts.frequencias import compilar as frequencias_compilar_script
 from .scripts.relatorios import auditar as relatorios_auditar_script
 from .scripts.relatorios import compilar as relatorios_compilar_script
 from .services.config import config as config_service
@@ -58,6 +59,7 @@ def _callback(
             ("scripthub relatorios compilar", "r compilar, relatorios c, r c"),
             ("scripthub relatorios extrair", "r extrair, relatorios e, r e"),
             ("scripthub frequencias auditar", "f auditar, frequencias a, f a"),
+            ("scripthub frequencias compilar", "f compilar, frequencias c, f c"),
             ("scripthub frequencias extrair", "f extrair, frequencias e, f e"),
             ("scripthub softskills", "s"),
             ("scripthub torpedo", "t"),
@@ -176,7 +178,7 @@ def relatorios_extrair():
     executar_script(config, relatorios_auditar_script.ESCOPOS, "extrair", "AUDITORIA DE RELATÓRIOS")
 
 
-# --- frequencias: subapp com 2 comandos (auditar/extrair), mesmo padrão de relatorios ---
+# --- frequencias: subapp com 3 comandos (auditar/extrair/compilar), mesmo padrão de relatorios ---
 
 frequencias_app = typer.Typer(help="Exporta frequências de presença do Moodle para o Google Sheets.")
 app.add_typer(frequencias_app, name="frequencias")
@@ -202,6 +204,19 @@ def frequencias_extrair():
     """Executa somente a extração de frequências (equivalente a `auditar --passo extrair`)."""
     config = _carregar_config(frequencias_auditar_script.get_config, "frequencias")
     executar_script(config, frequencias_auditar_script.ESCOPOS, "extrair", "AUDITORIA DE FREQUÊNCIAS")
+
+
+@frequencias_app.command("compilar")
+@frequencias_app.command("c", hidden=True)
+def frequencias_compilar(
+    passo: Annotated[
+        str | None,
+        typer.Option("--passo", "-p", help=_help_passo(frequencias_compilar_script.ESCOPOS)),
+    ] = None,
+):
+    """Extrai as frequências e compila uma ata em PDF por turma."""
+    config = _carregar_config(frequencias_compilar_script.get_config, "frequencias")
+    executar_script(config, frequencias_compilar_script.ESCOPOS, passo, "COMPILAÇÃO DE ATAS DE FREQUÊNCIA")
 
 
 # --- softskills / torpedo: subapps de script único (callback direto) ---
