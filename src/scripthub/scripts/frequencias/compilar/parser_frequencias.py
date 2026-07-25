@@ -169,9 +169,9 @@ def carregar_turma(caminho_xlsx: Path) -> Turma:
         alunos.append(
             Aluno(
                 nome=_nome_completo(nome_bruto, sobrenome_bruto),
-                id_estudante=str(linha[2]) if linha[2] is not None else "",
-                identificacao_usuario=str(linha[3]) if linha[3] is not None else "",
-                email=str(linha[4]) if linha[4] is not None else "",
+                id_estudante="" if pd.isna(linha[2]) else str(linha[2]),
+                identificacao_usuario="" if pd.isna(linha[3]) else str(linha[3]),
+                email="" if pd.isna(linha[4]) else str(linha[4]),
                 registros=registros,
             )
         )

@@ -279,3 +279,37 @@ def test_carregar_turma_matricula_tardia_justifica_por_data(tmp_path):
     assert aluno.registros[0].comentario == "Não matriculado no momento."
     # Sessão de 15/06 é posterior -> status real preservado
     assert aluno.registros[1].status == "PR"
+
+
+def test_carregar_turma_celulas_vazias_nao_geram_nan(tmp_path):
+    """Células vazias do Excel (NaN em pandas) não devem virar string 'nan'."""
+    linhas = [
+        ["Curso", "Turma X"],
+        ["Grupo", "Todos os participantes"],
+        [],
+        _cabecalho(["8/06/2026"]),
+        [
+            ".",
+            "Aluno Com Blanks",
+            None,  # id_estudante vazio
+            None,  # identificacao_usuario vazio
+            None,  # email vazio
+            "PR (0/0)",
+            "Autoregistrado",
+            1,
+            0,
+            0,
+            0,
+            1,
+            "0 / 0",
+            "0,0",
+        ],
+    ]
+    caminho = _escrever_xlsx(tmp_path, "Turma X.xlsx", linhas)
+
+    turma = carregar_turma(caminho)
+
+    aluno = turma.alunos[0]
+    assert aluno.id_estudante == ""
+    assert aluno.identificacao_usuario == ""
+    assert aluno.email == ""
