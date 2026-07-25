@@ -4,6 +4,9 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date
+from pathlib import Path
+
+import pandas as pd
 
 CORES_STATUS: dict[str, tuple[int, int, int]] = {
     "PR": (0, 170, 80),
@@ -88,3 +91,90 @@ def justificativas_do_periodo(aluno: Aluno, sessoes: list[Sessao]) -> list[tuple
         for r in registros_do_periodo(aluno, sessoes)
         if r.status == "JU" and r.comentario.strip()
     ]
+
+
+def _nome_completo(nome: str, sobrenome: str) -> str:
+    partes = [p.strip() for p in (nome, sobrenome) if p and p.strip() not in ("", ".")]
+    return re.sub(r"\s+", " ", " ".join(partes)).strip()
+
+
+def _extrair_sessoes(linha_cabecalho: list) -> list[Sessao]:
+    sessoes = []
+    coluna = _PRIMEIRA_COLUNA_SESSAO
+    while coluna < len(linha_cabecalho):
+        valor = linha_cabecalho[coluna]
+        if not isinstance(valor, str):
+            break
+        m = _RE_DATA_SESSAO.match(valor)
+        if not m:
+            break
+        dia, mes, ano = (int(x) for x in m.groups())
+        sessoes.append(Sessao(data=date(ano, mes, dia), coluna_status=coluna, coluna_comentario=coluna + 1))
+        coluna += 2
+    return sessoes
+
+
+def _extrair_status(valor) -> str | None:
+    if not isinstance(valor, str):
+        return None
+    m = _RE_STATUS.match(valor)
+    if not m or m.group(1) not in _STATUS_VALIDOS:
+        return None
+    return m.group(1)
+
+
+def _extrair_matricula_tardia(linha: list) -> date | None:
+    for valor in linha:
+        if isinstance(valor, str):
+            m = _RE_MATRICULA_TARDIA.search(valor)
+            if m:
+                dia, mes, ano = (int(x) for x in m.groups())
+                return date(ano, mes, dia)
+    return None
+
+
+def _linha_suspensa(linha: list) -> bool:
+    return any(isinstance(v, str) and _TEXTO_SUSPENSAO in v for v in linha)
+
+
+def carregar_turma(caminho_xlsx: Path) -> Turma:
+    """Lê um XLSX de frequência exportado do Moodle (mod/attendance) e aplica
+    as regras de negócio (status→cor, exclusão por suspensão, matrícula
+    tardia, '?'→falta) — ver design doc para o detalhamento de cada regra."""
+    df = pd.read_excel(caminho_xlsx, header=None)
+    linha_cabecalho = df.iloc[_LINHA_CABECALHO].tolist()
+    sessoes = _extrair_sessoes(linha_cabecalho)
+
+    alunos: list[Aluno] = []
+    for i in range(_LINHA_CABECALHO + 1, len(df)):
+        linha = df.iloc[i].tolist()
+        nome_bruto = linha[1] if isinstance(linha[1], str) else ""
+        if not nome_bruto.strip():
+            continue
+        if _linha_suspensa(linha):
+            continue
+
+        matricula_tardia = _extrair_matricula_tardia(linha)
+        registros = []
+        for sessao in sessoes:
+            if matricula_tardia is not None and sessao.data < matricula_tardia:
+                registros.append(RegistroSessao(sessao, "JU", _JUSTIFICATIVA_MATRICULA_TARDIA))
+                continue
+            status = _extrair_status(linha[sessao.coluna_status]) or "AU"
+            comentario_bruto = linha[sessao.coluna_comentario]
+            comentario = comentario_bruto if isinstance(comentario_bruto, str) else ""
+            registros.append(RegistroSessao(sessao, status, comentario))
+
+        sobrenome_bruto = linha[0] if isinstance(linha[0], str) else ""
+        alunos.append(
+            Aluno(
+                nome=_nome_completo(nome_bruto, sobrenome_bruto),
+                id_estudante=str(linha[2]) if linha[2] is not None else "",
+                identificacao_usuario=str(linha[3]) if linha[3] is not None else "",
+                email=str(linha[4]) if linha[4] is not None else "",
+                registros=registros,
+            )
+        )
+
+    alunos.sort(key=lambda a: a.nome)
+    return Turma(nome=caminho_xlsx.stem, alunos=alunos, sessoes=sessoes)
