@@ -52,6 +52,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Diretório onde os arquivos XLSX de frequência serão salvos",
             json_chaves=["moodle", "caminhoExportacao"],
+            scripts=("auditar",),
         ),
         Campo(
             chave="gsheets_id_planilha",
@@ -60,6 +61,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="ID da planilha de destino no Google Sheets",
             json_chaves=["gsheets", "idPlanilha"],
+            scripts=("auditar",),
         ),
         Campo(
             chave="gsheets_caminho_json_credenciais",
@@ -69,6 +71,16 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Caminho para o arquivo credentials.json da conta de serviço Google",
             json_chaves=["gsheets", "caminhoJsonCredenciais"],
             caminho_absoluto=True,
+            scripts=("auditar",),
+        ),
+        Campo(
+            chave="atas_caminho_saida",
+            rotulo="Caminho de saída das atas em PDF",
+            tipo="caminho",
+            origem="settings",
+            descricao="Diretório onde as atas de frequência (PDF) serão salvas",
+            json_chaves=["atas", "caminhoSaida"],
+            scripts=("compilar",),
         ),
     ],
     "relatorios": [
