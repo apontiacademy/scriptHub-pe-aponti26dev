@@ -27,6 +27,6 @@ class FalhaParcial(ErroScriptHub):
 
 
 class ErroIntegracao(ErroScriptHub):
-    """Moodle, Google Sheets/Drive ou o pentefino retornaram algo inesperado."""
+    """Moodle, Google Sheets/Drive retornaram algo inesperado."""
 
     codigo_saida = 5

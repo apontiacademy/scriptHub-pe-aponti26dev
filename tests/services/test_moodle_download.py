@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from bs4 import BeautifulSoup
 
 from scripthub.services.erros import ErroIntegracao
 from scripthub.services.moodle.download import _campos_de_form, baixar_relatorio
@@ -147,7 +148,6 @@ def test_baixar_relatorio_form_inclui_submit_download(tmp_path):
 
 
 def test_baixar_relatorio_via_link_direto(tmp_path):
-    """Tests line 88-92: direct-link download path."""
     sessao = _make_sessao(html=_HTML_LINK_DOWNLOAD)
 
     baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
@@ -157,7 +157,6 @@ def test_baixar_relatorio_via_link_direto(tmp_path):
 
 
 def test_baixar_relatorio_sem_form_nem_link_levanta_erro_integracao(tmp_path):
-    """Tests line 137: error when no form/link found."""
     sessao = _make_sessao(html=_HTML_SEM_DOWNLOAD)
 
     with pytest.raises(ErroIntegracao, match="[Dd]ownload"):
@@ -255,7 +254,6 @@ def test_baixar_relatorio_form_feedback_apaga_arquivo_quando_validacao_csv_falha
 
 
 def test_campos_de_form_coleta_inputs_ocultos():
-    """Tests line 55: continue when input has no name."""
     html = """
     <form>
       <input type="hidden" name="sesskey" value="sk1">
@@ -263,7 +261,7 @@ def test_campos_de_form_coleta_inputs_ocultos():
       <input type="text" name="user" value="john">
     </form>
     """
-    soup = __import__("bs4").BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
     form = soup.find("form")
 
     data = _campos_de_form(form)
@@ -282,7 +280,7 @@ def test_campos_de_form_coleta_primeiro_submit_apenas():
       <input type="submit" name="submit2" value="Cancel">
     </form>
     """
-    soup = __import__("bs4").BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
     form = soup.find("form")
 
     data = _campos_de_form(form)
@@ -300,7 +298,7 @@ def test_campos_de_form_ignora_button_type():
       <input type="submit" name="submit" value="Send">
     </form>
     """
-    soup = __import__("bs4").BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
     form = soup.find("form")
 
     data = _campos_de_form(form)
@@ -310,7 +308,6 @@ def test_campos_de_form_ignora_button_type():
 
 
 def test_campos_de_form_coleta_selects():
-    """Tests line 66: continue when select has no name."""
     html = """
     <form>
       <select name="group">
@@ -323,14 +320,14 @@ def test_campos_de_form_coleta_selects():
       <input type="hidden" name="id" value="1">
     </form>
     """
-    soup = __import__("bs4").BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
     form = soup.find("form")
 
     data = _campos_de_form(form)
 
+    assert set(data) == {"group", "id"}
     assert data["group"] == "2"
     assert data["id"] == "1"
-    # Unnamed select should not appear in data
 
 
 def test_campos_de_form_select_usa_primeira_opcao_se_nenhuma_marcada():
@@ -343,7 +340,7 @@ def test_campos_de_form_select_usa_primeira_opcao_se_nenhuma_marcada():
       </select>
     </form>
     """
-    soup = __import__("bs4").BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
     form = soup.find("form")
 
     data = _campos_de_form(form)
