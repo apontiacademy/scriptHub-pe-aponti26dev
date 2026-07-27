@@ -402,6 +402,30 @@ def test_gerar_pdf_turma_com_justificativas_em_meses_diferentes_gera_pagina_unic
     assert caminho.stat().st_size > 0
 
 
+def test_legenda_bolinha_e_texto_ficam_na_mesma_pagina_mesmo_perto_do_rodape(mocker):
+    """Reproduz o bug: self.ellipse() não participa do quebra-página automático do
+    fpdf2 (só self.cell() participa), então a bolinha do 1º item da legenda podia
+    ficar numa página e seu texto (+ o resto da legenda) na página seguinte."""
+    pdf = AtaPDF()
+    pdf._turma = "Turma X"
+    pdf._subtitulo = "Junho/2026"
+    pdf.add_page()
+    pdf.set_y(pdf.page_break_trigger - 2)  # sobra menos que a altura da legenda (5mm)
+
+    paginas_das_bolinhas = []
+    ellipse_original = AtaPDF.ellipse
+
+    def ellipse_espiao(self, *args, **kwargs):
+        paginas_das_bolinhas.append(self.page_no())
+        return ellipse_original(self, *args, **kwargs)
+
+    mocker.patch.object(AtaPDF, "ellipse", ellipse_espiao)
+
+    pdf._legenda()
+
+    assert paginas_das_bolinhas == [pdf.page_no()] * 4
+
+
 def test_pagina_capa_adiciona_pagina_sem_imagens():
     pdf = AtaPDF()
 

@@ -371,6 +371,9 @@ class AtaPDF(FPDF):
     def _legenda(self):
         self.ln(4)
         self.set_font("Helvetica", "B", 8)
+        altura_legenda = 5
+        if self.will_page_break(altura_legenda):
+            self.add_page()
         legendas = [("PR", "Presente"), ("AU", "Falta"), ("AT", "Atraso"), ("JU", "Justificada")]
         for codigo, rotulo in legendas:
             self.set_fill_color(*CORES_STATUS[codigo])
