@@ -142,7 +142,7 @@ cp settings.example.json settings.json
 
 | Chave | Usado por | Descrição |
 |---|---|---|
-| `moodle.urlLogin` | ambos | URL de login do Moodle |
+| `moodle.urlLogin` | `auditar`, `compilar`, `extrair` | URL de login do Moodle |
 | `moodle.urlsRelatorios` | `auditar`, `extrair` | Lista de URLs dos formulários de relatório |
 | `moodle.exportarAnaliseRelatorio` | `auditar` | `true` para exportar análise em CSV |
 | `moodle.caminhoExportacaoAnalise` | `auditar` | Caminho de saída da análise (obrigatório quando `exportarAnaliseRelatorio=true`) |

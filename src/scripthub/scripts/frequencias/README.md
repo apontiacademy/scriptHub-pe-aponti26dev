@@ -154,8 +154,8 @@ cp settings.example.json settings.json
 
 | Chave | Usado por | Descrição |
 |---|---|---|
-| `moodle.urlLogin` | ambos | URL de login do Moodle |
-| `moodle.urlsFrequencias` | ambos | Dicionário `{ "Nome da Turma": "URL do módulo de presença" }` |
+| `moodle.urlLogin` | `auditar`, `compilar`, `extrair` | URL de login do Moodle |
+| `moodle.urlsFrequencias` | `auditar`, `compilar`, `extrair` | Dicionário `{ "Nome da Turma": "URL do módulo de presença" }` |
 | `moodle.caminhoExportacao` | `auditar`, `extrair` | Pasta onde os `.xlsx` serão salvos |
 | `gsheets.idPlanilha` | `auditar` | ID da planilha do Google Sheets |
 | `gsheets.caminhoJsonCredenciais` | `auditar` | Caminho absoluto para o `credentials.json` da conta de serviço Google |
