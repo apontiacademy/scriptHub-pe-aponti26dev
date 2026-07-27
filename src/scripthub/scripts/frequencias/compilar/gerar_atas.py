@@ -75,6 +75,7 @@ class LinhaResumo:
     ju: int
     faltas: int
     percentual: float
+    percentual_ju: float
 
 
 def _sanitizar_nome_arquivo(texto: str) -> str:
@@ -141,11 +142,21 @@ def todas_justificativas(paginas: list[PaginaMensal]) -> list[tuple[str, date, s
     return [justificativa for pagina in paginas for justificativa in pagina.justificativas]
 
 
+def agrupar_justificativas_por_data(
+    justificativas: list[tuple[str, date, str]],
+) -> dict[date, list[tuple[str, str]]]:
+    agrupado: dict[date, list[tuple[str, str]]] = {}
+    for nome, data_sessao, texto in justificativas:
+        agrupado.setdefault(data_sessao, []).append((nome, texto))
+    return agrupado
+
+
 def montar_resumo_geral(turma: Turma) -> list[LinhaResumo]:
     resumo = []
     for aluno in turma.alunos:
         registros = registros_do_periodo(aluno, turma.sessoes)
         faltas, total = contar_faltas(registros)
+        ju = sum(1 for r in registros if r.status == "JU")
         resumo.append(
             LinhaResumo(
                 nome=aluno.nome,
@@ -154,9 +165,10 @@ def montar_resumo_geral(turma: Turma) -> list[LinhaResumo]:
                 email=aluno.email,
                 pr=sum(1 for r in registros if r.status == "PR"),
                 at=sum(1 for r in registros if r.status == "AT"),
-                ju=sum(1 for r in registros if r.status == "JU"),
+                ju=ju,
                 faltas=faltas,
                 percentual=percentual_faltas(faltas, total),
+                percentual_ju=percentual_faltas(ju, total),
             )
         )
     return resumo
@@ -259,15 +271,28 @@ class AtaPDF(FPDF):
         self._turma = turma_nome
         self._subtitulo = "Justificativas"
         self.add_page()
-        self.set_font("Helvetica", "", 9)
-        for nome, data_sessao, texto in justificativas:
-            self.multi_cell(
-                0,
-                5,
-                _para_latin1(f"{data_sessao.strftime('%d/%m/%Y')} - {nome}: {texto}"),
-                new_x=XPos.LMARGIN,
-                new_y=YPos.NEXT,
-            )
+
+        indentacao = MARGEM + 6
+        por_data = agrupar_justificativas_por_data(justificativas)
+        for data_sessao in sorted(por_data):
+            itens = por_data[data_sessao]
+            self.set_left_margin(MARGEM)
+            self.set_x(MARGEM)
+            self.set_font("Helvetica", "B", 10)
+            self.cell(0, 7, _para_latin1(data_sessao.strftime("%d/%m/%Y")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+            self.set_left_margin(indentacao)
+            for nome, texto in itens:
+                self.set_x(indentacao)
+                self.set_font("Helvetica", "", 9)
+                self.write(5, _para_latin1("- "))
+                self.set_font("Helvetica", "B", 9)
+                self.write(5, _para_latin1(nome))
+                self.set_font("Helvetica", "", 9)
+                self.write(5, _para_latin1(f": {texto}"))
+                self.ln(6)
+            self.set_left_margin(MARGEM)
+            self.ln(2)
 
     def pagina_resumo(self, turma_nome: str, resumo: list[LinhaResumo]):
         self._turma = turma_nome
@@ -275,11 +300,12 @@ class AtaPDF(FPDF):
         self.add_page()
 
         colunas = [
-            ("Aluno", 140),
-            ("PR", 25),
-            ("AT", 25),
-            ("JU", 25),
-            ("AU", 25),
+            ("Aluno", 124),
+            ("PR", 22),
+            ("AT", 22),
+            ("JU", 22),
+            ("AU", 22),
+            ("% JU", 28),
             ("% Faltas", 33),
         ]
         self.set_font("Helvetica", "B", 8)
@@ -297,6 +323,7 @@ class AtaPDF(FPDF):
                 _para_latin1(str(linha.at)),
                 _para_latin1(str(linha.ju)),
                 _para_latin1(str(linha.faltas)),
+                _para_latin1(f"{linha.percentual_ju:.1f}%"),
                 _para_latin1(f"{linha.percentual:.1f}%"),
             ]
             for (_, largura), valor in zip(colunas, valores, strict=True):

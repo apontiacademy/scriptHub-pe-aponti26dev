@@ -9,6 +9,7 @@ from scripthub.scripts.frequencias.compilar.gerar_atas import (
     _gerar_pdf_turma,
     _sanitizar_nome_arquivo,
     _truncar_para_largura,
+    agrupar_justificativas_por_data,
     main,
     montar_paginas_mensais,
     montar_resumo_geral,
@@ -120,6 +121,29 @@ def test_montar_resumo_geral_agrega_periodo_inteiro():
     assert linha.ju == 0
     assert linha.faltas == 1
     assert linha.percentual == pytest.approx(33.333, rel=1e-3)
+    assert linha.percentual_ju == 0.0
+
+
+def test_montar_resumo_geral_calcula_percentual_de_justificadas():
+    s1, s2, s3, s4 = _sessao(1, 6), _sessao(2, 6), _sessao(3, 6), _sessao(4, 6)
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[
+            RegistroSessao(s1, "PR"),
+            RegistroSessao(s2, "JU", "Atestado"),
+            RegistroSessao(s3, "JU", "Atestado"),
+            RegistroSessao(s4, "AU"),
+        ],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[s1, s2, s3, s4])
+
+    resumo = montar_resumo_geral(turma)
+
+    assert resumo[0].ju == 2
+    assert resumo[0].percentual_ju == pytest.approx(50.0)
 
 
 def test_montar_paginas_mensais_coleta_justificativas_de_matricula_tardia():
@@ -254,6 +278,24 @@ def test_truncar_para_largura_texto_maior_adiciona_reticencias():
     assert resultado != nome_longo
     assert resultado.endswith("...")
     assert pdf.get_string_width(resultado) <= 20
+
+
+def test_agrupar_justificativas_por_data_agrupa_mesma_data():
+    justificativas = [
+        ("Fulano", date(2026, 7, 1), "Atestado médico"),
+        ("Ciclano", date(2026, 7, 1), "Consulta médica"),
+        ("Fulano", date(2026, 7, 15), "Não matriculado no momento."),
+    ]
+
+    agrupado = agrupar_justificativas_por_data(justificativas)
+
+    assert list(agrupado.keys()) == [date(2026, 7, 1), date(2026, 7, 15)]
+    assert agrupado[date(2026, 7, 1)] == [("Fulano", "Atestado médico"), ("Ciclano", "Consulta médica")]
+    assert agrupado[date(2026, 7, 15)] == [("Fulano", "Não matriculado no momento.")]
+
+
+def test_agrupar_justificativas_por_data_vazio():
+    assert agrupar_justificativas_por_data([]) == {}
 
 
 def test_pagina_justificativas_adiciona_pagina_quando_ha_justificativas():
