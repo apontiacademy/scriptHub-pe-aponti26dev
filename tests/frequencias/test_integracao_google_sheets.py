@@ -1,10 +1,10 @@
 import pytest
 
-from scripthub.scripts.frequencias.auditar.config import Config, GsheetsConfig, MoodleConfig
-from scripthub.scripts.frequencias.auditar.integracao_google_sheets import main
+from scripthub.scripts.frequencias.config import Config, GsheetsConfig, MoodleConfig
+from scripthub.scripts.frequencias.integracao_google_sheets import main
 from scripthub.services.erros import ErroConfiguracao
 
-_PATCH = "scripthub.scripts.frequencias.auditar.integracao_google_sheets"
+_PATCH = "scripthub.scripts.frequencias.integracao_google_sheets"
 
 
 @pytest.fixture
