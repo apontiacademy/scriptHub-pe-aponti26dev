@@ -297,6 +297,8 @@ def test_carregar_turma_matricula_tardia_justifica_por_data(tmp_path):
     # Sessão de 8/06 é anterior à matrícula (10/06) -> justificada com texto fixo
     assert aluno.registros[0].status == "JU"
     assert aluno.registros[0].comentario == "Não matriculado no momento."
+    # Sessão de 15/06 é posterior -> status real preservado
+    assert aluno.registros[1].status == "PR"
 
 
 def test_carregar_turma_matricula_tardia_dia_sem_zero_a_esquerda(tmp_path, mocker):
