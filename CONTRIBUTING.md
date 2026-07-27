@@ -322,13 +322,12 @@ tests/
 │   ├── test_config.py
 │   └── test_exportar_frequencias.py
 ├── relatorios/
-│   ├── auditar/
+│   ├── compilar/
 │   │   ├── test_config.py
-│   │   ├── test_backup.py
-│   │   └── test_middleware.py
-│   └── compilar/
+│   │   └── test_compilar_pdfs.py
+│   └── extrair/
 │       ├── test_config.py
-│       └── test_compilar_pdfs.py
+│       └── test_download_de_relatorios.py
 ├── softskills/
 │   ├── test_config.py
 │   ├── test_download_softskills.py
