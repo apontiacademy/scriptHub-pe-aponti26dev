@@ -4,11 +4,15 @@ import pytest
 
 from scripthub.scripts.frequencias.compilar.config import AtasConfig, Config, MoodleConfig
 from scripthub.scripts.frequencias.compilar.gerar_atas import (
+    AtaPDF,
+    PaginaMensal,
     _gerar_pdf_turma,
     _sanitizar_nome_arquivo,
+    _truncar_para_largura,
     main,
     montar_paginas_mensais,
     montar_resumo_geral,
+    todas_justificativas,
 )
 from scripthub.scripts.frequencias.compilar.parser_frequencias import Aluno, RegistroSessao, Sessao, Turma
 from scripthub.services.erros import ErroConfiguracao, FalhaParcial
@@ -203,6 +207,94 @@ def test_main_conta_falhas_por_turma_e_levanta_falha_parcial(tmp_path, mocker):
         main(config)
 
     assert mock_gerar.call_count == 1
+
+
+def test_todas_justificativas_concatena_na_ordem_dos_meses():
+    pagina_junho = PaginaMensal(
+        mes="Junho",
+        ano=2026,
+        sessoes=[],
+        justificativas=[("Fulano", date(2026, 6, 10), "Atestado médico")],
+    )
+    pagina_julho = PaginaMensal(
+        mes="Julho",
+        ano=2026,
+        sessoes=[],
+        justificativas=[("Ciclano", date(2026, 7, 3), "Não matriculado no momento.")],
+    )
+
+    resultado = todas_justificativas([pagina_junho, pagina_julho])
+
+    assert resultado == [
+        ("Fulano", date(2026, 6, 10), "Atestado médico"),
+        ("Ciclano", date(2026, 7, 3), "Não matriculado no momento."),
+    ]
+
+
+def test_todas_justificativas_vazio_quando_nenhum_mes_tem_justificativa():
+    pagina = PaginaMensal(mes="Junho", ano=2026, sessoes=[])
+
+    assert todas_justificativas([pagina]) == []
+
+
+def test_truncar_para_largura_texto_menor_que_largura_nao_trunca():
+    pdf = AtaPDF()
+    pdf.set_font("Helvetica", "", 8)
+
+    assert _truncar_para_largura(pdf, "Nome Curto", 50) == "Nome Curto"
+
+
+def test_truncar_para_largura_texto_maior_adiciona_reticencias():
+    pdf = AtaPDF()
+    pdf.set_font("Helvetica", "", 8)
+    nome_longo = "Nome Extremamente Longo Que Nao Caberia De Jeito Nenhum Nessa Coluna Estreita"
+
+    resultado = _truncar_para_largura(pdf, nome_longo, 20)
+
+    assert resultado != nome_longo
+    assert resultado.endswith("...")
+    assert pdf.get_string_width(resultado) <= 20
+
+
+def test_pagina_justificativas_adiciona_pagina_quando_ha_justificativas():
+    pdf = AtaPDF()
+    pdf.pagina_resumo("Turma X", [])
+    assert pdf.page_no() == 1
+
+    pdf.pagina_justificativas("Turma X", [("Fulano", date(2026, 6, 1), "Atestado médico")])
+
+    assert pdf.page_no() == 2
+
+
+def test_pagina_justificativas_nao_adiciona_pagina_quando_vazia():
+    pdf = AtaPDF()
+    pdf.pagina_resumo("Turma X", [])
+    assert pdf.page_no() == 1
+
+    pdf.pagina_justificativas("Turma X", [])
+
+    assert pdf.page_no() == 1
+
+
+def test_gerar_pdf_turma_com_justificativas_em_meses_diferentes_gera_pagina_unica_no_final(tmp_path):
+    s1, s2 = _sessao(10, 6), _sessao(3, 7)
+    aluno = Aluno(
+        nome="Fulano de Tal",
+        id_estudante="42",
+        identificacao_usuario="fulano",
+        email="fulano@example.com",
+        registros=[
+            RegistroSessao(s1, "JU", "Atestado médico"),
+            RegistroSessao(s2, "JU", "Consulta médica"),
+        ],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[s1, s2])
+    caminho = tmp_path / "test.pdf"
+
+    _gerar_pdf_turma(turma, caminho)
+
+    assert caminho.exists()
+    assert caminho.stat().st_size > 0
 
 
 def test_main_sucesso_gera_todas_as_atas(tmp_path, mocker):

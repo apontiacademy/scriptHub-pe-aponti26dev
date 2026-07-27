@@ -81,6 +81,22 @@ def _sanitizar_nome_arquivo(texto: str) -> str:
     return re.sub(r'[\\/*?:"<>|]', "", texto).strip()
 
 
+def _truncar_para_largura(pdf: FPDF, texto: str, largura_max: float) -> str:
+    """Trunca `texto` para caber em `largura_max` (mm) na fonte atual de `pdf`,
+    adicionando reticências após o último caractere que coube."""
+    largura_disponivel = largura_max - 2 * pdf.c_margin
+    if pdf.get_string_width(texto) <= largura_disponivel:
+        return texto
+    reticencias = "..."
+    largura_reticencias = pdf.get_string_width(reticencias)
+    truncado = ""
+    for char in texto:
+        if pdf.get_string_width(truncado + char) + largura_reticencias > largura_disponivel:
+            break
+        truncado += char
+    return truncado + reticencias
+
+
 def _para_latin1(texto: str) -> str:
     """Substitui caracteres fora do Latin-1 por equivalentes ASCII."""
     substituicoes = {
@@ -119,6 +135,10 @@ def montar_paginas_mensais(turma: Turma) -> list[PaginaMensal]:
                 pagina.justificativas.append((aluno.nome, data_sessao, texto))
         paginas.append(pagina)
     return paginas
+
+
+def todas_justificativas(paginas: list[PaginaMensal]) -> list[tuple[str, date, str]]:
+    return [justificativa for pagina in paginas for justificativa in pagina.justificativas]
 
 
 def montar_resumo_geral(turma: Turma) -> list[LinhaResumo]:
@@ -189,7 +209,8 @@ class AtaPDF(FPDF):
             else:
                 self.set_fill_color(255, 255, 255)
                 preenchido = True
-            self.cell(col_nome, 6, _para_latin1(linha.nome[:38]), border=1, fill=preenchido)
+            nome = _truncar_para_largura(self, _para_latin1(linha.nome), col_nome)
+            self.cell(col_nome, 6, nome, border=1, fill=preenchido)
             x_inicio = self.get_x()
             y_inicio = self.get_y()
             for _status in linha.statuses:
@@ -213,7 +234,7 @@ class AtaPDF(FPDF):
                 self.ellipse(cx - raio, cy - raio, raio * 2, raio * 2, style="F")
 
         self._legenda()
-        self._rodape_justificativas(pagina.justificativas)
+        self._nota_justificativas(pagina.justificativas)
 
     def _legenda(self):
         self.ln(4)
@@ -225,13 +246,20 @@ class AtaPDF(FPDF):
             self.set_x(self.get_x() + 5)
             self.cell(30, 5, _para_latin1(rotulo))
 
-    def _rodape_justificativas(self, justificativas: list[tuple[str, date, str]]):
+    def _nota_justificativas(self, justificativas: list[tuple[str, date, str]]):
         if not justificativas:
             return
-        self.ln(6)
-        self.set_font("Helvetica", "B", 9)
-        self.cell(0, 5, _para_latin1("Justificativas"), ln=True)
-        self.set_font("Helvetica", "", 8)
+        self.ln(4)
+        self.set_font("Helvetica", "I", 8)
+        self.cell(0, 5, _para_latin1("* Justificativas ao final do documento."), ln=True)
+
+    def pagina_justificativas(self, turma_nome: str, justificativas: list[tuple[str, date, str]]):
+        if not justificativas:
+            return
+        self._turma = turma_nome
+        self._subtitulo = "Justificativas"
+        self.add_page()
+        self.set_font("Helvetica", "", 9)
         for nome, data_sessao, texto in justificativas:
             self.multi_cell(
                 0,
@@ -247,15 +275,12 @@ class AtaPDF(FPDF):
         self.add_page()
 
         colunas = [
-            ("Aluno", 45),
-            ("ID", 15),
-            ("Usuário", 25),
-            ("E-mail", 55),
-            ("PR", 15),
-            ("AT", 15),
-            ("JU", 15),
-            ("Faltas", 15),
-            ("% Faltas", 20),
+            ("Aluno", 140),
+            ("PR", 25),
+            ("AT", 25),
+            ("JU", 25),
+            ("AU", 25),
+            ("% Faltas", 33),
         ]
         self.set_font("Helvetica", "B", 8)
         self.set_fill_color(210, 210, 210)
@@ -265,27 +290,27 @@ class AtaPDF(FPDF):
 
         self.set_font("Helvetica", "", 8)
         for linha in resumo:
+            _, largura_nome = colunas[0]
             valores = [
-                linha.nome[:30],
-                linha.id_estudante,
-                linha.identificacao_usuario[:16],
-                linha.email[:34],
-                str(linha.pr),
-                str(linha.at),
-                str(linha.ju),
-                str(linha.faltas),
-                f"{linha.percentual:.1f}%",
+                _truncar_para_largura(self, _para_latin1(linha.nome), largura_nome),
+                _para_latin1(str(linha.pr)),
+                _para_latin1(str(linha.at)),
+                _para_latin1(str(linha.ju)),
+                _para_latin1(str(linha.faltas)),
+                _para_latin1(f"{linha.percentual:.1f}%"),
             ]
             for (_, largura), valor in zip(colunas, valores, strict=True):
-                self.cell(largura, 6, _para_latin1(valor), border=1)
+                self.cell(largura, 6, valor, border=1)
             self.ln(6)
 
 
 def _gerar_pdf_turma(turma: Turma, caminho_saida: Path) -> None:
     pdf = AtaPDF()
-    for pagina in montar_paginas_mensais(turma):
+    paginas = montar_paginas_mensais(turma)
+    for pagina in paginas:
         pdf.pagina_mensal(turma.nome, pagina)
     pdf.pagina_resumo(turma.nome, montar_resumo_geral(turma))
+    pdf.pagina_justificativas(turma.nome, todas_justificativas(paginas))
     caminho_saida.parent.mkdir(parents=True, exist_ok=True)
     pdf.output(str(caminho_saida))
 
