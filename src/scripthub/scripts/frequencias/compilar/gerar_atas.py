@@ -45,10 +45,11 @@ LARGURA_PAGINA = 297  # A4 paisagem
 MARGEM = 12
 LARGURA_UTIL = LARGURA_PAGINA - 2 * MARGEM
 
-LARGURA_LOGO_MAX = 72
-ALTURA_LOGO_MAX = 36
+LARGURA_LOGO_MAX = 65
+ALTURA_LOGO_MAX = 32
 ALTURA_ASSINATURA_MAX = 40
 ESPACAMENTO_CAPA = 8
+MARGEM_TOPO_LOGO = 28
 
 
 @dataclass
@@ -214,7 +215,7 @@ class AtaPDF(FPDF):
             self.image(
                 str(caminho_logo),
                 x=x_logo,
-                y=MARGEM,
+                y=MARGEM_TOPO_LOGO,
                 w=LARGURA_LOGO_MAX,
                 h=ALTURA_LOGO_MAX,
                 keep_aspect_ratio=True,
