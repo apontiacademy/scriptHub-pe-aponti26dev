@@ -145,7 +145,7 @@ def _executar_pipeline_simples(fn) -> None:
 
 # --- relatorios: subapp com 2 scripts internos (compilar/extrair) ---
 
-relatorios_app = typer.Typer(help="Processa relatórios do Moodle: auditoria completa ou compilação de PDFs.")
+relatorios_app = typer.Typer(help="Processa relatórios do Moodle: extração ou compilação de PDFs.")
 app.add_typer(relatorios_app, name="relatorios")
 app.add_typer(relatorios_app, name="r", hidden=True)
 
