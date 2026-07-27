@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from scripthub.services import log
+
 CORES_STATUS: dict[str, tuple[int, int, int]] = {
     "PR": (0, 170, 80),
     "AU": (220, 50, 50),
@@ -119,6 +121,8 @@ def _extrair_status(valor) -> str | None:
         return None
     m = _RE_STATUS.match(valor)
     if not m or m.group(1) not in _STATUS_VALIDOS:
+        if valor.strip() not in ("", "?"):
+            log.aviso(f"Status de frequência não reconhecido, tratado como falta: {valor!r}")
         return None
     return m.group(1)
 

@@ -177,7 +177,7 @@ def test_carregar_turma_status_basico(tmp_path):
     assert [r.status for r in aluno.registros] == ["PR", "AU"]
 
 
-def test_carregar_turma_interrogacao_vira_au(tmp_path):
+def test_carregar_turma_interrogacao_vira_au(tmp_path, mocker):
     linhas = [
         ["Curso", "Turma X"],
         ["Grupo", "Todos os participantes"],
@@ -186,10 +186,30 @@ def test_carregar_turma_interrogacao_vira_au(tmp_path):
         [".", "Aluno Um", "1", "aluno1", "a1@example.com", "?", None, 1, 0, 0, 0, 1, "0 / 0", "0,0"],
     ]
     caminho = _escrever_xlsx(tmp_path, "Turma X.xlsx", linhas)
+    mock_log = mocker.patch("scripthub.scripts.frequencias.compilar.parser_frequencias.log")
 
     turma = carregar_turma(caminho)
 
     assert turma.alunos[0].registros[0].status == "AU"
+    mock_log.aviso.assert_not_called()
+
+
+def test_carregar_turma_status_desconhecido_loga_aviso_e_vira_au(tmp_path, mocker):
+    linhas = [
+        ["Curso", "Turma X"],
+        ["Grupo", "Todos os participantes"],
+        [],
+        _cabecalho(["8/06/2026"]),
+        [".", "Aluno Um", "1", "aluno1", "a1@example.com", "XX (0/0)", None, 1, 0, 0, 0, 1, "0 / 0", "0,0"],
+    ]
+    caminho = _escrever_xlsx(tmp_path, "Turma X.xlsx", linhas)
+    mock_log = mocker.patch("scripthub.scripts.frequencias.compilar.parser_frequencias.log")
+
+    turma = carregar_turma(caminho)
+
+    assert turma.alunos[0].registros[0].status == "AU"
+    mock_log.aviso.assert_called_once()
+    assert "XX (0/0)" in mock_log.aviso.call_args[0][0]
 
 
 def test_carregar_turma_aluno_suspenso_e_excluido(tmp_path):
