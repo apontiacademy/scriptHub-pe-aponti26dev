@@ -125,8 +125,8 @@ src/scripthub/
 ├── scripts/                # Módulos de automação (um por pasta)
 │   ├── frequencias/
 │   ├── relatorios/
-│   │   ├── auditar/
-│   │   └── compilar/
+│   │   ├── compilar/
+│   │   └── extrair/
 │   ├── softskills/
 │   └── torpedo/
 └── services/
@@ -136,7 +136,7 @@ src/scripthub/
 
 Cada pacote de script segue um dos dois padrões:
 
-**Padrão A — pipeline por escopos** (`frequencias`, `relatorios/auditar`):
+**Padrão A — pipeline por escopos** (`frequencias`, `relatorios/extrair`):
 - `__init__.py` — declara `CLI_CMD`, exporta `ESCOPOS` e `get_config`
 - `ESCOPOS`: lista de `Escopo(slug, nome, func, aliases)` — ver `services/escopo.py`
 - `get_config()`: retorna a dataclass de configuração (carrega `.env` + `settings.json`)
@@ -382,7 +382,6 @@ def test_funcao(entrada, esperado):
 - Playwright real (fazer_login, publicar_no_forum) — teste apenas funções puras como `carregar_conteudo`, `_md_para_html`
 - Geração de PDF com FPDF — instanciar `RelatorioPDF` requer fontes instaladas
 - Google API real — sempre mockar `build`, `Credentials.from_service_account_file`, `gspread.authorize`
-- pentefino Core real — mockar `executar_analise_core`
 - Orquestradores Padrão A/B pesados (ex.: `softskills/main.py`) cujo `main()`/`ESCOPOS` exigiria mockar
   muitos serviços externos para pouco ganho — teste os helpers que ele chama isoladamente; o próprio arquivo
   entra no `omit` de cobertura do `pyproject.toml` quando esse for o caso
