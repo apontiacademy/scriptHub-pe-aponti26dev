@@ -14,8 +14,6 @@ def main():
 
     compilar_pdfs.main(config)
 
-    log.ok("PIPELINE EXECUTADO E CONCLUÍDO COM SUCESSO ABSOLUTO!")
-
 
 if __name__ == "__main__":
     import sys

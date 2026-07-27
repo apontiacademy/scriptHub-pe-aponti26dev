@@ -8,6 +8,7 @@
     "caminhoExportacao": "/home/you/Downloads/frequencias"
   },
   "gsheets": {
-    "idPlanilha": "abcdefghijklmnopqrstuvwxyz12345678"
+    "idPlanilha": "abcdefghijklmnopqrstuvwxyz12345678",
+    "caminhoJsonCredenciais": "/home/you/credentials.json"
   }
 }

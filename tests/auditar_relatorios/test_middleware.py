@@ -1,7 +1,10 @@
+import dataclasses
+
 import pytest
 
 from scripthub.scripts.auditar_relatorios.config import Config, GsheetsConfig, MoodleConfig
 from scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios import main
+from scripthub.services.erros import ErroIntegracao
 
 _PATCH_CORE = "scripthub.scripts.auditar_relatorios.middleware_analise_de_relatorios.executar_analise_core"
 
@@ -13,13 +16,11 @@ def config(tmp_path):
             usuario="user",
             senha="pass",
             caminho_download_relatorio=tmp_path / "relatorios",
-            headless=True,
             csv_residentes=tmp_path / "residentes.csv",
             csv_saida_analise=tmp_path / "dados" / "resultado.csv",
             url_login="https://example.com/login",
             urls_relatorios=["https://example.com/r1"],
-            exportar_analise_relatorio=False,
-            caminho_exportacao_analise=None,
+            exportar_analise_relatorio=True,
         ),
         gsheets=GsheetsConfig(
             id_planilha="planilha-id",
@@ -70,6 +71,17 @@ def test_main_injeta_flag_csv_saida(config, mocker):
     assert str(config.moodle.csv_saida_analise) in args
 
 
+def test_main_injeta_flag_csv_saida_com_caminho_padrao_quando_exportacao_desativada(config, mocker):
+    config = dataclasses.replace(config, moodle=dataclasses.replace(config.moodle, exportar_analise_relatorio=False))
+    mock_core = mocker.patch(_PATCH_CORE)
+
+    main(config)
+
+    args = mock_core.call_args[0][0]
+    assert "-o" in args
+    assert str(config.moodle.csv_saida_analise) in args
+
+
 def test_main_cria_diretorio_pai_do_csv_saida(config, mocker):
     mocker.patch(_PATCH_CORE)
     assert not config.moodle.csv_saida_analise.parent.exists()
@@ -79,8 +91,21 @@ def test_main_cria_diretorio_pai_do_csv_saida(config, mocker):
     assert config.moodle.csv_saida_analise.parent.exists()
 
 
-def test_main_nao_propaga_excecao_do_core(config, mocker):
+def test_main_propaga_excecao_do_core(config, mocker):
     mocker.patch(_PATCH_CORE, side_effect=RuntimeError("falha no core"))
 
-    # O código atual captura a exceção e faz log.erro — não deve propagar
+    with pytest.raises(RuntimeError, match="falha no core"):
+        main(config)
+
+
+def test_main_converte_system_exit_do_core_em_erro_integracao(config, mocker):
+    mocker.patch(_PATCH_CORE, side_effect=SystemExit(1))
+
+    with pytest.raises(ErroIntegracao, match="código de saída 1"):
+        main(config)
+
+
+def test_main_nao_levanta_erro_para_system_exit_zero(config, mocker):
+    mocker.patch(_PATCH_CORE, side_effect=SystemExit(0))
+
     main(config)

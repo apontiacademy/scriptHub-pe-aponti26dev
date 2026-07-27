@@ -8,6 +8,7 @@ from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
 from scripthub.services import log
+from scripthub.services.erros import ErroConfiguracao, FalhaParcial
 
 from .config import Config
 
@@ -252,7 +253,7 @@ def _carregar_relatorios(
             try:
                 df = pd.read_csv(caminho_csv, dtype=str).fillna("")
             except Exception as e:
-                log.erro(f"Falha ao ler {caminho_csv}: {e}")
+                log.aviso(f"Falha ao ler {caminho_csv}: {e}")
                 continue
 
             colunas_perguntas = _extrair_colunas_perguntas(df)
@@ -331,7 +332,7 @@ def main(config: Config):
     alunos = _carregar_relatorios(config.moodle.meses, config.moodle.caminho_download)
 
     if not alunos:
-        raise RuntimeError("Nenhum dado de aluno encontrado nos CSVs.")
+        raise ErroConfiguracao("Nenhum dado de aluno encontrado nos CSVs.")
 
     log.ok(f"{len(alunos)} aluno(s) encontrado(s).")
 
@@ -361,7 +362,12 @@ def main(config: Config):
             log.erro(f"Falha ao gerar PDF para {aluno.nome}: {e}")
             erros += 1
 
-    log.ok(f"Escopo 2 finalizado: {gerados} PDF(s) gerado(s), {erros} erro(s).")
+    if erros:
+        raise FalhaParcial(
+            f"{erros} PDF(s) falharam ao gerar de {len(alunos)} aluno(s). {gerados} gerado(s) com sucesso."
+        )
+
+    log.ok(f"{gerados} PDF(s) gerado(s) com sucesso.")
 
 
 if __name__ == "__main__":
