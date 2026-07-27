@@ -54,7 +54,7 @@ uv run scripthub frequencias auditar
 
 ## `compilar`
 
-Extrai as frequências de todas as turmas do Moodle (independente de `auditar` já ter rodado) e compila uma ata de frequência em PDF por turma: uma página por mês, com a presença de cada aluno marcada por uma bolinha colorida, e uma última página de resumo geral do período inteiro.
+Extrai as frequências de todas as turmas do Moodle (independente de `auditar` já ter rodado) e compila uma ata de frequência em PDF por turma: uma capa, uma página por mês (com a presença de cada aluno marcada por uma bolinha colorida), uma página de resumo geral do período inteiro e, por fim, a lista de justificativas agrupada por data.
 
 ### Pipeline
 
@@ -90,6 +90,8 @@ uv run scripthub frequencias compilar
 - Aluno com matrícula tardia (`"Inscrição de usuários inicia..."`) tem as sessões anteriores à matrícula justificadas automaticamente (`"Não matriculado no momento."`), mas continua na ata.
 - Sessão sem chamada feita (`"?"`) conta como falta.
 - Aluno com mais de 3 faltas no mês tem a linha inteira destacada em vermelho naquela página mensal — limite fixo no código, não configurável.
+- A capa mostra o logo do programa (opcional), o título "Registro de Frequências" e o nome da turma, centralizados como bloco; a assinatura de logos da Aponti (opcional) fica fixa na parte de baixo. Ambas as imagens são configuráveis (`atas.caminhoLogo`/`atas.caminhoAssinatura`) — se ausentes ou apontando para um arquivo inexistente, simplesmente não são exibidas.
+- Todas as justificativas do período ficam concentradas numa única página ao final do documento, agrupadas por data — cada página mensal com justificativas só exibe a nota "* Justificativas ao final do documento.".
 
 ### Estrutura de saída
 
@@ -137,6 +139,8 @@ cp settings.example.json settings.json
 | `gsheets.idPlanilha` | `auditar` | ID da planilha do Google Sheets |
 | `gsheets.caminhoJsonCredenciais` | `auditar` | Caminho absoluto para o `credentials.json` da conta de serviço Google |
 | `atas.caminhoSaida` | `compilar` | Pasta onde as atas em PDF serão salvas |
+| `atas.caminhoLogo` | `compilar` | Imagem do logo do programa exibida na capa (opcional) |
+| `atas.caminhoAssinatura` | `compilar` | Imagem da assinatura de logos da Aponti exibida no rodapé da capa (opcional) |
 
 Exemplo de `urlsFrequencias`:
 

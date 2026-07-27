@@ -38,6 +38,21 @@ def test_load_valido(tmp_path, monkeypatch, settings_valido):
         "Turma B": "https://example.com/freq?id=2",
     }
     assert config.atas.caminho_saida == tmp_path / "atas"
+    assert config.atas.caminho_logo is None
+    assert config.atas.caminho_assinatura is None
+
+
+def test_load_com_logo_e_assinatura_opcionais(tmp_path, monkeypatch, settings_valido):
+    settings_valido["atas"]["caminhoLogo"] = str(tmp_path / "logo.png")
+    settings_valido["atas"]["caminhoAssinatura"] = str(tmp_path / "assinatura.png")
+    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
+    monkeypatch.setattr(cfg_module, "DIRETORIO_DOMINIO", tmp_path)
+
+    config = Config.load()
+
+    assert config.atas.caminho_logo == tmp_path / "logo.png"
+    assert config.atas.caminho_assinatura == tmp_path / "assinatura.png"
 
 
 def test_load_sem_caminho_saida_levanta_key_error(tmp_path, monkeypatch, settings_valido):

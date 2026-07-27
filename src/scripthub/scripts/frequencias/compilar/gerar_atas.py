@@ -45,6 +45,11 @@ LARGURA_PAGINA = 297  # A4 paisagem
 MARGEM = 12
 LARGURA_UTIL = LARGURA_PAGINA - 2 * MARGEM
 
+LARGURA_LOGO_MAX = 90
+ALTURA_LOGO_MAX = 45
+ALTURA_ASSINATURA_MAX = 22
+ESPACAMENTO_CAPA = 8
+
 
 @dataclass
 class LinhaAluno:
@@ -181,8 +186,11 @@ class AtaPDF(FPDF):
         self.set_auto_page_break(auto=True, margin=MARGEM)
         self._turma = ""
         self._subtitulo = ""
+        self._pagina_capa = False
 
     def header(self):
+        if self._pagina_capa:
+            return
         self.set_font("Helvetica", "B", 14)
         self.cell(0, 8, _para_latin1(self._turma), ln=True)
         self.set_font("Helvetica", "", 11)
@@ -193,6 +201,58 @@ class AtaPDF(FPDF):
         self.set_y(-12)
         self.set_font("Helvetica", "I", 8)
         self.cell(0, 5, _para_latin1(f"Página {self.page_no()}"), align="C")
+
+    def pagina_capa(self, turma_nome: str, caminho_logo: Path | None, caminho_assinatura: Path | None):
+        logo_existe = caminho_logo is not None and caminho_logo.exists()
+        assinatura_existe = caminho_assinatura is not None and caminho_assinatura.exists()
+
+        self._pagina_capa = True
+        self.add_page()
+
+        altura_titulo = 14
+        altura_turma = 11
+        altura_bloco = altura_titulo + ESPACAMENTO_CAPA + altura_turma
+        if logo_existe:
+            altura_bloco += ALTURA_LOGO_MAX + ESPACAMENTO_CAPA
+
+        y = (self.h - altura_bloco) / 2
+
+        if logo_existe:
+            x = (self.w - LARGURA_LOGO_MAX) / 2
+            self.image(
+                str(caminho_logo),
+                x=x,
+                y=y,
+                w=LARGURA_LOGO_MAX,
+                h=ALTURA_LOGO_MAX,
+                keep_aspect_ratio=True,
+            )
+            y += ALTURA_LOGO_MAX + ESPACAMENTO_CAPA
+
+        self.set_y(y)
+        self.set_font("Helvetica", "B", 26)
+        self.cell(
+            0, altura_titulo, _para_latin1("Registro de Frequências"), align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT
+        )
+        y += altura_titulo + ESPACAMENTO_CAPA
+
+        self.set_y(y)
+        self.set_font("Helvetica", "", 18)
+        self.cell(0, altura_turma, _para_latin1(turma_nome), align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        if assinatura_existe:
+            x = MARGEM
+            y_assinatura = self.h - self.b_margin - ALTURA_ASSINATURA_MAX
+            self.image(
+                str(caminho_assinatura),
+                x=x,
+                y=y_assinatura,
+                w=LARGURA_UTIL,
+                h=ALTURA_ASSINATURA_MAX,
+                keep_aspect_ratio=True,
+            )
+
+        self._pagina_capa = False
 
     def pagina_mensal(self, turma_nome: str, pagina: PaginaMensal):
         self._turma = turma_nome
@@ -331,8 +391,14 @@ class AtaPDF(FPDF):
             self.ln(6)
 
 
-def _gerar_pdf_turma(turma: Turma, caminho_saida: Path) -> None:
+def _gerar_pdf_turma(
+    turma: Turma,
+    caminho_saida: Path,
+    caminho_logo: Path | None = None,
+    caminho_assinatura: Path | None = None,
+) -> None:
     pdf = AtaPDF()
+    pdf.pagina_capa(turma.nome, caminho_logo, caminho_assinatura)
     paginas = montar_paginas_mensais(turma)
     for pagina in paginas:
         pdf.pagina_mensal(turma.nome, pagina)
@@ -356,7 +422,12 @@ def main(config: Config) -> None:
             turma = carregar_turma(arquivo)
             nome_arquivo = _sanitizar_nome_arquivo(turma.nome) + ".pdf"
             caminho_saida = config.atas.caminho_saida / nome_arquivo
-            _gerar_pdf_turma(turma, caminho_saida)
+            _gerar_pdf_turma(
+                turma,
+                caminho_saida,
+                caminho_logo=config.atas.caminho_logo,
+                caminho_assinatura=config.atas.caminho_assinatura,
+            )
             log.ok(f"{caminho_saida.name}")
         except Exception as e:
             log.erro(f"Falha ao gerar ata para {arquivo.stem}: {e}")

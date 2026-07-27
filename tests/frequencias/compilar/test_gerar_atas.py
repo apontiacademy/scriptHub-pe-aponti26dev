@@ -1,4 +1,5 @@
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -25,7 +26,7 @@ def _sessao(dia, mes, ano=2026, col=5):
     return Sessao(data=date(ano, mes, dia), coluna_status=col, coluna_comentario=col + 1)
 
 
-def _make_config(tmp_path):
+def _make_config(tmp_path, caminho_logo=None, caminho_assinatura=None):
     return Config(
         moodle=MoodleConfig(
             usuario="user",
@@ -33,8 +34,19 @@ def _make_config(tmp_path):
             url_login="https://moodle.example.com/login/index.php",
             urls_frequencias={"Turma A": "https://moodle.example.com/freq?id=1"},
         ),
-        atas=AtasConfig(caminho_saida=tmp_path / "atas"),
+        atas=AtasConfig(
+            caminho_saida=tmp_path / "atas",
+            caminho_logo=caminho_logo,
+            caminho_assinatura=caminho_assinatura,
+        ),
     )
+
+
+def _imagem_valida(caminho: Path, tamanho=(120, 60)):
+    from PIL import Image
+
+    Image.new("RGB", tamanho, color=(255, 0, 0)).save(caminho)
+    return caminho
 
 
 def _turma_um_aluno_dois_meses():
@@ -337,6 +349,72 @@ def test_gerar_pdf_turma_com_justificativas_em_meses_diferentes_gera_pagina_unic
 
     assert caminho.exists()
     assert caminho.stat().st_size > 0
+
+
+def test_pagina_capa_adiciona_pagina_sem_imagens():
+    pdf = AtaPDF()
+
+    pdf.pagina_capa("Turma X", None, None)
+
+    assert pdf.page_no() == 1
+
+
+def test_pagina_capa_ignora_caminhos_inexistentes(tmp_path):
+    pdf = AtaPDF()
+
+    pdf.pagina_capa("Turma X", tmp_path / "logo.png", tmp_path / "assinatura.png")
+
+    assert pdf.page_no() == 1
+    assert pdf.output()
+
+
+def test_pagina_capa_com_logo_e_assinatura_validas(tmp_path):
+    logo = _imagem_valida(tmp_path / "logo.png")
+    assinatura = _imagem_valida(tmp_path / "assinatura.png", tamanho=(300, 40))
+    pdf = AtaPDF()
+
+    pdf.pagina_capa("Turma X", logo, assinatura)
+
+    assert pdf.page_no() == 1
+    assert pdf.output()
+
+
+def test_pagina_capa_nao_desenha_cabecalho_padrao():
+    pdf = AtaPDF()
+
+    pdf.pagina_capa("Turma X", None, None)
+    pdf.pagina_mensal("Turma X", PaginaMensal(mes="Junho", ano=2026, sessoes=[]))
+
+    assert pdf.page_no() == 2
+
+
+def test_gerar_pdf_turma_inclui_capa_como_primeira_pagina(tmp_path, mocker):
+    turma = _turma_um_aluno_dois_meses()
+    caminho = tmp_path / "test.pdf"
+    spy = mocker.spy(AtaPDF, "pagina_capa")
+
+    _gerar_pdf_turma(turma, caminho, caminho_logo=None, caminho_assinatura=None)
+
+    spy.assert_called_once_with(mocker.ANY, turma.nome, None, None)
+
+
+def test_main_repassa_logo_e_assinatura_configurados(tmp_path, mocker):
+    logo = _imagem_valida(tmp_path / "logo.png")
+    assinatura = _imagem_valida(tmp_path / "assinatura.png")
+    config = _make_config(tmp_path, caminho_logo=logo, caminho_assinatura=assinatura)
+    diretorio = tmp_path / "dados" / "frequencias"
+    diretorio.mkdir(parents=True)
+    (diretorio / "turma_a.xlsx").touch()
+    mocker.patch(f"{_PATCH}.DIRETORIO_DOWNLOAD", diretorio)
+    mocker.patch(
+        f"{_PATCH}.carregar_turma",
+        side_effect=lambda caminho: Turma(nome=caminho.stem, alunos=[], sessoes=[]),
+    )
+    mock_gerar = mocker.patch(f"{_PATCH}._gerar_pdf_turma")
+
+    main(config)
+
+    mock_gerar.assert_called_once_with(mocker.ANY, mocker.ANY, caminho_logo=logo, caminho_assinatura=assinatura)
 
 
 def test_main_sucesso_gera_todas_as_atas(tmp_path, mocker):

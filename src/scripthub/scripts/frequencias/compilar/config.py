@@ -22,6 +22,8 @@ class MoodleConfig:
 @dataclass
 class AtasConfig:
     caminho_saida: Path
+    caminho_logo: Path | None = None
+    caminho_assinatura: Path | None = None
 
 
 @dataclass
@@ -44,7 +46,11 @@ class Config:
             urls_frequencias=moodle_json["urlsFrequencias"],
         )
 
-        atas_config = AtasConfig(caminho_saida=Path(atas_json["caminhoSaida"]))
+        atas_config = AtasConfig(
+            caminho_saida=Path(atas_json["caminhoSaida"]),
+            caminho_logo=Path(atas_json["caminhoLogo"]) if atas_json.get("caminhoLogo") else None,
+            caminho_assinatura=Path(atas_json["caminhoAssinatura"]) if atas_json.get("caminhoAssinatura") else None,
+        )
 
         return Config(moodle=moodle_config, atas=atas_config)
 

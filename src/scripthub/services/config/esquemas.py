@@ -82,6 +82,26 @@ ESQUEMAS: dict[str, list[Campo]] = {
             json_chaves=["atas", "caminhoSaida"],
             scripts=("compilar",),
         ),
+        Campo(
+            chave="atas_caminho_logo",
+            rotulo="Logo do programa (opcional)",
+            tipo="caminho",
+            origem="settings",
+            descricao="Imagem exibida no topo da capa da ata (deixe vazio para nenhuma)",
+            obrigatorio=False,
+            json_chaves=["atas", "caminhoLogo"],
+            scripts=("compilar",),
+        ),
+        Campo(
+            chave="atas_caminho_assinatura",
+            rotulo="Assinatura de logos da Aponti (opcional)",
+            tipo="caminho",
+            origem="settings",
+            descricao="Imagem exibida no rodapé da capa da ata (deixe vazio para nenhuma)",
+            obrigatorio=False,
+            json_chaves=["atas", "caminhoAssinatura"],
+            scripts=("compilar",),
+        ),
     ],
     "relatorios": [
         Campo(
