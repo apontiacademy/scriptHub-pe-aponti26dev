@@ -30,10 +30,10 @@ def test_esquema_relatorios_tem_um_unico_campo_moodle_usuario():
     assert len(campos) == 1
 
 
-def test_esquema_relatorios_campo_so_de_auditar_tem_scripts_auditar():
+def test_esquema_relatorios_campo_de_extracao_tem_scripts_auditar_e_extrair():
     campo = _campo("relatorios", "moodle_urls_relatorios")
 
-    assert campo.scripts == ("auditar",)
+    assert campo.scripts == ("auditar", "extrair")
 
 
 def test_esquema_relatorios_campo_so_de_compilar_tem_scripts_compilar():
@@ -46,3 +46,9 @@ def test_esquema_relatorios_campo_comum_tem_scripts_vazio():
     campo = _campo("relatorios", "moodle_usuario")
 
     assert campo.scripts == ()
+
+
+def test_esquema_frequencias_campo_de_extracao_tem_scripts_auditar_e_extrair():
+    campo = _campo("frequencias", "moodle_caminho_exportacao")
+
+    assert campo.scripts == ("auditar", "extrair")

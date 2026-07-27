@@ -1,6 +1,6 @@
 # frequencias
 
-Domínio de automação de frequências do Moodle, com dois scripts internos: `auditar` (pipeline completo de auditoria) e `compilar` (geração de atas de frequência em PDF, por turma).
+Domínio de automação de frequências do Moodle, com três scripts internos: `auditar` (pipeline completo de auditoria), `compilar` (geração de atas de frequência em PDF, por turma) e `extrair` (só a extração de frequências, isolada).
 
 ## `auditar`
 
@@ -14,11 +14,12 @@ Passo 1 — extrair:  Extração de frequências (Moodle)
 Passo 2 — integrar: Integração (Google Sheets)
 ```
 
-O passo `extrair` também tem um subcomando de nível superior próprio, por
-ser o mais comumente rodado isolado (mesmo padrão de `relatorios extrair`):
+O passo `extrair` também existe como script próprio de nível superior — ver
+seção [`extrair`](#extrair) abaixo — por ser o mais comumente rodado isolado
+(mesmo padrão de `relatorios extrair`):
 
 ```bash
-uv run scripthub frequencias extrair   # equivalente a `auditar --passo extrair`
+uv run scripthub frequencias extrair   # mesmo resultado de `auditar --passo extrair`
 uv run scripthub frequencias e         # idem, forma curta
 ```
 
@@ -41,6 +42,25 @@ uv run scripthub frequencias auditar --passo integrar    # só integra com Sheet
 
 ```bash
 uv run scripthub frequencias auditar
+```
+
+### Estrutura de saída
+
+```
+<caminhoExportacao>/
+├── Turma 01.xlsx
+├── Turma 02.xlsx
+└── ...
+```
+
+## `extrair`
+
+Baixa as frequências de todas as turmas do Moodle e exporta um `.xlsx` por turma — sem sincronizar com o Google Sheets (isso é feito por `auditar`). Implementação própria, independente de `auditar`, embora hoje produza o mesmo resultado que o passo `extrair` de lá.
+
+### Como rodar
+
+```bash
+uv run scripthub frequencias extrair
 ```
 
 ### Estrutura de saída
@@ -111,9 +131,9 @@ frequencias/compilar/
 
 ## Configuração
 
-Compartilhada entre `auditar` e `compilar` — `.env` e `settings.json` vivem na raiz de `frequencias/`, não em cada subpasta.
+Compartilhada entre `auditar`, `compilar` e `extrair` — `.env` e `settings.json` vivem na raiz de `frequencias/`, não em cada subpasta.
 
-> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config frequencias` configura essas opções interativamente. Use `--script auditar` ou `--script compilar` para priorizar os campos daquele script na tela de edição.
+> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config frequencias` configura essas opções interativamente. Use `--script auditar`, `--script compilar` ou `--script extrair` para priorizar os campos daquele script na tela de edição.
 
 ### 1. Variáveis de ambiente
 
@@ -134,9 +154,9 @@ cp settings.example.json settings.json
 
 | Chave | Usado por | Descrição |
 |---|---|---|
-| `moodle.urlLogin` | ambos | URL de login do Moodle |
-| `moodle.urlsFrequencias` | ambos | Dicionário `{ "Nome da Turma": "URL do módulo de presença" }` |
-| `moodle.caminhoExportacao` | `auditar` | Pasta onde os `.xlsx` de `auditar` serão salvos |
+| `moodle.urlLogin` | `auditar`, `compilar`, `extrair` | URL de login do Moodle |
+| `moodle.urlsFrequencias` | `auditar`, `compilar`, `extrair` | Dicionário `{ "Nome da Turma": "URL do módulo de presença" }` |
+| `moodle.caminhoExportacao` | `auditar`, `extrair` | Pasta onde os `.xlsx` serão salvos |
 | `gsheets.idPlanilha` | `auditar` | ID da planilha do Google Sheets |
 | `gsheets.caminhoJsonCredenciais` | `auditar` | Caminho absoluto para o `credentials.json` da conta de serviço Google |
 | `atas.caminhoSaida` | `compilar` | Pasta onde as atas em PDF serão salvas |

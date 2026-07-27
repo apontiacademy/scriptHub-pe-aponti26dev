@@ -52,7 +52,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Diretório onde os arquivos XLSX de frequência serão salvos",
             json_chaves=["moodle", "caminhoExportacao"],
-            scripts=("auditar",),
+            scripts=("auditar", "extrair"),
         ),
         Campo(
             chave="gsheets_id_planilha",
@@ -132,7 +132,16 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Lista de URLs das páginas de feedback do Moodle",
             json_chaves=["moodle", "urlsRelatorios"],
-            scripts=("auditar",),
+            scripts=("auditar", "extrair"),
+        ),
+        Campo(
+            chave="moodle_caminho_download_relatorio",
+            rotulo="Caminho de download dos relatórios",
+            tipo="caminho",
+            origem="settings",
+            descricao="Diretório onde os CSVs baixados do Moodle serão salvos",
+            json_chaves=["moodle", "caminhoDownloadRelatorio"],
+            scripts=("auditar", "extrair"),
         ),
         Campo(
             chave="moodle_exportar_analise",

@@ -16,25 +16,13 @@ class MoodleConfig:
     usuario: str
     senha: str
     caminho_download_relatorio: Path
-    csv_residentes: Path
-    csv_saida_analise: Path
     url_login: str
     urls_relatorios: list[str]
-    exportar_analise_relatorio: bool
-
-
-@dataclass
-class GsheetsConfig:
-    id_planilha: str
-    nome_aba: str
-    caminho_backup_local: Path
-    caminho_json_credenciais: Path
 
 
 @dataclass
 class Config:
     moodle: MoodleConfig
-    gsheets: GsheetsConfig
 
     @staticmethod
     def load() -> "Config":
@@ -42,44 +30,16 @@ class Config:
         dados_settings = Config.__carregar_settings_json()
 
         moodle_json = dados_settings.get("moodle", {})
-        gsheets_json = dados_settings.get("gsheets", {})
-
-        exportar_analise = moodle_json.get("exportarAnaliseRelatorio", False)
-        caminho_exportacao = moodle_json.get("caminhoExportacaoAnalise")
-
-        if exportar_analise and not caminho_exportacao:
-            raise ErroConfiguracao(
-                "caminhoExportacaoAnalise deve ser definido em settings.json quando exportarAnaliseRelatorio=true"
-            )
 
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
             caminho_download_relatorio=Path(moodle_json["caminhoDownloadRelatorio"]),
-            csv_residentes=Path(moodle_json.get("csvResidentes", str(DIRETORIO_BASE / "dados" / "residentes.csv"))),
-            csv_saida_analise=(
-                Path(caminho_exportacao) if exportar_analise else DIRETORIO_BASE / "dados" / "resultado_analise.csv"
-            ),
             url_login=moodle_json["urlLogin"],
             urls_relatorios=[i.strip() for i in moodle_json["urlsRelatorios"]],
-            exportar_analise_relatorio=exportar_analise,
         )
 
-        caminho_json_credenciais = Path(gsheets_json["caminhoJsonCredenciais"])
-        if not caminho_json_credenciais.is_absolute():
-            raise ErroConfiguracao(
-                "gsheets.caminhoJsonCredenciais deve ser um caminho absoluto. "
-                "Configure com `scripthub config relatorios --script auditar`."
-            )
-
-        gsheets_config = GsheetsConfig(
-            id_planilha=gsheets_json["idPlanilha"],
-            nome_aba=gsheets_json["nomeAba"],
-            caminho_backup_local=Path(gsheets_json["caminhoBackupLocal"]),
-            caminho_json_credenciais=caminho_json_credenciais,
-        )
-
-        return Config(moodle=moodle_config, gsheets=gsheets_config)
+        return Config(moodle=moodle_config)
 
     @staticmethod
     def __carregar_env() -> dict:
