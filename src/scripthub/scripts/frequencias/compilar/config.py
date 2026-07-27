@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from scripthub.services.erros import ErroConfiguracao
 
 DIRETORIO_BASE = Path(__file__).resolve().parent
+DIRETORIO_DOMINIO = DIRETORIO_BASE.parent
 
 
 @dataclass
@@ -16,19 +17,19 @@ class MoodleConfig:
     senha: str
     url_login: str
     urls_frequencias: dict[str, str]
-    caminho_exportacao: Path
 
 
 @dataclass
-class GsheetsConfig:
-    id_planilha: str
-    caminho_json_credenciais: Path
+class AtasConfig:
+    caminho_saida: Path
+    caminho_logo: Path | None = None
+    caminho_assinatura: Path | None = None
 
 
 @dataclass
 class Config:
     moodle: MoodleConfig
-    gsheets: GsheetsConfig
+    atas: AtasConfig
 
     @staticmethod
     def load() -> "Config":
@@ -36,33 +37,26 @@ class Config:
         dados_settings = Config.__carregar_settings_json()
 
         moodle_json = dados_settings.get("moodle", {})
-        gsheets_json = dados_settings.get("gsheets", {})
+        atas_json = dados_settings.get("atas", {})
 
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
             url_login=moodle_json["urlLogin"],
             urls_frequencias=moodle_json["urlsFrequencias"],
-            caminho_exportacao=Path(moodle_json["caminhoExportacao"]),
         )
 
-        caminho_json_credenciais = Path(gsheets_json["caminhoJsonCredenciais"])
-        if not caminho_json_credenciais.is_absolute():
-            raise ErroConfiguracao(
-                "gsheets.caminhoJsonCredenciais deve ser um caminho absoluto. "
-                "Configure com `scripthub config -s frequencias`."
-            )
-
-        gsheets_config = GsheetsConfig(
-            id_planilha=gsheets_json["idPlanilha"],
-            caminho_json_credenciais=caminho_json_credenciais,
+        atas_config = AtasConfig(
+            caminho_saida=Path(atas_json["caminhoSaida"]),
+            caminho_logo=Path(atas_json["caminhoLogo"]) if atas_json.get("caminhoLogo") else None,
+            caminho_assinatura=Path(atas_json["caminhoAssinatura"]) if atas_json.get("caminhoAssinatura") else None,
         )
 
-        return Config(moodle=moodle_config, gsheets=gsheets_config)
+        return Config(moodle=moodle_config, atas=atas_config)
 
     @staticmethod
     def __carregar_env() -> dict:
-        load_dotenv(dotenv_path=DIRETORIO_BASE / ".env")
+        load_dotenv(dotenv_path=DIRETORIO_DOMINIO / ".env")
 
         dados = {
             "moodle_usuario": os.getenv("MOODLE_USUARIO"),
@@ -75,7 +69,7 @@ class Config:
 
     @staticmethod
     def __carregar_settings_json() -> dict:
-        caminho_settings = DIRETORIO_BASE / "settings.json"
+        caminho_settings = DIRETORIO_DOMINIO / "settings.json"
 
         if not caminho_settings.exists():
             raise ErroConfiguracao(f"O arquivo {caminho_settings} não foi encontrado.")
