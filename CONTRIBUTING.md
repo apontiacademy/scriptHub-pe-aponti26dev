@@ -123,6 +123,19 @@ O mesmo commit pode virar PR contra mais de um branch de destino ao mesmo tempo 
 
   Os três branches de destino ficam com o `CHANGELOG.md` sincronizado quanto a essa versão já ter sido oficialmente lançada, sem herdar os conflitos estruturais entre `dev` e `nightly`. A promoção `dev → nightly` acima não tem esse problema porque o branch nasce diretamente de `dev`: a PR contra `dev` é, por construção, um diff trivial (o branch já é descendente de `dev`), então não há ancestralidade quebrada para reconciliar.
 
+### Releases no GitHub
+
+Toda vez que a PR que é o **alvo real** de uma promoção (`nightly` em "Promoção `dev → nightly`", `main` em "Promoção `nightly → main`") é squash-merged, cria-se uma Release correspondente no branch alvo — nunca a partir de uma PR-eco, já que ela não representa lançamento novo naquele branch.
+
+| Alvo real | Tag | Tipo | Título | Descrição |
+|---|---|---|---|---|
+| `nightly` | `vX.Y.Z-nightly` | **Pre-release** | igual à tag (`vX.Y.Z-nightly`) | texto da entrada `[X.Y.Z] - data` correspondente em `CHANGELOG.md` |
+| `main` | `vX.Y.Z` | **Release** | igual à tag (`vX.Y.Z`) | texto da entrada `[X.Y.Z] - data` correspondente em `CHANGELOG.md` |
+
+A tag aponta para o commit de squash recém-mergeado no branch alvo.
+
+**Tag pai** (campo "Previous tag" ao criar a release no GitHub, usado para calcular o range de comparação): a tag imediatamente anterior **da mesma trilha**. `-nightly` só encadeia com `-nightly`; tags de `main` (sem sufixo) só encadeiam com outra tag de `main` — as duas trilhas nunca se cruzam. Ex.: `v0.21.0-nightly` tem como pai `v0.20.0-nightly` (nunca `v0.20.0`), e `v0.21.0` tem como pai `v0.20.0` (nunca `v0.20.0-nightly`).
+
 ## Estrutura do projeto
 
 ```
