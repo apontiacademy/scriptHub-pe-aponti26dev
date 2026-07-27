@@ -1,6 +1,6 @@
 [project]
 name = "scriptHub-pe-aponti26dev"
-version = "0.20.0"
+version = "0.21.0"
 description = "Central de scripts de automação da Aponti Academy"
 readme = "README.md"
 requires-python = ">3.12"
@@ -13,7 +13,6 @@ dependencies = [
     "gspread>=6.2.1",
     "openpyxl>=3.1.5",
     "pandas>=3.0.3",
-    "pentefinocli-pe-aponti26dev",
     "playwright>=1.60.0",
     "questionary>=2.1.1",
     "rich>=13.0.0",
@@ -42,15 +41,14 @@ markers = [
 [tool.coverage.run]
 omit = [
     # Automação Playwright — requer browser real
-    "src/scripthub/scripts/torpedo_de_forum/main.py",
+    "src/scripthub/scripts/torpedo/main.py",
     # Padrão B (depreciado) — orquestração não testada diretamente, só helpers
-    "src/scripthub/scripts/auditar_softskills/main.py",
+    "src/scripthub/scripts/softskills/main.py",
     # FPDF — requer fontes e renderização
-    "src/scripthub/scripts/compilacao_de_relatorios/compilar_pdfs.py",
+    "src/scripthub/scripts/relatorios/compilar/compilar_pdfs.py",
     # Questionary UI interativa
     "src/scripthub/services/config/ui.py",
     "src/scripthub/services/config/main.py",
-    "src/scripthub/services/menu/main.py",
     # CLI e i18n — patching de Typer/Click
     "src/scripthub/cli.py",
     "src/scripthub/_i18n.py",
@@ -86,7 +84,7 @@ select = [
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-# Padrão A exporta MENU_CMD antes do import de ESCOPOS/get_config (ver CLAUDE.md)
+# Padrão A exporta CLI_CMD antes do import de ESCOPOS/get_config (ver CLAUDE.md)
 "**/__init__.py" = ["E402"]
 # _instalar_i18n() precisa rodar antes dos imports de .scripts/.services (ordem deliberada)
 "src/scripthub/cli.py" = ["E402"]
@@ -97,7 +95,3 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
-
-[tool.uv.sources]
-pentefinocli-pe-aponti26dev = { git = "https://github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git", rev = "main" }
-

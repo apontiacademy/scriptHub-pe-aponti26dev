@@ -1,15 +1,17 @@
 from types import SimpleNamespace
 
 import pytest
+from typer.testing import CliRunner
 
 import scripthub.cli as cli_module
 from scripthub.cli import (
     _carregar_config,
     _executar_com_tratamento_global,
     _executar_pipeline_simples,
+    app,
     config,
     executar_script,
-    relatorios,
+    relatorios_app,
 )
 from scripthub.services.erros import ErroConfiguracao, ErroIntegracao, ErroUsoCLI, FalhaParcial
 from scripthub.services.escopo import Escopo
@@ -17,6 +19,33 @@ from scripthub.services.escopo import Escopo
 
 def _escopo(slug="baixar", nome="Baixar", func=None, aliases=()):
     return Escopo(slug, nome, func or (lambda config: None), aliases)
+
+
+runner = CliRunner()
+
+
+def test_aliases_nao_lista_menu_interativo():
+    result = runner.invoke(app, ["--aliases"])
+
+    assert result.exit_code == 0
+    assert "scripthub menu" not in result.output
+    assert "[depreciado]" not in result.output
+
+
+def test_aliases_lista_extrair_e_frequencias_auditar():
+    result = runner.invoke(app, ["--aliases"])
+
+    assert result.exit_code == 0
+    assert "scripthub relatorios extrair" in result.output
+    assert "scripthub frequencias auditar" in result.output
+    assert "scripthub frequencias extrair" in result.output
+    assert "scripthub relatorios auditar" not in result.output
+
+
+def test_menu_interativo_nao_e_um_comando_registrado():
+    nomes = {comando.name for comando in app.registered_commands}
+
+    assert nomes.isdisjoint({"menu", "m"})
 
 
 # --- executar_script / _executar_pipeline_simples: só executam e propagam, sem logar/converter ---
@@ -130,7 +159,7 @@ def test_carregar_config_key_error_vira_erro_configuracao_com_dica():
         _carregar_config(carregar, "meu_script")
 
     assert "meu_script" in str(exc_info.value)
-    assert exc_info.value.dica == "Execute: scripthub config -s meu_script"
+    assert exc_info.value.dica == "Execute: scripthub config meu_script"
 
 
 def test_carregar_config_erro_configuracao_sem_dica_recebe_dica_padrao():
@@ -140,7 +169,7 @@ def test_carregar_config_erro_configuracao_sem_dica_recebe_dica_padrao():
     with pytest.raises(ErroConfiguracao) as exc_info:
         _carregar_config(carregar, "meu_script")
 
-    assert exc_info.value.dica == "Execute: scripthub config -s meu_script"
+    assert exc_info.value.dica == "Execute: scripthub config meu_script"
 
 
 def test_carregar_config_erro_configuracao_com_dica_propria_nao_e_sobrescrita():
@@ -290,31 +319,185 @@ def test_callback_debug_flag_seta_modulo_global():
 # --- validações de uso da CLI viram ErroUsoCLI, sem log/typer.Exit direto ---
 
 
-def test_relatorios_modo_invalido_levanta_erro_uso_cli(mocker):
-    mock_log = mocker.patch("scripthub.cli.log")
-
-    with pytest.raises(ErroUsoCLI) as exc_info:
-        relatorios(modo="invalido", passo=None)
-
-    assert exc_info.value.codigo_saida == 3
-    mock_log.erro.assert_not_called()
-
-
-def test_relatorios_compilar_com_passo_levanta_erro_uso_cli(mocker):
-    mock_log = mocker.patch("scripthub.cli.log")
-
-    with pytest.raises(ErroUsoCLI) as exc_info:
-        relatorios(modo="compilar", passo="baixar")
-
-    assert exc_info.value.codigo_saida == 3
-    mock_log.erro.assert_not_called()
-
-
 def test_config_opcoes_e_limpar_juntos_levanta_erro_uso_cli(mocker):
     mock_log = mocker.patch("scripthub.cli.log")
 
     with pytest.raises(ErroUsoCLI) as exc_info:
-        config(script=None, apenas_visualizar=True, limpar=True)
+        config(dominio=None, apenas_visualizar=True, limpar=True)
 
     assert exc_info.value.codigo_saida == 3
     mock_log.erro.assert_not_called()
+
+
+# --- subapps: registro duplo (nome cheio + alias) resolve para o mesmo comando ---
+
+
+def test_relatorios_subapp_registrado_com_nome_cheio_e_alias():
+    nomes = {t.name for t in app.registered_groups}
+
+    assert {"relatorios", "r"}.issubset(nomes)
+
+
+def test_frequencias_subapp_registrado_com_nome_cheio_e_alias():
+    nomes = {t.name for t in app.registered_groups}
+
+    assert {"frequencias", "f"}.issubset(nomes)
+
+
+def test_relatorios_help_lista_subcomandos_extrair_e_compilar():
+    result = runner.invoke(app, ["relatorios", "--help"])
+
+    assert result.exit_code == 0
+    assert "extrair" in result.output
+    assert "compilar" in result.output
+
+
+def test_relatorios_auditar_nao_e_um_comando_registrado():
+    nomes = {t.name for t in relatorios_app.registered_commands}
+
+    assert nomes.isdisjoint({"auditar", "a"})
+
+
+def test_relatorios_compilar_chama_pipeline_simples(mocker):
+    mock_pipeline = mocker.patch("scripthub.cli._executar_pipeline_simples")
+
+    result = runner.invoke(app, ["relatorios", "compilar"])
+
+    assert result.exit_code == 0
+    mock_pipeline.assert_called_once()
+
+
+def test_relatorios_extrair_chama_executar_script_com_passo_fixo(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["relatorios", "extrair"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "EXTRAÇÃO DE RELATÓRIOS")
+
+
+def test_relatorios_e_e_alias_de_extrair(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["r", "e"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "EXTRAÇÃO DE RELATÓRIOS")
+
+
+def test_frequencias_sem_subcomando_da_erro_comando_nao_fornecido():
+    result = runner.invoke(app, ["frequencias"])
+
+    assert result.exit_code == 2
+    assert "Comando não fornecido" in result.output
+
+
+def test_frequencias_help_lista_subcomandos_auditar_e_extrair():
+    result = runner.invoke(app, ["frequencias", "--help"])
+
+    assert result.exit_code == 0
+    assert "auditar" in result.output
+    assert "extrair" in result.output
+
+
+def test_frequencias_auditar_chama_executar_script(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["frequencias", "auditar"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, None, "AUDITORIA DE FREQUÊNCIAS")
+
+
+def test_frequencias_auditar_aceita_passo(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["frequencias", "auditar", "--passo", "extrair"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "AUDITORIA DE FREQUÊNCIAS")
+
+
+def test_f_a_encadeia_alias_de_dominio_e_de_script(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["f", "a"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once()
+
+
+def test_frequencias_extrair_chama_executar_script_com_passo_fixo(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["frequencias", "extrair"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "EXTRAÇÃO DE FREQUÊNCIAS")
+
+
+def test_f_e_encadeia_alias_de_dominio_e_de_script(mocker):
+    mocker.patch("scripthub.cli._carregar_config", return_value=None)
+    mock_executar = mocker.patch("scripthub.cli.executar_script")
+
+    result = runner.invoke(app, ["f", "e"])
+
+    assert result.exit_code == 0
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "EXTRAÇÃO DE FREQUÊNCIAS")
+
+
+# --- validação de integração: slugs reais resolvem sem mocks de executar_script ---
+
+
+def test_relatorios_extrair_resolve_passo_real_nos_escopos(mocker):
+    from dataclasses import replace
+
+    from scripthub.scripts.relatorios.extrair.main import ESCOPOS as ESCOPOS_EXTRAIR
+
+    # Mock a config
+    mock_config = mocker.MagicMock()
+    mocker.patch("scripthub.cli._carregar_config", return_value=mock_config)
+
+    # Substituir o Escopo "extrair" na lista (índice 0) por um com função mockada
+    mock_func = mocker.MagicMock()
+    original_escopo = ESCOPOS_EXTRAIR[0]
+    ESCOPOS_EXTRAIR[0] = replace(original_escopo, func=mock_func)
+
+    try:
+        result = runner.invoke(app, ["relatorios", "extrair"])
+
+        assert result.exit_code == 0
+        mock_func.assert_called_once_with(mock_config)
+    finally:
+        # Restaurar o Escopo original
+        ESCOPOS_EXTRAIR[0] = original_escopo
+
+
+def test_frequencias_extrair_resolve_passo_real_nos_escopos(mocker):
+    from dataclasses import replace
+
+    from scripthub.scripts.frequencias.extrair.main import ESCOPOS as ESCOPOS_EXTRAIR
+
+    # Mock a config
+    mock_config = mocker.MagicMock()
+    mocker.patch("scripthub.cli._carregar_config", return_value=mock_config)
+
+    # Substituir o Escopo "extrair" na lista (índice 0) por um com função mockada
+    mock_func = mocker.MagicMock()
+    original_escopo = ESCOPOS_EXTRAIR[0]
+    ESCOPOS_EXTRAIR[0] = replace(original_escopo, func=mock_func)
+
+    try:
+        result = runner.invoke(app, ["frequencias", "extrair"])
+
+        assert result.exit_code == 0
+        mock_func.assert_called_once_with(mock_config)
+    finally:
+        # Restaurar o Escopo original
+        ESCOPOS_EXTRAIR[0] = original_escopo

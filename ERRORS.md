@@ -12,7 +12,7 @@ mensagem de log.
 | 2 | Configuração inválida ou ausente | `.env`, `settings.json`, credenciais do Google, ou um arquivo/diretório local que um passo anterior do pipeline deveria ter gerado | `scripthub.services.erros.ErroConfiguracao` |
 | 3 | Uso inválido da CLI | `--passo` desconhecido, flags conflitantes (`--opcoes` + `--limpar`), `modo` inválido em `relatorios`, script desconhecido em `config` | `scripthub.services.erros.ErroUsoCLI` |
 | 4 | Falha parcial | Parte de um lote de itens falhou (N de M PDFs, fóruns, arquivos), mas o restante foi processado | `scripthub.services.erros.FalhaParcial` |
-| 5 | Falha de integração externa | Moodle, Google Sheets/Drive ou o `pentefino` retornaram algo inesperado (HTML mudou, planilha/aba não encontrada, API falhou) | `scripthub.services.erros.ErroIntegracao` |
+| 5 | Falha de integração externa | Moodle ou Google Sheets/Drive retornaram algo inesperado (HTML mudou, planilha/aba não encontrada, API falhou) | `scripthub.services.erros.ErroIntegracao` |
 
 **Nota sobre o código 2 do Click/Typer**: por convenção, a biblioteca Click
 (usada pelo Typer) sai com código `2` quando falha em fazer o parsing de uma
@@ -70,7 +70,7 @@ consiga corrigir?
   validados antes do script rodar) → `ErroUsoCLI` (3)
 - Parte de um lote falhou, mas não é um erro fatal do processo inteiro →
   `FalhaParcial` (4)
-- Um sistema externo (Moodle, Google, `pentefino`) devolveu algo inesperado
+- Um sistema externo (Moodle ou Google) devolveu algo inesperado
   (página sem o elemento esperado, planilha/aba não encontrada, API falhou) →
   `ErroIntegracao` (5)
 - Nenhuma das anteriores, ou a causa é ambígua/inesperada (provável bug) →
@@ -89,26 +89,23 @@ ao classificar um novo `raise`.
 ### `ErroConfiguracao` (2)
 
 - `.env`/`settings.json` ausentes ou incompletos: `config.py` de todos os 5 pacotes
-- Precondição de um passo anterior não satisfeita: `auditar_frequencias/integracao_google_sheets.py` (diretório de exportação, XLSX ausentes), `auditar_relatorios/integracao_google_sheets.py` (CSV de auditoria ausente), `compilacao_de_relatorios/compilar_pdfs.py` (nenhum dado de aluno nos CSVs)
-- Credenciais/IDs do Google ausentes: `auditar_frequencias/integracao_google_sheets.py`, `auditar_relatorios/integracao_google_sheets.py`, `auditar_relatorios/backup.py`
-- Arquivo/URL de entrada do próprio script ausente: `auditar_frequencias/exportar_frequencias.py` (URLs de frequência), `auditar_relatorios/download_de_relatorios.py` (URLs de relatório), `compilacao_de_relatorios/download_de_relatorios.py` (meses), `torpedo_de_forum/main.py` (post `.md`, URLs de fórum, título do `.md`, imagem de override)
+- Precondição de um passo anterior não satisfeita: `frequencias/auditar/integracao_google_sheets.py` (diretório de exportação, XLSX ausentes), `frequencias/compilar/gerar_atas.py` (nenhum XLSX de frequência encontrado), `relatorios/compilar/compilar_pdfs.py` (nenhum dado de aluno nos CSVs)
+- Credenciais/IDs do Google ausentes: `frequencias/auditar/integracao_google_sheets.py`
+- Arquivo/URL de entrada do próprio script ausente: `frequencias/auditar/extrair_frequencias.py`, `frequencias/compilar/extrair_frequencias.py` (URLs de frequência), `relatorios/extrair/download_de_relatorios.py` (URLs de relatório), `relatorios/compilar/download_de_relatorios.py` (meses), `torpedo/main.py` (post `.md`, URLs de fórum, título do `.md`, imagem de override)
 - Falha de autenticação no Moodle (usuário/senha errados no `.env`): `services/moodle/sessao.py` (`MoodleSessao.login`, usado por todos os scripts que baixam do Moodle via HTTP)
-- `settings.json` incompleto para uma combinação específica de opções: `auditar_relatorios/config.py` (`caminhoExportacaoAnalise` ausente quando `exportarAnaliseRelatorio=true`)
-- `gsheets.caminhoJsonCredenciais` não é um caminho absoluto: `auditar_frequencias/config.py`, `auditar_relatorios/config.py`
+- `gsheets.caminhoJsonCredenciais` não é um caminho absoluto: `frequencias/auditar/config.py`
 
 ### `FalhaParcial` (4)
 
-- `auditar_frequencias/integracao_google_sheets.py` (N arquivos XLSX falharam)
-- `compilacao_de_relatorios/compilar_pdfs.py` (N PDFs falharam)
-- `torpedo_de_forum/main.py` (N fóruns falharam ao publicar)
+- `frequencias/auditar/integracao_google_sheets.py` (N arquivos XLSX falharam)
+- `frequencias/compilar/gerar_atas.py` (N atas falharam)
+- `relatorios/compilar/compilar_pdfs.py` (N PDFs falharam)
+- `torpedo/main.py` (N fóruns falharam ao publicar)
 
 ### `ErroIntegracao` (5)
 
-- Estrutura de página do Moodle inesperada: `auditar_frequencias/exportar_frequencias.py` (formulário não encontrado, resposta que não é um XLSX válido)
+- Estrutura de página do Moodle inesperada: `services/moodle/attendance.py` (`extrair_frequencia`, formulário de exportação não encontrado, resposta que não é um XLSX válido — usado por `frequencias/auditar` e `frequencias/compilar`)
 - Sessão do Moodle caiu no meio da execução (já autenticada, sem ser problema de credencial): `services/moodle/sessao.py` (`MoodleSessao.get`/`baixar`, sessão expirada)
-- Dados vindos de fora malformados: `auditar_relatorios/integracao_google_sheets.py` (CSV ilegível ou com menos de 4 colunas, aba não encontrada na planilha)
 - Planilha do Google Sheets não encontrada pelo ID configurado: `services/google/sheets.py` (`GoogleSheetsClient.planilha`)
-- `pentefino` (biblioteca externa) falhou: `auditar_relatorios/middleware_analise_de_relatorios.py`
-- Google Drive falhou ao gerar o backup: `auditar_relatorios/backup.py`
-- Relatório do Moodle baixado via HTTP não é um CSV válido, ou nenhum link/formulário de download foi encontrado na página: `services/moodle/download.py` (`baixar_relatorio`, usado por `auditar_relatorios` e `compilacao_de_relatorios`)
-- Elemento esperado da página do fórum não encontrado (botão de novo tópico, editor de conteúdo, botão de submissão): `torpedo_de_forum/main.py`
+- Relatório do Moodle baixado via HTTP não é um CSV válido, ou nenhum link/formulário de download foi encontrado na página: `services/moodle/download.py` (`baixar_relatorio`, usado por `relatorios/extrair` e `relatorios/compilar`)
+- Elemento esperado da página do fórum não encontrado (botão de novo tópico, editor de conteúdo, botão de submissão): `torpedo/main.py`

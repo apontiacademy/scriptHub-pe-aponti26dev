@@ -30,14 +30,11 @@ scripthub config
 
 ```bash
 # Invocar um script diretamente
-uv run scripthub frequencias
-uv run scripthub relatorios auditar
+uv run scripthub frequencias auditar
+uv run scripthub frequencias compilar
 uv run scripthub relatorios compilar
 uv run scripthub softskills
 uv run scripthub torpedo
-
-# Menu interativo (depreciado — prefira os comandos acima)
-uv run scripthub menu
 ```
 
 Para ver a ajuda e os aliases disponíveis:
@@ -52,26 +49,28 @@ uv run scripthub --version   # ou: scripthub -V
 
 | Comando | Alias | Descrição |
 |---|---|---|
-| `scripthub menu` | `m` | **Depreciado.** Menu interativo — prefira usar os comandos da CLI diretamente |
-| `scripthub frequencias [-p slug]` | `f` | Exporta frequências de presença do Moodle para o Google Sheets |
-| `scripthub relatorios auditar [-p slug]` | `r auditar` | Pipeline completo: download → análise → Google Sheets → backup |
+| `scripthub frequencias auditar [-p slug]` | `f auditar` | Pipeline completo: extração de frequências do Moodle → integração ao Google Sheets |
+| `scripthub frequencias compilar [-p slug]` | `f compilar` | Pipeline completo: extração de frequências do Moodle → geração de atas em PDF |
+| `scripthub frequencias extrair` | `f extrair` | Executa somente a extração de frequências do Moodle (atalho) |
+| `scripthub relatorios extrair` | `r extrair` | Executa somente a extração de relatórios do Moodle |
 | `scripthub relatorios compilar` | `r compilar` | Compila relatórios em PDF |
 | `scripthub softskills` | `s` | Baixa notas de soft skills do Moodle e envia ao Google Drive |
 | `scripthub torpedo` | `t` | Posta tópicos em fóruns do Moodle a partir de arquivos Markdown |
 | `scripthub config` | `c` | Configura interativamente as opções de um script |
 
-A opção `--passo <slug>` (ou `-p`) executa apenas um passo do pipeline. Disponível nos comandos `frequencias` e `relatorios auditar`:
+A opção `--passo <slug>` (ou `-p`) executa apenas um passo do pipeline. Disponível nos comandos `frequencias auditar` e `frequencias compilar`. Os passos mais usados isoladamente (extração) também têm um subcomando próprio (`extrair`), que não exige saber o slug:
 
 | Comando | Passos disponíveis |
 |---|---|
-| `scripthub frequencias` | `exportar` (`e`), `integrar` (`i`) |
-| `scripthub relatorios auditar` | `extrair` (`e`), `analisar` (`a`), `integrar` (`i`), `salvar` (`s`) |
+| `scripthub frequencias auditar` | `extrair` (`e`), `integrar` (`i`) |
+| `scripthub frequencias compilar` | `extrair` (`e`), `gerar` (`g`) |
 
 ```bash
-scripthub frequencias --passo exportar          # só baixa do Moodle
-scripthub frequencias -p e                      # idem, forma curta
-scripthub relatorios auditar --passo extrair    # só baixa relatórios
-scripthub relatorios auditar -p s               # só executa o backup
+scripthub frequencias auditar --passo extrair      # só baixa do Moodle
+scripthub frequencias auditar -p e                 # idem, forma curta
+scripthub frequencias compilar --passo gerar       # só gera os PDFs
+scripthub frequencias extrair                      # atalho direto pro passo de extração
+scripthub relatorios extrair                       # atalho direto pro passo de extração
 ```
 
 ## Configuração
@@ -83,11 +82,11 @@ Cada script tem suas próprias opções configuráveis (URLs do Moodle, credenci
 uv run scripthub config
 
 # Ir direto para as opções de um script específico
-uv run scripthub config -s auditar_frequencias
+uv run scripthub config frequencias
 
 # Apenas visualizar o estado atual das opções (sem editar)
 uv run scripthub config --opcoes
-uv run scripthub config -o -s torpedo_de_forum
+uv run scripthub config torpedo --opcoes
 ```
 
 O comando exibe cada opção com um ícone de status:
