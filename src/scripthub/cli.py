@@ -19,7 +19,6 @@ from .scripts import softskills, torpedo
 from .scripts.frequencias import auditar as frequencias_auditar_script
 from .scripts.frequencias import compilar as frequencias_compilar_script
 from .scripts.frequencias import extrair as frequencias_extrair_script
-from .scripts.relatorios import auditar as relatorios_auditar_script
 from .scripts.relatorios import compilar as relatorios_compilar_script
 from .scripts.relatorios import extrair as relatorios_extrair_script
 from .services.config import config as config_service
@@ -57,7 +56,6 @@ def _callback(
         raise typer.Exit()
     elif aliases:
         _ALIASES = [
-            ("scripthub relatorios auditar", "r auditar, relatorios a, r a"),
             ("scripthub relatorios compilar", "r compilar, relatorios c, r c"),
             ("scripthub relatorios extrair", "r extrair, relatorios e, r e"),
             ("scripthub frequencias auditar", "f auditar, frequencias a, f a"),
@@ -145,24 +143,11 @@ def _executar_pipeline_simples(fn) -> None:
     log.sucesso("Script finalizado com sucesso. Código de saída: 0")
 
 
-# --- relatorios: subapp com 3 scripts internos (auditar/compilar/extrair) ---
+# --- relatorios: subapp com 2 scripts internos (compilar/extrair) ---
 
 relatorios_app = typer.Typer(help="Processa relatórios do Moodle: auditoria completa ou compilação de PDFs.")
 app.add_typer(relatorios_app, name="relatorios")
 app.add_typer(relatorios_app, name="r", hidden=True)
-
-
-@relatorios_app.command("auditar")
-@relatorios_app.command("a", hidden=True)
-def relatorios_auditar(
-    passo: Annotated[
-        str | None,
-        typer.Option("--passo", "-p", help=_help_passo(relatorios_auditar_script.ESCOPOS)),
-    ] = None,
-):
-    """Pipeline completo de auditoria de relatórios (extração, análise, integração, backup)."""
-    config = _carregar_config(relatorios_auditar_script.get_config, "relatorios")
-    executar_script(config, relatorios_auditar_script.ESCOPOS, passo, "AUDITORIA DE RELATÓRIOS")
 
 
 @relatorios_app.command("compilar")
@@ -175,7 +160,7 @@ def relatorios_compilar():
 @relatorios_app.command("extrair")
 @relatorios_app.command("e", hidden=True)
 def relatorios_extrair():
-    """Baixa os relatórios do Moodle (equivalente a `auditar --passo extrair`)."""
+    """Baixa os relatórios do Moodle."""
     config = _carregar_config(relatorios_extrair_script.get_config, "relatorios")
     executar_script(config, relatorios_extrair_script.ESCOPOS, "extrair", "EXTRAÇÃO DE RELATÓRIOS")
 
