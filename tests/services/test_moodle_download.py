@@ -186,7 +186,6 @@ def test_baixar_relatorio_form_feedback_data_inclui_sesskey_id_e_download_csv(tm
 
 
 def test_baixar_relatorio_form_feedback_inclui_apenas_primeiro_submit(tmp_path):
-    """Tests multiple-submit-button handling (only first one included)."""
     sessao = _make_sessao(html=_HTML_FEEDBACK_DOIS_SUBMITS)
 
     baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
@@ -197,7 +196,6 @@ def test_baixar_relatorio_form_feedback_inclui_apenas_primeiro_submit(tmp_path):
 
 
 def test_baixar_relatorio_ignora_select_download_em_form_de_login(tmp_path):
-    """Tests ignoring <select name=\"download\"> inside login forms."""
     sessao = _make_sessao(html=_HTML_FEEDBACK_SELECT_EM_FORM_LOGIN)
 
     with pytest.raises(ErroIntegracao, match="[Dd]ownload"):
@@ -205,7 +203,6 @@ def test_baixar_relatorio_ignora_select_download_em_form_de_login(tmp_path):
 
 
 def test_baixar_relatorio_form_feedback_coleta_outros_selects(tmp_path):
-    """Tests collecting other select fields like 'group'."""
     sessao = _make_sessao(html=_HTML_FEEDBACK_COM_GROUP)
 
     baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
@@ -272,7 +269,6 @@ def test_campos_de_form_coleta_inputs_ocultos():
 
 
 def test_campos_de_form_coleta_primeiro_submit_apenas():
-    """Tests that only the first submit button is included."""
     html = """
     <form>
       <input type="hidden" name="id" value="1">
@@ -290,7 +286,6 @@ def test_campos_de_form_coleta_primeiro_submit_apenas():
 
 
 def test_campos_de_form_ignora_button_type():
-    """Tests that type='button' inputs are not included."""
     html = """
     <form>
       <input type="hidden" name="id" value="1">
@@ -331,7 +326,6 @@ def test_campos_de_form_coleta_selects():
 
 
 def test_campos_de_form_select_usa_primeira_opcao_se_nenhuma_marcada():
-    """Tests that first option is used if none marked as selected."""
     html = """
     <form>
       <select name="lang">
