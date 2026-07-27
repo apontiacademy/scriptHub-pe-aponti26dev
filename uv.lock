@@ -772,14 +772,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pentefinocli-pe-aponti26dev"
-version = "0.2.1"
-source = { git = "https://github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git?rev=main#5d098fb529c68aa3fb5bb0e9b5f77c7dcfe333e1" }
-dependencies = [
-    { name = "pandas" },
-]
-
-[[package]]
 name = "pillow"
 version = "12.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1129,7 +1121,6 @@ dependencies = [
     { name = "gspread" },
     { name = "openpyxl" },
     { name = "pandas" },
-    { name = "pentefinocli-pe-aponti26dev" },
     { name = "playwright" },
     { name = "questionary" },
     { name = "rich" },
@@ -1154,7 +1145,6 @@ requires-dist = [
     { name = "gspread", specifier = ">=6.2.1" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=3.0.3" },
-    { name = "pentefinocli-pe-aponti26dev", git = "https://github.com/apontiacademy/pentefinoCli-pe-aponti26dev.git?rev=main" },
     { name = "playwright", specifier = ">=1.60.0" },
     { name = "questionary", specifier = ">=2.1.1" },
     { name = "rich", specifier = ">=13.0.0" },
