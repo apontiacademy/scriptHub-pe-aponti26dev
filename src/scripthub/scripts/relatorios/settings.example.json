@@ -5,6 +5,7 @@
       "https://moodle.yourinstitution.edu/mod/feedback/show_entries.php?id=1111",
       "https://moodle.yourinstitution.edu/mod/feedback/show_entries.php?id=2222"
     ],
+    "caminhoDownloadRelatorio": "/home/you/Downloads/relatorios",
     "exportarAnaliseRelatorio": true,
     "caminhoExportacaoAnalise": "/home/you/Downloads",
     "meses": {

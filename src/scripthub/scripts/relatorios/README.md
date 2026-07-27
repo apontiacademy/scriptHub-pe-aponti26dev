@@ -53,9 +53,11 @@ uv run scripthub relatorios auditar
 ### Estrutura de saída
 
 ```
+<caminhoDownloadRelatorio>/
+└── relatorio1.csv, relatorio2.csv, ...   # CSVs baixados do Moodle
+
 relatorios/auditar/
 └── dados/
-    ├── relatorios/          # CSVs baixados do Moodle
     ├── residentes.csv       # Lista de alunos
     └── resultado_analise.csv
 
@@ -76,9 +78,8 @@ uv run scripthub relatorios extrair
 ### Estrutura de saída
 
 ```
-relatorios/extrair/
-└── dados/
-    └── relatorios/          # CSVs baixados do Moodle
+<caminhoDownloadRelatorio>/
+└── relatorio1.csv, relatorio2.csv, ...   # CSVs baixados do Moodle
 ```
 
 ## `compilar`
@@ -144,6 +145,7 @@ cp settings.example.json settings.json
 |---|---|---|
 | `moodle.urlLogin` | `auditar`, `compilar`, `extrair` | URL de login do Moodle |
 | `moodle.urlsRelatorios` | `auditar`, `extrair` | Lista de URLs dos formulários de relatório |
+| `moodle.caminhoDownloadRelatorio` | `auditar`, `extrair` | Diretório onde os CSVs baixados do Moodle serão salvos |
 | `moodle.exportarAnaliseRelatorio` | `auditar` | `true` para exportar análise em CSV |
 | `moodle.caminhoExportacaoAnalise` | `auditar` | Caminho de saída da análise (obrigatório quando `exportarAnaliseRelatorio=true`) |
 | `moodle.csvResidentes` | `auditar` | Caminho do CSV de residentes usado na análise |

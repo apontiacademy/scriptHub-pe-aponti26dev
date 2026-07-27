@@ -55,7 +55,7 @@ class Config:
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
-            caminho_download_relatorio=DIRETORIO_BASE / "dados" / "relatorios",
+            caminho_download_relatorio=Path(moodle_json["caminhoDownloadRelatorio"]),
             csv_residentes=Path(moodle_json.get("csvResidentes", str(DIRETORIO_BASE / "dados" / "residentes.csv"))),
             csv_saida_analise=(
                 Path(caminho_exportacao) if exportar_analise else DIRETORIO_BASE / "dados" / "resultado_analise.csv"

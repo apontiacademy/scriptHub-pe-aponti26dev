@@ -135,6 +135,15 @@ ESQUEMAS: dict[str, list[Campo]] = {
             scripts=("auditar", "extrair"),
         ),
         Campo(
+            chave="moodle_caminho_download_relatorio",
+            rotulo="Caminho de download dos relatórios",
+            tipo="caminho",
+            origem="settings",
+            descricao="Diretório onde os CSVs baixados do Moodle serão salvos",
+            json_chaves=["moodle", "caminhoDownloadRelatorio"],
+            scripts=("auditar", "extrair"),
+        ),
+        Campo(
             chave="moodle_exportar_analise",
             rotulo="Exportar análise dos relatórios",
             tipo="bool",

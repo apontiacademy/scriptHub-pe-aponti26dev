@@ -16,6 +16,7 @@ def settings_valido(tmp_path):
                 "https://example.com/relatorio1",
                 "https://example.com/relatorio2",
             ],
+            "caminhoDownloadRelatorio": str(tmp_path / "downloads"),
         },
     }
 
@@ -35,7 +36,7 @@ def test_load_retorna_config_completa(tmp_path, monkeypatch, settings_valido):
         "https://example.com/relatorio1",
         "https://example.com/relatorio2",
     ]
-    assert config.moodle.caminho_download_relatorio == tmp_path / "dados" / "relatorios"
+    assert config.moodle.caminho_download_relatorio == tmp_path / "downloads"
 
 
 def test_load_sem_usuario_levanta_erro_configuracao(tmp_path, monkeypatch, settings_valido):
@@ -71,6 +72,17 @@ def test_load_sem_settings_levanta_erro_configuracao(tmp_path, monkeypatch):
 
 def test_load_sem_urls_relatorios_levanta_key_error(tmp_path, monkeypatch, settings_valido):
     del settings_valido["moodle"]["urlsRelatorios"]
+    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
+    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+    monkeypatch.setattr(cfg_module, "DIRETORIO_DOMINIO", tmp_path)
+
+    with pytest.raises(KeyError):
+        Config.load()
+
+
+def test_load_sem_caminho_download_relatorio_levanta_key_error(tmp_path, monkeypatch, settings_valido):
+    del settings_valido["moodle"]["caminhoDownloadRelatorio"]
     (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
     (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
     monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)

@@ -34,7 +34,7 @@ class Config:
         moodle_config = MoodleConfig(
             usuario=dados_env["moodle_usuario"],
             senha=dados_env["moodle_senha"],
-            caminho_download_relatorio=DIRETORIO_BASE / "dados" / "relatorios",
+            caminho_download_relatorio=Path(moodle_json["caminhoDownloadRelatorio"]),
             url_login=moodle_json["urlLogin"],
             urls_relatorios=[i.strip() for i in moodle_json["urlsRelatorios"]],
         )

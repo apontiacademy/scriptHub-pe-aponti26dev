@@ -16,6 +16,7 @@ def settings_valido(tmp_path):
                 "https://example.com/relatorio1",
                 "https://example.com/relatorio2",
             ],
+            "caminhoDownloadRelatorio": str(tmp_path / "downloads"),
             "csvResidentes": str(tmp_path / "residentes.csv"),
             "exportarAnaliseRelatorio": False,
         },
@@ -40,9 +41,21 @@ def test_load_retorna_config_completa(tmp_path, monkeypatch, settings_valido):
     assert config.moodle.senha == "pass"
     assert config.moodle.url_login == "https://example.com/login"
     assert len(config.moodle.urls_relatorios) == 2
+    assert config.moodle.caminho_download_relatorio == tmp_path / "downloads"
     assert config.gsheets.id_planilha == "planilha-id-123"
     assert config.gsheets.nome_aba == "Resultados"
     assert config.gsheets.caminho_json_credenciais == tmp_path / "credentials.json"
+
+
+def test_load_sem_caminho_download_relatorio_levanta_key_error(tmp_path, monkeypatch, settings_valido):
+    del settings_valido["moodle"]["caminhoDownloadRelatorio"]
+    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
+    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
+    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+    monkeypatch.setattr(cfg_module, "DIRETORIO_DOMINIO", tmp_path)
+
+    with pytest.raises(KeyError):
+        Config.load()
 
 
 def test_load_sem_caminho_json_credenciais_levanta_key_error(tmp_path, monkeypatch, settings_valido):
