@@ -45,9 +45,9 @@ LARGURA_PAGINA = 297  # A4 paisagem
 MARGEM = 12
 LARGURA_UTIL = LARGURA_PAGINA - 2 * MARGEM
 
-LARGURA_LOGO_MAX = 90
-ALTURA_LOGO_MAX = 45
-ALTURA_ASSINATURA_MAX = 22
+LARGURA_LOGO_MAX = 72
+ALTURA_LOGO_MAX = 36
+ALTURA_ASSINATURA_MAX = 40
 ESPACAMENTO_CAPA = 8
 
 
@@ -209,25 +209,22 @@ class AtaPDF(FPDF):
         self._pagina_capa = True
         self.add_page()
 
-        altura_titulo = 14
-        altura_turma = 11
-        altura_bloco = altura_titulo + ESPACAMENTO_CAPA + altura_turma
         if logo_existe:
-            altura_bloco += ALTURA_LOGO_MAX + ESPACAMENTO_CAPA
-
-        y = (self.h - altura_bloco) / 2
-
-        if logo_existe:
-            x = (self.w - LARGURA_LOGO_MAX) / 2
+            x_logo = (self.w - LARGURA_LOGO_MAX) / 2
             self.image(
                 str(caminho_logo),
-                x=x,
-                y=y,
+                x=x_logo,
+                y=MARGEM,
                 w=LARGURA_LOGO_MAX,
                 h=ALTURA_LOGO_MAX,
                 keep_aspect_ratio=True,
             )
-            y += ALTURA_LOGO_MAX + ESPACAMENTO_CAPA
+
+        altura_titulo = 14
+        altura_turma = 11
+        altura_bloco = altura_titulo + ESPACAMENTO_CAPA + altura_turma
+
+        y = (self.h - altura_bloco) / 2
 
         self.set_y(y)
         self.set_font("Helvetica", "B", 26)
