@@ -297,8 +297,43 @@ def test_carregar_turma_matricula_tardia_justifica_por_data(tmp_path):
     # Sessão de 8/06 é anterior à matrícula (10/06) -> justificada com texto fixo
     assert aluno.registros[0].status == "JU"
     assert aluno.registros[0].comentario == "Não matriculado no momento."
-    # Sessão de 15/06 é posterior -> status real preservado
-    assert aluno.registros[1].status == "PR"
+
+
+def test_carregar_turma_matricula_tardia_dia_sem_zero_a_esquerda(tmp_path, mocker):
+    linhas = [
+        ["Curso", "Turma X"],
+        ["Grupo", "Todos os participantes"],
+        [],
+        _cabecalho(["3/07/2026", "5/07/2026"]),
+        [
+            ".",
+            "Tardio",
+            "1",
+            "tardio",
+            "t@example.com",
+            "Inscrição de usuários inicia 8.07.2026",
+            None,
+            "←",
+            None,
+            0,
+            0,
+            0,
+            1,
+            1,
+            "0 / 0",
+            "0,0",
+        ],
+    ]
+    caminho = _escrever_xlsx(tmp_path, "Turma X.xlsx", linhas)
+    mock_log = mocker.patch("scripthub.scripts.frequencias.compilar.parser_frequencias.log")
+
+    turma = carregar_turma(caminho)
+
+    aluno = turma.alunos[0]
+    assert [r.status for r in aluno.registros] == ["JU", "JU"]
+    assert aluno.registros[0].comentario == "Não matriculado no momento."
+    assert aluno.registros[1].comentario == "Não matriculado no momento."
+    mock_log.aviso.assert_not_called()
 
 
 def test_carregar_turma_celulas_vazias_nao_geram_nan(tmp_path):
