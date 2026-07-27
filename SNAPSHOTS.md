@@ -40,3 +40,10 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 - **Added**: `scripthub frequencias auditar` — subcomando novo, pipeline completo; `frequencias_app` sai do modelo `callback(invoke_without_command=True)` e passa a espelhar `relatorios_app`
 - **Added**: `scripthub frequencias extrair` — subcomando novo, atalho pro passo de extração (`frequencias auditar --passo exportar`)
 - **Changed**: `_ALIASES`/`--aliases` e READMEs de `relatorios`/`frequencias` atualizados com os comandos novos; `--passo`/`-p` permanece 100% intocado, sem depreciação nem remoção. **Breaking change**: `scripthub frequencias` sem subcomando agora dá o mesmo erro "Comando não fornecido" (exit 2) que `scripthub relatorios` sem subcomando já dava (Closes #89)
+
+### 0.21.0.dev6 - 2026-07-27 - (PR#112)
+
+- **Added**: `scripthub frequencias compilar`, novo subcomando irmão de `auditar` — extrai as frequências do Moodle (cópia própria, independente de `auditar`) e gera uma ata de frequência em PDF por turma: capa configurável, resumo geral da turma por mês, uma página por mês com a presença de cada aluno marcada por uma bolinha colorida, resumo geral por aluno do período inteiro e lista de justificativas consolidada ao final do documento
+- **Added**: regras de negócio da ata — status do Moodle mapeado para cor (`PR`/`AU`/`AT`/`JU`), só `AU` conta como falta, `"Inscrições suspensas"` exclui o aluno inteiramente, matrícula tardia justifica automaticamente as sessões anteriores à data de inscrição, `"?"` (sessão sem chamada) conta como falta, e mais de 3 faltas no mês (limite fixo, não configurável) destaca a linha na página daquele mês
+- **Added**: campos de configuração `atas.caminhoSaida`/`atas.caminhoLogo`/`atas.caminhoAssinatura`, escopados por script (`auditar`/`compilar`) em `services/config/esquemas.py` (Closes #58)
+- **Changed**: lógica de download compartilhada entre `auditar` e `compilar` extraída para `services/moodle/attendance.py`; `frequencias/exportar_frequencias.py`/`integracao_google_sheets.py` movidos para `frequencias/auditar/`, com `exportar` renomeado para `extrair`

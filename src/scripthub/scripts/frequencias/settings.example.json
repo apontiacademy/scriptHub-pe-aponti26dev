@@ -10,5 +10,10 @@
   "gsheets": {
     "idPlanilha": "abcdefghijklmnopqrstuvwxyz12345678",
     "caminhoJsonCredenciais": "/home/you/credentials.json"
+  },
+  "atas": {
+    "caminhoSaida": "/home/you/Documents/atas-frequencia",
+    "caminhoLogo": "/home/you/Documents/atas-frequencia/logo.png",
+    "caminhoAssinatura": "/home/you/Documents/atas-frequencia/assinatura.png"
   }
 }

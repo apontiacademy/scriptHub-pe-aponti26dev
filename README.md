@@ -31,6 +31,7 @@ scripthub config
 ```bash
 # Invocar um script diretamente
 uv run scripthub frequencias auditar
+uv run scripthub frequencias compilar
 uv run scripthub relatorios auditar
 uv run scripthub relatorios compilar
 uv run scripthub softskills
@@ -49,8 +50,9 @@ uv run scripthub --version   # ou: scripthub -V
 
 | Comando | Alias | Descrição |
 |---|---|---|
-| `scripthub frequencias auditar [-p slug]` | `f auditar` | Exporta frequências de presença do Moodle para o Google Sheets |
-| `scripthub frequencias extrair` | `f extrair` | Executa somente a extração de frequências do Moodle |
+| `scripthub frequencias auditar [-p slug]` | `f auditar` | Pipeline completo: extração de frequências do Moodle → integração ao Google Sheets |
+| `scripthub frequencias compilar [-p slug]` | `f compilar` | Pipeline completo: extração de frequências do Moodle → geração de atas em PDF |
+| `scripthub frequencias extrair` | `f extrair` | Executa somente a extração de frequências do Moodle (atalho) |
 | `scripthub relatorios auditar [-p slug]` | `r auditar` | Pipeline completo: download → análise → Google Sheets → backup |
 | `scripthub relatorios extrair` | `r extrair` | Executa somente a extração de relatórios do Moodle |
 | `scripthub relatorios compilar` | `r compilar` | Compila relatórios em PDF |
@@ -58,19 +60,19 @@ uv run scripthub --version   # ou: scripthub -V
 | `scripthub torpedo` | `t` | Posta tópicos em fóruns do Moodle a partir de arquivos Markdown |
 | `scripthub config` | `c` | Configura interativamente as opções de um script |
 
-A opção `--passo <slug>` (ou `-p`) executa apenas um passo do pipeline. Disponível nos comandos `frequencias auditar` e `relatorios auditar`. Os passos mais usados isoladamente (extração) também têm um subcomando próprio (`extrair`), que não exige saber o slug:
-
-Em `frequencias`, o subcomando `extrair` corresponde ao passo interno `exportar` (nome escolhido por consistência com `relatorios extrair`, que já bate com seu próprio slug).
+A opção `--passo <slug>` (ou `-p`) executa apenas um passo do pipeline. Disponível nos comandos `frequencias auditar`, `frequencias compilar` e `relatorios auditar`. Os passos mais usados isoladamente (extração) também têm um subcomando próprio (`extrair`), que não exige saber o slug:
 
 | Comando | Passos disponíveis |
 |---|---|
-| `scripthub frequencias auditar` | `exportar` (`e`), `integrar` (`i`) |
+| `scripthub frequencias auditar` | `extrair` (`e`), `integrar` (`i`) |
+| `scripthub frequencias compilar` | `extrair` (`e`), `gerar` (`g`) |
 | `scripthub relatorios auditar` | `extrair` (`e`), `analisar` (`a`), `integrar` (`i`), `salvar` (`s`) |
 
 ```bash
-scripthub frequencias auditar --passo exportar     # só baixa do Moodle
+scripthub frequencias auditar --passo extrair      # só baixa do Moodle
 scripthub frequencias auditar -p e                 # idem, forma curta
-scripthub frequencias extrair                      # atalho direto pro mesmo passo
+scripthub frequencias compilar --passo gerar       # só gera os PDFs
+scripthub frequencias extrair                      # atalho direto pro passo de extração
 scripthub relatorios auditar --passo extrair       # só baixa relatórios
 scripthub relatorios auditar -p s                  # só executa o backup
 scripthub relatorios extrair                       # atalho direto pro passo de extração
