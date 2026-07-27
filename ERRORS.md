@@ -12,7 +12,7 @@ mensagem de log.
 | 2 | Configuração inválida ou ausente | `.env`, `settings.json`, credenciais do Google, ou um arquivo/diretório local que um passo anterior do pipeline deveria ter gerado | `scripthub.services.erros.ErroConfiguracao` |
 | 3 | Uso inválido da CLI | `--passo` desconhecido, flags conflitantes (`--opcoes` + `--limpar`), `modo` inválido em `relatorios`, script desconhecido em `config` | `scripthub.services.erros.ErroUsoCLI` |
 | 4 | Falha parcial | Parte de um lote de itens falhou (N de M PDFs, fóruns, arquivos), mas o restante foi processado | `scripthub.services.erros.FalhaParcial` |
-| 5 | Falha de integração externa | Moodle, Google Sheets/Drive retornaram algo inesperado (HTML mudou, planilha/aba não encontrada, API falhou) | `scripthub.services.erros.ErroIntegracao` |
+| 5 | Falha de integração externa | Moodle ou Google Sheets/Drive retornaram algo inesperado (HTML mudou, planilha/aba não encontrada, API falhou) | `scripthub.services.erros.ErroIntegracao` |
 
 **Nota sobre o código 2 do Click/Typer**: por convenção, a biblioteca Click
 (usada pelo Typer) sai com código `2` quando falha em fazer o parsing de uma
@@ -70,7 +70,7 @@ consiga corrigir?
   validados antes do script rodar) → `ErroUsoCLI` (3)
 - Parte de um lote falhou, mas não é um erro fatal do processo inteiro →
   `FalhaParcial` (4)
-- Um sistema externo (Moodle, Google) devolveu algo inesperado
+- Um sistema externo (Moodle ou Google) devolveu algo inesperado
   (página sem o elemento esperado, planilha/aba não encontrada, API falhou) →
   `ErroIntegracao` (5)
 - Nenhuma das anteriores, ou a causa é ambígua/inesperada (provável bug) →
