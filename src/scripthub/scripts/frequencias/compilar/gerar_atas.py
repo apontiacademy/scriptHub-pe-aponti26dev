@@ -71,6 +71,16 @@ class PaginaMensal:
 
 
 @dataclass
+class LinhaResumoMensal:
+    mes: str
+    ano: int
+    percentual_pr: float
+    percentual_at: float
+    percentual_ju: float
+    percentual_au: float
+
+
+@dataclass
 class LinhaResumo:
     nome: str
     id_estudante: str
@@ -155,6 +165,28 @@ def agrupar_justificativas_por_data(
     for nome, data_sessao, texto in justificativas:
         agrupado.setdefault(data_sessao, []).append((nome, texto))
     return agrupado
+
+
+def montar_resumo_mensal_turma(turma: Turma) -> list[LinhaResumoMensal]:
+    linhas = []
+    for (ano, mes), sessoes_mes in agrupar_sessoes_por_mes(turma.sessoes).items():
+        contagens = {"PR": 0, "AT": 0, "JU": 0, "AU": 0}
+        total = 0
+        for aluno in turma.alunos:
+            for registro in registros_do_periodo(aluno, sessoes_mes):
+                contagens[registro.status] += 1
+                total += 1
+        linhas.append(
+            LinhaResumoMensal(
+                mes=_MESES_PT[mes],
+                ano=ano,
+                percentual_pr=percentual_faltas(contagens["PR"], total),
+                percentual_at=percentual_faltas(contagens["AT"], total),
+                percentual_ju=percentual_faltas(contagens["JU"], total),
+                percentual_au=percentual_faltas(contagens["AU"], total),
+            )
+        )
+    return linhas
 
 
 def montar_resumo_geral(turma: Turma) -> list[LinhaResumo]:
@@ -251,6 +283,37 @@ class AtaPDF(FPDF):
             )
 
         self._pagina_capa = False
+
+    def pagina_resumo_turma(self, turma_nome: str, linhas: list[LinhaResumoMensal]):
+        self._turma = turma_nome
+        self._subtitulo = "Resumo geral da turma"
+        self.add_page()
+
+        colunas = [
+            ("Mês", 93),
+            ("% PR", 45),
+            ("% AT", 45),
+            ("% JU", 45),
+            ("% AU", 45),
+        ]
+        self.set_font("Helvetica", "B", 8)
+        self.set_fill_color(210, 210, 210)
+        for titulo, largura in colunas:
+            self.cell(largura, 6, _para_latin1(titulo), border=1, fill=True, align="C")
+        self.ln(6)
+
+        self.set_font("Helvetica", "", 8)
+        for linha in linhas:
+            valores = [
+                _para_latin1(f"{linha.mes}/{linha.ano}"),
+                _para_latin1(f"{linha.percentual_pr:.1f}%"),
+                _para_latin1(f"{linha.percentual_at:.1f}%"),
+                _para_latin1(f"{linha.percentual_ju:.1f}%"),
+                _para_latin1(f"{linha.percentual_au:.1f}%"),
+            ]
+            for (_, largura), valor in zip(colunas, valores, strict=True):
+                self.cell(largura, 6, valor, border=1, align="C")
+            self.ln(6)
 
     def pagina_mensal(self, turma_nome: str, pagina: PaginaMensal):
         self._turma = turma_nome
@@ -354,7 +417,7 @@ class AtaPDF(FPDF):
 
     def pagina_resumo(self, turma_nome: str, resumo: list[LinhaResumo]):
         self._turma = turma_nome
-        self._subtitulo = "Resumo geral"
+        self._subtitulo = "Resumo geral por aluno"
         self.add_page()
 
         colunas = [
@@ -397,6 +460,7 @@ def _gerar_pdf_turma(
 ) -> None:
     pdf = AtaPDF()
     pdf.pagina_capa(turma.nome, caminho_logo, caminho_assinatura)
+    pdf.pagina_resumo_turma(turma.nome, montar_resumo_mensal_turma(turma))
     paginas = montar_paginas_mensais(turma)
     for pagina in paginas:
         pdf.pagina_mensal(turma.nome, pagina)

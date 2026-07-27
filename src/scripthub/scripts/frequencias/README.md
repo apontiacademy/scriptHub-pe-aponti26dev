@@ -54,7 +54,7 @@ uv run scripthub frequencias auditar
 
 ## `compilar`
 
-Extrai as frequências de todas as turmas do Moodle (independente de `auditar` já ter rodado) e compila uma ata de frequência em PDF por turma: uma capa, uma página por mês (com a presença de cada aluno marcada por uma bolinha colorida), uma página de resumo geral do período inteiro e, por fim, a lista de justificativas agrupada por data.
+Extrai as frequências de todas as turmas do Moodle (independente de `auditar` já ter rodado) e compila uma ata de frequência em PDF por turma: uma capa, um resumo geral da turma por mês, uma página por mês (com a presença de cada aluno marcada por uma bolinha colorida), um resumo geral por aluno do período inteiro e, por fim, a lista de justificativas agrupada por data.
 
 ### Pipeline
 
@@ -90,7 +90,8 @@ uv run scripthub frequencias compilar
 - Aluno com matrícula tardia (`"Inscrição de usuários inicia..."`) tem as sessões anteriores à matrícula justificadas automaticamente (`"Não matriculado no momento."`), mas continua na ata.
 - Sessão sem chamada feita (`"?"`) conta como falta.
 - Aluno com mais de 3 faltas no mês tem a linha inteira destacada em vermelho naquela página mensal — limite fixo no código, não configurável.
-- A capa mostra o logo do programa (opcional), o título "Registro de Frequências" e o nome da turma, centralizados como bloco; a assinatura de logos da Aponti (opcional) fica fixa na parte de baixo. Ambas as imagens são configuráveis (`atas.caminhoLogo`/`atas.caminhoAssinatura`) — se ausentes ou apontando para um arquivo inexistente, simplesmente não são exibidas.
+- A capa mostra o logo do programa (opcional) fixo no topo, o título "Registro de Frequências" e o nome da turma centralizados logo abaixo; a assinatura de logos da Aponti (opcional) fica fixa na parte de baixo. Ambas as imagens são configuráveis (`atas.caminhoLogo`/`atas.caminhoAssinatura`) — se ausentes ou apontando para um arquivo inexistente, simplesmente não são exibidas.
+- Logo após a capa, o "Resumo geral da turma" agrega, por mês, o percentual de `PR`/`AT`/`JU`/`AU` de todos os alunos (sem detalhar por aluno) — distinto do "Resumo geral por aluno", que vem depois das páginas mensais com os totais do período inteiro por aluno.
 - Todas as justificativas do período ficam concentradas numa única página ao final do documento, agrupadas por data — cada página mensal com justificativas só exibe a nota "* Justificativas ao final do documento.".
 
 ### Estrutura de saída

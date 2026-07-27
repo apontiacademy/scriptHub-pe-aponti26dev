@@ -14,6 +14,7 @@ from scripthub.scripts.frequencias.compilar.gerar_atas import (
     main,
     montar_paginas_mensais,
     montar_resumo_geral,
+    montar_resumo_mensal_turma,
     todas_justificativas,
 )
 from scripthub.scripts.frequencias.compilar.parser_frequencias import Aluno, RegistroSessao, Sessao, Turma
@@ -156,6 +157,56 @@ def test_montar_resumo_geral_calcula_percentual_de_justificadas():
 
     assert resumo[0].ju == 2
     assert resumo[0].percentual_ju == pytest.approx(50.0)
+
+
+def test_montar_resumo_mensal_turma_agrega_percentuais_por_mes():
+    s1, s2, s3 = _sessao(1, 6), _sessao(2, 6), _sessao(3, 7)
+    alunos = [
+        Aluno(
+            nome="Fulano",
+            id_estudante="1",
+            identificacao_usuario="fulano",
+            email="f@example.com",
+            registros=[
+                RegistroSessao(s1, "PR"),
+                RegistroSessao(s2, "AU"),
+                RegistroSessao(s3, "AT"),
+            ],
+        ),
+        Aluno(
+            nome="Ciclano",
+            id_estudante="2",
+            identificacao_usuario="ciclano",
+            email="c@example.com",
+            registros=[
+                RegistroSessao(s1, "PR"),
+                RegistroSessao(s2, "JU", "Atestado"),
+                RegistroSessao(s3, "PR"),
+            ],
+        ),
+    ]
+    turma = Turma(nome="Turma X", alunos=alunos, sessoes=[s1, s2, s3])
+
+    linhas = montar_resumo_mensal_turma(turma)
+
+    assert len(linhas) == 2
+    junho = linhas[0]
+    assert (junho.mes, junho.ano) == ("Junho", 2026)
+    assert junho.percentual_pr == pytest.approx(50.0)
+    assert junho.percentual_au == pytest.approx(25.0)
+    assert junho.percentual_ju == pytest.approx(25.0)
+    assert junho.percentual_at == pytest.approx(0.0)
+
+    julho = linhas[1]
+    assert (julho.mes, julho.ano) == ("Julho", 2026)
+    assert julho.percentual_pr == pytest.approx(50.0)
+    assert julho.percentual_at == pytest.approx(50.0)
+
+
+def test_montar_resumo_mensal_turma_vazio_sem_sessoes():
+    turma = Turma(nome="Turma X", alunos=[], sessoes=[])
+
+    assert montar_resumo_mensal_turma(turma) == []
 
 
 def test_montar_paginas_mensais_coleta_justificativas_de_matricula_tardia():
@@ -396,6 +447,39 @@ def test_gerar_pdf_turma_inclui_capa_como_primeira_pagina(tmp_path, mocker):
     _gerar_pdf_turma(turma, caminho, caminho_logo=None, caminho_assinatura=None)
 
     spy.assert_called_once_with(mocker.ANY, turma.nome, None, None)
+
+
+def test_pagina_resumo_turma_adiciona_pagina():
+    pdf = AtaPDF()
+
+    pdf.pagina_resumo_turma("Turma X", [])
+
+    assert pdf.page_no() == 1
+
+
+def test_gerar_pdf_turma_passa_resumo_mensal_para_pagina_resumo_turma(tmp_path, mocker):
+    turma = _turma_um_aluno_dois_meses()
+    caminho = tmp_path / "test.pdf"
+    spy = mocker.spy(AtaPDF, "pagina_resumo_turma")
+
+    _gerar_pdf_turma(turma, caminho)
+
+    spy.assert_called_once_with(mocker.ANY, turma.nome, montar_resumo_mensal_turma(turma))
+
+
+def test_gerar_pdf_turma_ordem_das_paginas(tmp_path, mocker):
+    turma = _turma_um_aluno_dois_meses()
+    caminho = tmp_path / "test.pdf"
+    ordem = []
+    mocker.patch.object(AtaPDF, "pagina_capa", side_effect=lambda *a, **k: ordem.append("capa"))
+    mocker.patch.object(AtaPDF, "pagina_resumo_turma", side_effect=lambda *a, **k: ordem.append("resumo_turma"))
+    mocker.patch.object(AtaPDF, "pagina_mensal", side_effect=lambda *a, **k: ordem.append("mensal"))
+    mocker.patch.object(AtaPDF, "pagina_resumo", side_effect=lambda *a, **k: ordem.append("resumo"))
+    mocker.patch.object(AtaPDF, "pagina_justificativas", side_effect=lambda *a, **k: ordem.append("justificativas"))
+
+    _gerar_pdf_turma(turma, caminho)
+
+    assert ordem == ["capa", "resumo_turma", "mensal", "mensal", "resumo", "justificativas"]
 
 
 def test_main_repassa_logo_e_assinatura_configurados(tmp_path, mocker):
