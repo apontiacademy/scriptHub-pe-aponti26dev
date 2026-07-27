@@ -1,3 +1,3 @@
-"""Automação de relatórios do Moodle: auditoria e compilação de PDFs."""
+"""Automação de relatórios do Moodle: extração e compilação de PDFs."""
 
 CLI_CMD = ("relatorios",)

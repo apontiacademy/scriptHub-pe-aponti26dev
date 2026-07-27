@@ -11,6 +11,7 @@ from scripthub.cli import (
     app,
     config,
     executar_script,
+    relatorios_app,
 )
 from scripthub.services.erros import ErroConfiguracao, ErroIntegracao, ErroUsoCLI, FalhaParcial
 from scripthub.services.escopo import Escopo
@@ -38,6 +39,7 @@ def test_aliases_lista_extrair_e_frequencias_auditar():
     assert "scripthub relatorios extrair" in result.output
     assert "scripthub frequencias auditar" in result.output
     assert "scripthub frequencias extrair" in result.output
+    assert "scripthub relatorios auditar" not in result.output
 
 
 def test_menu_interativo_nao_e_um_comando_registrado():
@@ -342,32 +344,18 @@ def test_frequencias_subapp_registrado_com_nome_cheio_e_alias():
     assert {"frequencias", "f"}.issubset(nomes)
 
 
-def test_relatorios_help_lista_subcomandos_auditar_e_compilar():
+def test_relatorios_help_lista_subcomandos_extrair_e_compilar():
     result = runner.invoke(app, ["relatorios", "--help"])
 
     assert result.exit_code == 0
-    assert "auditar" in result.output
+    assert "extrair" in result.output
     assert "compilar" in result.output
 
 
-def test_relatorios_a_e_alias_de_auditar(mocker):
-    mocker.patch("scripthub.cli._carregar_config", return_value=None)
-    mock_executar = mocker.patch("scripthub.cli.executar_script")
+def test_relatorios_auditar_nao_e_um_comando_registrado():
+    nomes = {t.name for t in relatorios_app.registered_commands}
 
-    result = runner.invoke(app, ["relatorios", "a"])
-
-    assert result.exit_code == 0
-    mock_executar.assert_called_once()
-
-
-def test_r_a_encadeia_alias_de_dominio_e_de_script(mocker):
-    mocker.patch("scripthub.cli._carregar_config", return_value=None)
-    mock_executar = mocker.patch("scripthub.cli.executar_script")
-
-    result = runner.invoke(app, ["r", "a"])
-
-    assert result.exit_code == 0
-    mock_executar.assert_called_once()
+    assert nomes.isdisjoint({"auditar", "a"})
 
 
 def test_relatorios_compilar_chama_pipeline_simples(mocker):

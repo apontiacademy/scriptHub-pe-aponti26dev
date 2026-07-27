@@ -1,12 +1,10 @@
 from unittest.mock import MagicMock
 
 import pytest
+from bs4 import BeautifulSoup
 
-from scripthub.scripts.relatorios.auditar.config import Config, GsheetsConfig, MoodleConfig
-from scripthub.scripts.relatorios.auditar.download_de_relatorios import baixar_relatorio, main
-from scripthub.services.erros import ErroConfiguracao, ErroIntegracao
-
-_PATCH = "scripthub.scripts.relatorios.auditar.download_de_relatorios"
+from scripthub.services.erros import ErroIntegracao
+from scripthub.services.moodle.download import _campos_de_form, baixar_relatorio
 
 _HTML_FORM_DOWNLOAD = """
 <html><body>
@@ -27,9 +25,6 @@ _HTML_LINK_DOWNLOAD = """
 
 _HTML_SEM_DOWNLOAD = "<html><body><p>sem botão</p></body></html>"
 
-# Estrutura real de mod/feedback/show_entries.php: o primeiro form da página
-# (ex.: "Configurar modo de edição") não tem relação com exportação — o form
-# correto é identificado pelo <select name="download">, com method="get".
 _HTML_FEEDBACK_DOWNLOAD = """
 <html><body>
 <form action="/editmode.php" method="post">
@@ -43,6 +38,60 @@ _HTML_FEEDBACK_DOWNLOAD = """
   <select name="download">
     <option value="csv">CSV</option>
     <option value="excel">Excel</option>
+  </select>
+</form>
+</body></html>
+"""
+
+_HTML_FEEDBACK_DOIS_SUBMITS = """
+<html><body>
+<form action="/mod/feedback/show_entries.php" method="get">
+  <input type="hidden" name="sesskey" value="sk789">
+  <input type="hidden" name="id" value="8313">
+  <input type="submit" name="submitbutton" value="Exportar">
+  <input type="submit" name="cancel" value="Cancelar">
+  <select name="download">
+    <option value="csv">CSV</option>
+  </select>
+</form>
+</body></html>
+"""
+
+_HTML_FEEDBACK_SELECT_EM_FORM_LOGIN = """
+<html><body>
+<form action="/login/index.php" method="get">
+  <select name="download">
+    <option value="csv">CSV</option>
+  </select>
+</form>
+</body></html>
+"""
+
+_HTML_FEEDBACK_COM_GROUP = """
+<html><body>
+<form action="/mod/feedback/show_entries.php" method="get">
+  <input type="hidden" name="sesskey" value="sk789">
+  <input type="hidden" name="id" value="8313">
+  <select name="group">
+    <option value="0">Todos os grupos</option>
+    <option value="42" selected>Turma 42</option>
+  </select>
+  <select name="download">
+    <option value="csv">CSV</option>
+    <option value="excel">Excel</option>
+  </select>
+</form>
+</body></html>
+"""
+
+_HTML_FEEDBACK_SEM_OPCAO_CSV = """
+<html><body>
+<form action="/mod/feedback/show_entries.php" method="get">
+  <input type="hidden" name="sesskey" value="sk789">
+  <input type="hidden" name="id" value="8313">
+  <select name="download">
+    <option value="excel">Excel</option>
+    <option value="pdf">PDF</option>
   </select>
 </form>
 </body></html>
@@ -63,27 +112,6 @@ def _make_sessao(html=_HTML_FORM_DOWNLOAD, download_content_type="text/csv"):
     resp_download.headers = {"Content-Type": download_content_type}
     sessao.baixar.return_value = resp_download
     return sessao
-
-
-def _make_config(tmp_path):
-    return Config(
-        moodle=MoodleConfig(
-            usuario="user",
-            senha="pass",
-            caminho_download_relatorio=tmp_path / "relatorios",
-            csv_residentes=tmp_path / "residentes.csv",
-            csv_saida_analise=tmp_path / "resultado.csv",
-            url_login="https://moodle.example.com/login/index.php",
-            urls_relatorios=["https://moodle.example.com/report?id=1"],
-            exportar_analise_relatorio=False,
-        ),
-        gsheets=GsheetsConfig(
-            id_planilha="planilha-id",
-            nome_aba="Resultados",
-            caminho_backup_local=tmp_path / "backups",
-            caminho_json_credenciais=tmp_path / "creds.json",
-        ),
-    )
 
 
 # ── baixar_relatorio ──────────────────────────────────────────────────────────
@@ -117,26 +145,6 @@ def test_baixar_relatorio_form_inclui_submit_download(tmp_path):
     _, kwargs = sessao.baixar.call_args
     data = kwargs["data"]
     assert data.get("download") == "Download"
-
-
-_HTML_FORM_GENERICO_METHOD_GET = """
-<html><body>
-<form action="/mod/quiz/report.php" method="get">
-  <input type="hidden" name="sesskey" value="sk1">
-  <input type="hidden" name="id" value="1">
-  <input type="submit" name="download" value="Download">
-</form>
-</body></html>
-"""
-
-
-def test_baixar_relatorio_form_generico_respeita_method_get_do_form(tmp_path):
-    sessao = _make_sessao(html=_HTML_FORM_GENERICO_METHOD_GET)
-
-    baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
-
-    _, kwargs = sessao.baixar.call_args
-    assert kwargs["method"] == "get"
 
 
 def test_baixar_relatorio_via_link_direto(tmp_path):
@@ -177,31 +185,6 @@ def test_baixar_relatorio_form_feedback_data_inclui_sesskey_id_e_download_csv(tm
     assert kwargs["data"]["download"] == "csv"
 
 
-_HTML_FEEDBACK_DOIS_SUBMITS = """
-<html><body>
-<form action="/mod/feedback/show_entries.php" method="get">
-  <input type="hidden" name="sesskey" value="sk789">
-  <input type="hidden" name="id" value="8313">
-  <input type="submit" name="submitbutton" value="Exportar">
-  <input type="submit" name="cancel" value="Cancelar">
-  <select name="download">
-    <option value="csv">CSV</option>
-  </select>
-</form>
-</body></html>
-"""
-
-_HTML_FEEDBACK_SELECT_EM_FORM_LOGIN = """
-<html><body>
-<form action="/login/index.php" method="get">
-  <select name="download">
-    <option value="csv">CSV</option>
-  </select>
-</form>
-</body></html>
-"""
-
-
 def test_baixar_relatorio_form_feedback_inclui_apenas_primeiro_submit(tmp_path):
     sessao = _make_sessao(html=_HTML_FEEDBACK_DOIS_SUBMITS)
 
@@ -219,24 +202,6 @@ def test_baixar_relatorio_ignora_select_download_em_form_de_login(tmp_path):
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
 
 
-_HTML_FEEDBACK_COM_GROUP = """
-<html><body>
-<form action="/mod/feedback/show_entries.php" method="get">
-  <input type="hidden" name="sesskey" value="sk789">
-  <input type="hidden" name="id" value="8313">
-  <select name="group">
-    <option value="0">Todos os grupos</option>
-    <option value="42" selected>Turma 42</option>
-  </select>
-  <select name="download">
-    <option value="csv">CSV</option>
-    <option value="excel">Excel</option>
-  </select>
-</form>
-</body></html>
-"""
-
-
 def test_baixar_relatorio_form_feedback_coleta_outros_selects(tmp_path):
     sessao = _make_sessao(html=_HTML_FEEDBACK_COM_GROUP)
 
@@ -244,20 +209,6 @@ def test_baixar_relatorio_form_feedback_coleta_outros_selects(tmp_path):
 
     _, kwargs = sessao.baixar.call_args
     assert kwargs["data"]["group"] == "42"
-
-
-_HTML_FEEDBACK_SEM_OPCAO_CSV = """
-<html><body>
-<form action="/mod/feedback/show_entries.php" method="get">
-  <input type="hidden" name="sesskey" value="sk789">
-  <input type="hidden" name="id" value="8313">
-  <select name="download">
-    <option value="excel">Excel</option>
-    <option value="pdf">PDF</option>
-  </select>
-</form>
-</body></html>
-"""
 
 
 def test_baixar_relatorio_levanta_erro_quando_select_nao_oferece_csv(tmp_path):
@@ -277,7 +228,7 @@ def test_baixar_relatorio_levanta_erro_integracao_quando_resposta_nao_e_csv(tmp_
 def test_baixar_relatorio_apaga_arquivo_quando_validacao_csv_falha(tmp_path):
     sessao = _make_sessao(download_content_type="text/html")
     caminho_saida = tmp_path / "r.csv"
-    caminho_saida.write_bytes(b"<html>lixo</html>")  # simula gravacao ja feita por MoodleSessao.baixar()
+    caminho_saida.write_bytes(b"<html>lixo</html>")
 
     with pytest.raises(ErroIntegracao, match="[Cc][Ss][Vv]"):
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", caminho_saida)
@@ -296,39 +247,96 @@ def test_baixar_relatorio_form_feedback_apaga_arquivo_quando_validacao_csv_falha
     assert not caminho_saida.exists()
 
 
-# ── main ─────────────────────────────────────────────────────────────────────
+# ── _campos_de_form ───────────────────────────────────────────────────────────
 
 
-def test_main_levanta_runtime_error_sem_urls(tmp_path, mocker):
-    config = _make_config(tmp_path)
-    config.moodle.urls_relatorios = []
-    mocker.patch(f"{_PATCH}.MoodleSessao")
+def test_campos_de_form_coleta_inputs_ocultos():
+    html = """
+    <form>
+      <input type="hidden" name="sesskey" value="sk1">
+      <input type="hidden" value="no-name">
+      <input type="text" name="user" value="john">
+    </form>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    form = soup.find("form")
 
-    with pytest.raises(ErroConfiguracao, match="[Uu][Rr][Ll]"):
-        main(config)
+    data = _campos_de_form(form)
 
-
-def test_main_chama_login_e_baixar_para_cada_url(tmp_path, mocker):
-    config = _make_config(tmp_path)
-    config.moodle.urls_relatorios = [
-        "https://moodle.example.com/r1",
-        "https://moodle.example.com/r2",
-    ]
-    mock_sessao_cls = mocker.patch(f"{_PATCH}.MoodleSessao")
-    mock_sessao = mock_sessao_cls.return_value
-    mock_baixar = mocker.patch(f"{_PATCH}.baixar_relatorio")
-
-    main(config)
-
-    mock_sessao.login.assert_called_once()
-    assert mock_baixar.call_count == 2
+    assert data["sesskey"] == "sk1"
+    assert data["user"] == "john"
+    assert "no-name" not in data
 
 
-def test_main_cria_diretorio_de_download(tmp_path, mocker):
-    config = _make_config(tmp_path)
-    mocker.patch(f"{_PATCH}.MoodleSessao")
-    mocker.patch(f"{_PATCH}.baixar_relatorio")
+def test_campos_de_form_coleta_primeiro_submit_apenas():
+    html = """
+    <form>
+      <input type="hidden" name="id" value="1">
+      <input type="submit" name="submit1" value="Save">
+      <input type="submit" name="submit2" value="Cancel">
+    </form>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    form = soup.find("form")
 
-    main(config)
+    data = _campos_de_form(form)
 
-    assert config.moodle.caminho_download_relatorio.exists()
+    assert data["submit1"] == "Save"
+    assert "submit2" not in data
+
+
+def test_campos_de_form_ignora_button_type():
+    html = """
+    <form>
+      <input type="hidden" name="id" value="1">
+      <input type="button" name="btn" value="Click">
+      <input type="submit" name="submit" value="Send">
+    </form>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    form = soup.find("form")
+
+    data = _campos_de_form(form)
+
+    assert "btn" not in data
+    assert data["submit"] == "Send"
+
+
+def test_campos_de_form_coleta_selects():
+    html = """
+    <form>
+      <select name="group">
+        <option value="1">Group A</option>
+        <option value="2" selected>Group B</option>
+      </select>
+      <select>
+        <option value="no-name">No name select</option>
+      </select>
+      <input type="hidden" name="id" value="1">
+    </form>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    form = soup.find("form")
+
+    data = _campos_de_form(form)
+
+    assert set(data) == {"group", "id"}
+    assert data["group"] == "2"
+    assert data["id"] == "1"
+
+
+def test_campos_de_form_select_usa_primeira_opcao_se_nenhuma_marcada():
+    html = """
+    <form>
+      <select name="lang">
+        <option value="pt">Português</option>
+        <option value="en">English</option>
+      </select>
+    </form>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    form = soup.find("form")
+
+    data = _campos_de_form(form)
+
+    assert data["lang"] == "pt"
