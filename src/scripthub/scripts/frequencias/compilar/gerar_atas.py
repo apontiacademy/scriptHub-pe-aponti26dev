@@ -19,11 +19,11 @@ from .parser_frequencias import (
     Sessao,
     Turma,
     agrupar_sessoes_por_mes,
+    calcular_percentual,
     carregar_turma,
     contar_faltas,
     excedeu_limite_faltas_mes,
     justificativas_do_periodo,
-    percentual_faltas,
     registros_do_periodo,
 )
 
@@ -144,7 +144,7 @@ def montar_paginas_mensais(turma: Turma) -> list[PaginaMensal]:
                     nome=aluno.nome,
                     statuses=[r.status for r in registros],
                     faltas=faltas,
-                    percentual=percentual_faltas(faltas, total),
+                    percentual=calcular_percentual(faltas, total),
                     destacar=excedeu_limite_faltas_mes(aluno, sessoes_mes),
                 )
             )
@@ -180,10 +180,10 @@ def montar_resumo_mensal_turma(turma: Turma) -> list[LinhaResumoMensal]:
             LinhaResumoMensal(
                 mes=_MESES_PT[mes],
                 ano=ano,
-                percentual_pr=percentual_faltas(contagens["PR"], total),
-                percentual_at=percentual_faltas(contagens["AT"], total),
-                percentual_ju=percentual_faltas(contagens["JU"], total),
-                percentual_au=percentual_faltas(contagens["AU"], total),
+                percentual_pr=calcular_percentual(contagens["PR"], total),
+                percentual_at=calcular_percentual(contagens["AT"], total),
+                percentual_ju=calcular_percentual(contagens["JU"], total),
+                percentual_au=calcular_percentual(contagens["AU"], total),
             )
         )
     return linhas
@@ -205,8 +205,8 @@ def montar_resumo_geral(turma: Turma) -> list[LinhaResumo]:
                 at=sum(1 for r in registros if r.status == "AT"),
                 ju=ju,
                 faltas=faltas,
-                percentual=percentual_faltas(faltas, total),
-                percentual_ju=percentual_faltas(ju, total),
+                percentual=calcular_percentual(faltas, total),
+                percentual_ju=calcular_percentual(ju, total),
             )
         )
     return resumo
@@ -225,9 +225,9 @@ class AtaPDF(FPDF):
         if self._pagina_capa:
             return
         self.set_font("Helvetica", "B", 14)
-        self.cell(0, 8, _para_latin1(self._turma), ln=True)
+        self.cell(0, 8, _para_latin1(self._turma), ln=True)  # TODO: substituir por new_x e new_y
         self.set_font("Helvetica", "", 11)
-        self.cell(0, 6, _para_latin1(self._subtitulo), ln=True)
+        self.cell(0, 6, _para_latin1(self._subtitulo), ln=True)  # TODO: substituir por new_x e new_y
         self.ln(2)
 
     def footer(self):
@@ -332,16 +332,15 @@ class AtaPDF(FPDF):
         for sessao in pagina.sessoes:
             self.cell(col_sessao, 6, sessao.data.strftime("%d/%m"), border=1, fill=True, align="C")
         self.cell(col_extra, 6, _para_latin1("Faltas"), border=1, fill=True, align="C")
-        self.cell(col_extra, 6, _para_latin1("% Faltas"), border=1, fill=True, align="C", ln=True)
+        self.cell(
+            col_extra, 6, _para_latin1("% Faltas"), border=1, fill=True, align="C", ln=True
+        )  # TODO: substituir por new_x e new_y
 
         self.set_font("Helvetica", "", 8)
         for linha in pagina.linhas:
-            if linha.destacar:
-                self.set_fill_color(245, 200, 200)
-                preenchido = True
-            else:
-                self.set_fill_color(255, 255, 255)
-                preenchido = True
+            cor_preenchimento = (245, 200, 200) if linha.destacar else (255, 255, 255)
+            self.set_fill_color(*cor_preenchimento)
+            preenchido = True
             nome = _truncar_para_largura(self, _para_latin1(linha.nome), col_nome)
             self.cell(col_nome, 6, nome, border=1, fill=preenchido)
             x_inicio = self.get_x()
@@ -357,7 +356,7 @@ class AtaPDF(FPDF):
                 fill=preenchido,
                 align="C",
                 ln=True,
-            )
+            )  # TODO: substituir por new_x e new_y
 
             raio = min(col_sessao, 6) * 0.28
             for i, status in enumerate(linha.statuses):
@@ -384,7 +383,9 @@ class AtaPDF(FPDF):
             return
         self.ln(4)
         self.set_font("Helvetica", "I", 8)
-        self.cell(0, 5, _para_latin1("* Justificativas ao final do documento."), ln=True)
+        self.cell(
+            0, 5, _para_latin1("* Justificativas ao final do documento."), ln=True
+        )  # TODO: substituir por new_x e new_y
 
     def pagina_justificativas(self, turma_nome: str, justificativas: list[tuple[str, date, str]]):
         if not justificativas:

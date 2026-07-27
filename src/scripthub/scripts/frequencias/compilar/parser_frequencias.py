@@ -76,8 +76,8 @@ def contar_faltas(registros: list[RegistroSessao]) -> tuple[int, int]:
     return faltas, len(registros)
 
 
-def percentual_faltas(faltas: int, total: int) -> float:
-    return (faltas / total * 100) if total else 0.0
+def calcular_percentual(parte: int, total: int) -> float:
+    return (parte / total * 100) if total else 0.0
 
 
 def excedeu_limite_faltas_mes(aluno: Aluno, sessoes_mes: list[Sessao]) -> bool:

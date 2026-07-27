@@ -13,7 +13,7 @@ from scripthub.scripts.frequencias.compilar.parser_frequencias import (
     contar_faltas,
     excedeu_limite_faltas_mes,
     justificativas_do_periodo,
-    percentual_faltas,
+    calcular_percentual,
     registros_do_periodo,
 )
 
@@ -48,8 +48,8 @@ def test_contar_faltas_conta_so_au():
 
 
 def test_percentual_faltas():
-    assert percentual_faltas(2, 8) == 25.0
-    assert percentual_faltas(0, 0) == 0.0
+    assert calcular_percentual(2, 8) == 25.0
+    assert calcular_percentual(0, 0) == 0.0
 
 
 def test_registros_do_periodo_filtra_por_sessoes():
