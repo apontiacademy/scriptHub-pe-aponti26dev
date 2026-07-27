@@ -9,11 +9,11 @@ from scripthub.scripts.frequencias.compilar.parser_frequencias import (
     Sessao,
     _nome_completo,
     agrupar_sessoes_por_mes,
+    calcular_percentual,
     carregar_turma,
     contar_faltas,
     excedeu_limite_faltas_mes,
     justificativas_do_periodo,
-    calcular_percentual,
     registros_do_periodo,
 )
 
