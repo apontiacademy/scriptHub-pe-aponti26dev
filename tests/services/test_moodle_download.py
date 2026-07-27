@@ -5,7 +5,6 @@ import pytest
 from scripthub.services.erros import ErroIntegracao
 from scripthub.services.moodle.download import _campos_de_form, baixar_relatorio
 
-
 _HTML_FORM_DOWNLOAD = """
 <html><body>
 <form action="/mod/quiz/report.php" method="post">
