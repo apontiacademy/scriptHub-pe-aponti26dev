@@ -386,7 +386,7 @@ def test_relatorios_extrair_chama_executar_script_com_passo_fixo(mocker):
     result = runner.invoke(app, ["relatorios", "extrair"])
 
     assert result.exit_code == 0
-    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "AUDITORIA DE RELATÓRIOS")
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "EXTRAÇÃO DE RELATÓRIOS")
 
 
 def test_relatorios_e_e_alias_de_extrair(mocker):
@@ -396,7 +396,7 @@ def test_relatorios_e_e_alias_de_extrair(mocker):
     result = runner.invoke(app, ["r", "e"])
 
     assert result.exit_code == 0
-    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "AUDITORIA DE RELATÓRIOS")
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "EXTRAÇÃO DE RELATÓRIOS")
 
 
 def test_frequencias_sem_subcomando_da_erro_comando_nao_fornecido():
@@ -451,7 +451,7 @@ def test_frequencias_extrair_chama_executar_script_com_passo_fixo(mocker):
     result = runner.invoke(app, ["frequencias", "extrair"])
 
     assert result.exit_code == 0
-    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "AUDITORIA DE FREQUÊNCIAS")
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "EXTRAÇÃO DE FREQUÊNCIAS")
 
 
 def test_f_e_encadeia_alias_de_dominio_e_de_script(mocker):
@@ -461,7 +461,7 @@ def test_f_e_encadeia_alias_de_dominio_e_de_script(mocker):
     result = runner.invoke(app, ["f", "e"])
 
     assert result.exit_code == 0
-    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "AUDITORIA DE FREQUÊNCIAS")
+    mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "EXTRAÇÃO DE FREQUÊNCIAS")
 
 
 # --- validação de integração: slugs reais resolvem sem mocks de executar_script ---
@@ -470,7 +470,7 @@ def test_f_e_encadeia_alias_de_dominio_e_de_script(mocker):
 def test_relatorios_extrair_resolve_passo_real_nos_escopos(mocker):
     from dataclasses import replace
 
-    from scripthub.scripts.relatorios.auditar.main import ESCOPOS as ESCOPOS_AUDITAR
+    from scripthub.scripts.relatorios.extrair.main import ESCOPOS as ESCOPOS_EXTRAIR
 
     # Mock a config
     mock_config = mocker.MagicMock()
@@ -478,8 +478,8 @@ def test_relatorios_extrair_resolve_passo_real_nos_escopos(mocker):
 
     # Substituir o Escopo "extrair" na lista (índice 0) por um com função mockada
     mock_func = mocker.MagicMock()
-    original_escopo = ESCOPOS_AUDITAR[0]
-    ESCOPOS_AUDITAR[0] = replace(original_escopo, func=mock_func)
+    original_escopo = ESCOPOS_EXTRAIR[0]
+    ESCOPOS_EXTRAIR[0] = replace(original_escopo, func=mock_func)
 
     try:
         result = runner.invoke(app, ["relatorios", "extrair"])
@@ -488,13 +488,13 @@ def test_relatorios_extrair_resolve_passo_real_nos_escopos(mocker):
         mock_func.assert_called_once_with(mock_config)
     finally:
         # Restaurar o Escopo original
-        ESCOPOS_AUDITAR[0] = original_escopo
+        ESCOPOS_EXTRAIR[0] = original_escopo
 
 
 def test_frequencias_extrair_resolve_passo_real_nos_escopos(mocker):
     from dataclasses import replace
 
-    from scripthub.scripts.frequencias.auditar.main import ESCOPOS as ESCOPOS_FREQ
+    from scripthub.scripts.frequencias.extrair.main import ESCOPOS as ESCOPOS_EXTRAIR
 
     # Mock a config
     mock_config = mocker.MagicMock()
@@ -502,8 +502,8 @@ def test_frequencias_extrair_resolve_passo_real_nos_escopos(mocker):
 
     # Substituir o Escopo "extrair" na lista (índice 0) por um com função mockada
     mock_func = mocker.MagicMock()
-    original_escopo = ESCOPOS_FREQ[0]
-    ESCOPOS_FREQ[0] = replace(original_escopo, func=mock_func)
+    original_escopo = ESCOPOS_EXTRAIR[0]
+    ESCOPOS_EXTRAIR[0] = replace(original_escopo, func=mock_func)
 
     try:
         result = runner.invoke(app, ["frequencias", "extrair"])
@@ -512,4 +512,4 @@ def test_frequencias_extrair_resolve_passo_real_nos_escopos(mocker):
         mock_func.assert_called_once_with(mock_config)
     finally:
         # Restaurar o Escopo original
-        ESCOPOS_FREQ[0] = original_escopo
+        ESCOPOS_EXTRAIR[0] = original_escopo

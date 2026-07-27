@@ -1,6 +1,6 @@
 # relatorios
 
-Domínio de automação de relatórios do Moodle, com dois scripts internos: `auditar` (pipeline completo de auditoria) e `compilar` (geração de PDFs individuais por aluno).
+Domínio de automação de relatórios do Moodle, com três scripts internos: `auditar` (pipeline completo de auditoria), `compilar` (geração de PDFs individuais por aluno) e `extrair` (só a extração de relatórios, isolada).
 
 ## `auditar`
 
@@ -36,6 +36,14 @@ uv run scripthub relatorios auditar --passo analisar  # só analisa
 uv run scripthub relatorios auditar -p s               # só faz backup
 ```
 
+O passo `extrair` também existe como script próprio de nível superior — ver
+seção [`extrair`](#extrair) abaixo — por ser o mais comumente rodado isolado:
+
+```bash
+uv run scripthub relatorios extrair   # mesmo resultado de `auditar --passo extrair`
+uv run scripthub relatorios e         # idem, forma curta
+```
+
 ### Como rodar
 
 ```bash
@@ -53,6 +61,24 @@ relatorios/auditar/
 
 <caminhoBackupLocal>/
 └── [BACKUP AAAA-MM-DD HH-MM] <nome da aba>.xlsx
+```
+
+## `extrair`
+
+Baixa todos os relatórios do Moodle listados em `moodle.urlsRelatorios` — sem análise pente-fino, sem sincronizar com o Google Sheets e sem backup (isso é feito por `auditar`). Implementação própria, independente de `auditar`, embora hoje produza o mesmo resultado que o passo `extrair` de lá.
+
+### Como rodar
+
+```bash
+uv run scripthub relatorios extrair
+```
+
+### Estrutura de saída
+
+```
+relatorios/extrair/
+└── dados/
+    └── relatorios/          # CSVs baixados do Moodle
 ```
 
 ## `compilar`
@@ -93,9 +119,9 @@ relatorios/compilar/
 
 ## Configuração
 
-Compartilhada entre `auditar` e `compilar` — `.env` e `settings.json` vivem na raiz de `relatorios/`, não em cada subpasta.
+Compartilhada entre `auditar`, `compilar` e `extrair` — `.env` e `settings.json` vivem na raiz de `relatorios/`, não em cada subpasta.
 
-> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config relatorios` configura essas opções interativamente. Use `--script auditar` ou `--script compilar` para priorizar os campos daquele script na tela de edição.
+> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config relatorios` configura essas opções interativamente. Use `--script auditar`, `--script compilar` ou `--script extrair` para priorizar os campos daquele script na tela de edição.
 
 ### 1. Variáveis de ambiente
 
@@ -117,7 +143,7 @@ cp settings.example.json settings.json
 | Chave | Usado por | Descrição |
 |---|---|---|
 | `moodle.urlLogin` | ambos | URL de login do Moodle |
-| `moodle.urlsRelatorios` | `auditar` | Lista de URLs dos formulários de relatório |
+| `moodle.urlsRelatorios` | `auditar`, `extrair` | Lista de URLs dos formulários de relatório |
 | `moodle.exportarAnaliseRelatorio` | `auditar` | `true` para exportar análise em CSV |
 | `moodle.caminhoExportacaoAnalise` | `auditar` | Caminho de saída da análise (obrigatório quando `exportarAnaliseRelatorio=true`) |
 | `moodle.csvResidentes` | `auditar` | Caminho do CSV de residentes usado na análise |

@@ -18,8 +18,10 @@ except PackageNotFoundError:
 from .scripts import softskills, torpedo
 from .scripts.frequencias import auditar as frequencias_auditar_script
 from .scripts.frequencias import compilar as frequencias_compilar_script
+from .scripts.frequencias import extrair as frequencias_extrair_script
 from .scripts.relatorios import auditar as relatorios_auditar_script
 from .scripts.relatorios import compilar as relatorios_compilar_script
+from .scripts.relatorios import extrair as relatorios_extrair_script
 from .services.config import config as config_service
 from .services.config import limpar as limpar_config
 from .services.config import visualizar as visualizar_config
@@ -143,7 +145,7 @@ def _executar_pipeline_simples(fn) -> None:
     log.sucesso("Script finalizado com sucesso. Código de saída: 0")
 
 
-# --- relatorios: subapp com 2 scripts internos (auditar/compilar) ---
+# --- relatorios: subapp com 3 scripts internos (auditar/compilar/extrair) ---
 
 relatorios_app = typer.Typer(help="Processa relatórios do Moodle: auditoria completa ou compilação de PDFs.")
 app.add_typer(relatorios_app, name="relatorios")
@@ -173,9 +175,9 @@ def relatorios_compilar():
 @relatorios_app.command("extrair")
 @relatorios_app.command("e", hidden=True)
 def relatorios_extrair():
-    """Executa somente a extração de relatórios (equivalente a `auditar --passo extrair`)."""
-    config = _carregar_config(relatorios_auditar_script.get_config, "relatorios")
-    executar_script(config, relatorios_auditar_script.ESCOPOS, "extrair", "AUDITORIA DE RELATÓRIOS")
+    """Baixa os relatórios do Moodle (equivalente a `auditar --passo extrair`)."""
+    config = _carregar_config(relatorios_extrair_script.get_config, "relatorios")
+    executar_script(config, relatorios_extrair_script.ESCOPOS, "extrair", "EXTRAÇÃO DE RELATÓRIOS")
 
 
 # --- frequencias: subapp com 3 comandos (auditar/extrair/compilar), mesmo padrão de relatorios ---
@@ -201,9 +203,9 @@ def frequencias_auditar(
 @frequencias_app.command("extrair")
 @frequencias_app.command("e", hidden=True)
 def frequencias_extrair():
-    """Executa somente a extração de frequências (equivalente a `auditar --passo extrair`)."""
-    config = _carregar_config(frequencias_auditar_script.get_config, "frequencias")
-    executar_script(config, frequencias_auditar_script.ESCOPOS, "extrair", "AUDITORIA DE FREQUÊNCIAS")
+    """Baixa as frequências do Moodle (equivalente a `auditar --passo extrair`)."""
+    config = _carregar_config(frequencias_extrair_script.get_config, "frequencias")
+    executar_script(config, frequencias_extrair_script.ESCOPOS, "extrair", "EXTRAÇÃO DE FREQUÊNCIAS")
 
 
 @frequencias_app.command("compilar")
