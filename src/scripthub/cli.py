@@ -5,7 +5,7 @@ from typing import Annotated
 import typer
 
 from ._i18n import instalar as _instalar_i18n
-from .services import log, perfil
+from .services import log, migracao, perfil
 from .services.erros import ErroConfiguracao, ErroScriptHub, ErroUsoCLI
 
 _instalar_i18n()
@@ -266,6 +266,13 @@ def unset_profile():
         return
     perfil.remover_perfil()
     log.ok(f"Profile ativo voltou a ser '{perfil.PADRAO}'.")
+
+
+@app.command("migrate-legacy-config", deprecated=True)
+def migrate_legacy_config():
+    """[DEPRECIADO] Migra settings.json/.env/dados do layout antigo (dentro do pacote instalado)
+    para o novo layout (diretórios do SO + keyring). Será removido numa atualização futura."""
+    migracao.migrar_configuracao_legada()
 
 
 # --- config ---

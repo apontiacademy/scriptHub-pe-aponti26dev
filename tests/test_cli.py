@@ -556,3 +556,17 @@ def test_unset_profile_quando_nao_default_remove_e_loga_ok(mocker, tmp_path):
     assert perfil_module.perfil_persistido() == perfil_module.PADRAO
     mock_log.ok.assert_called_once()
     mock_log.aviso.assert_not_called()
+
+
+def test_migrate_legacy_config_delega_para_o_servico_de_migracao(mocker):
+    mock_migrar = mocker.patch("scripthub.cli.migracao.migrar_configuracao_legada")
+
+    cli_module.migrate_legacy_config()
+
+    mock_migrar.assert_called_once()
+
+
+def test_migrate_legacy_config_esta_marcado_como_depreciado():
+    comando = next(c for c in app.registered_commands if c.name == "migrate-legacy-config")
+
+    assert comando.deprecated is True
