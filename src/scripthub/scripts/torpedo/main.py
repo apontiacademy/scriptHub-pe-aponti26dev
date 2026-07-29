@@ -10,11 +10,6 @@ from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
 
-# =========================================================================
-# ANCORAGEM DINÂMICA DE ESCOPO
-# =========================================================================
-PASTA_ESCOPO = Path(__file__).resolve().parent
-
 _IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 
 

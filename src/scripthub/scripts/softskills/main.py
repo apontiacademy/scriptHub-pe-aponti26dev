@@ -3,11 +3,10 @@ import io
 import re
 import time
 from collections import defaultdict
-from pathlib import Path as _Path
 
 import scripthub.scripts.softskills.download_softskills as download_softskills
 import scripthub.scripts.softskills.integracao_drive as integracao_drive
-from scripthub.services import log
+from scripthub.services import diretorios, log, perfil
 from scripthub.services.moodle import MoodleSessao
 
 from .config import Config
@@ -139,7 +138,7 @@ def main():
         log.aviso(f"Turmas sem notas: {sem_notas} (alunos ainda não responderam)")
 
     # ── 3. Build aprovados_bootcamp_fap2026.csv ───────────────────────────────
-    ap_path = _Path(__file__).resolve().parent / "aprovados_bootcamp_fap2026.csv"
+    ap_path = diretorios.caminho_dados(perfil.resolver_perfil(), "softskills") / "aprovados_bootcamp_fap2026.csv"
     approved = download_softskills.carregar_aprovados_do_backup(ap_path)
     if approved:
         log.passo(f"{len(approved)} aprovados carregados do backup local.")

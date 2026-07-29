@@ -268,7 +268,7 @@ def test_main_sem_xlsx_levanta_erro_configuracao(tmp_path, mocker):
     config = _make_config(tmp_path)
     diretorio = tmp_path / "dados" / "frequencias"
     diretorio.mkdir(parents=True)
-    mocker.patch(f"{_PATCH}.DIRETORIO_DOWNLOAD", diretorio)
+    mocker.patch(f"{_PATCH}._diretorio_download", return_value=diretorio)
 
     with pytest.raises(ErroConfiguracao):
         main(config)
@@ -280,7 +280,7 @@ def test_main_conta_falhas_por_turma_e_levanta_falha_parcial(tmp_path, mocker):
     diretorio.mkdir(parents=True)
     (diretorio / "turma_a.xlsx").touch()
     (diretorio / "turma_b.xlsx").touch()
-    mocker.patch(f"{_PATCH}.DIRETORIO_DOWNLOAD", diretorio)
+    mocker.patch(f"{_PATCH}._diretorio_download", return_value=diretorio)
     mocker.patch(
         f"{_PATCH}.carregar_turma",
         side_effect=[
@@ -513,7 +513,7 @@ def test_main_repassa_logo_e_assinatura_configurados(tmp_path, mocker):
     diretorio = tmp_path / "dados" / "frequencias"
     diretorio.mkdir(parents=True)
     (diretorio / "turma_a.xlsx").touch()
-    mocker.patch(f"{_PATCH}.DIRETORIO_DOWNLOAD", diretorio)
+    mocker.patch(f"{_PATCH}._diretorio_download", return_value=diretorio)
     mocker.patch(
         f"{_PATCH}.carregar_turma",
         side_effect=lambda caminho: Turma(nome=caminho.stem, alunos=[], sessoes=[]),
@@ -531,7 +531,7 @@ def test_main_sucesso_gera_todas_as_atas(tmp_path, mocker):
     diretorio.mkdir(parents=True)
     (diretorio / "turma_a.xlsx").touch()
     (diretorio / "turma_b.xlsx").touch()
-    mocker.patch(f"{_PATCH}.DIRETORIO_DOWNLOAD", diretorio)
+    mocker.patch(f"{_PATCH}._diretorio_download", return_value=diretorio)
     mocker.patch(
         f"{_PATCH}.carregar_turma",
         side_effect=lambda caminho: Turma(nome=caminho.stem, alunos=[], sessoes=[]),
