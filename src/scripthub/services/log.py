@@ -2,18 +2,10 @@ import logging
 import sys
 from pathlib import Path
 
-
-def _find_project_root() -> Path:
-    for parent in Path(__file__).resolve().parents:
-        if (parent / "pyproject.toml").exists():
-            return parent
-    return Path.cwd()
-
+from . import diretorios, perfil
 
 _NIVEL_SUCESSO = 25  # entre INFO (20) e WARNING (30)
 logging.addLevelName(_NIVEL_SUCESSO, "SUCCESS")
-
-_log_dir = _find_project_root() / "logs"
 
 _comando_atual: str = " ".join(sys.argv[1:]) or "scripthub"
 _LOG_FILE = Path(__file__).resolve()
@@ -42,37 +34,46 @@ class _ScriptFilter(logging.Filter):
 
 
 _logger = logging.getLogger("scripthub")
-if not _logger.handlers:
-    _log_dir.mkdir(exist_ok=True)
+
+
+def _garantir_handler() -> None:
+    if _logger.handlers:
+        return
+    log_dir = diretorios.caminho_log(perfil.resolver_perfil())
+    log_dir.mkdir(parents=True, exist_ok=True)
     _logger.setLevel(logging.DEBUG)
-    _handler = logging.FileHandler(_log_dir / "scripthub.log", encoding="utf-8")
-    _handler.setFormatter(
+    handler = logging.FileHandler(log_dir / "scripthub.log", encoding="utf-8")
+    handler.setFormatter(
         logging.Formatter(
             "%(asctime)s  %(levelname)-7s  %(comando)-25s  %(caller)-65s  %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
     )
-    _handler.addFilter(_ScriptFilter())
-    _logger.addHandler(_handler)
+    handler.addFilter(_ScriptFilter())
+    _logger.addHandler(handler)
 
 
 def secao(titulo: str) -> None:
+    _garantir_handler()
     print()
     print(f"▶ {titulo}")
     _logger.info("▶ %s", titulo)
 
 
 def passo(msg: str) -> None:
+    _garantir_handler()
     print(f"  • {msg}")
     _logger.info("  • %s", msg)
 
 
 def ok(msg: str) -> None:
+    _garantir_handler()
     print(f"  ✔ {msg}")
     _logger.info("  ✔ %s", msg)
 
 
 def sucesso(msg: str) -> None:
+    _garantir_handler()
     print(f"  ✅ {msg}")
     _logger.log(_NIVEL_SUCESSO, "  ✅ %s", msg)
 
@@ -85,6 +86,7 @@ def _painel_erro(msg: str) -> None:
 
 
 def erro(msg: str) -> None:
+    _garantir_handler()
     _painel_erro(msg)
     _logger.error("  ❌ %s", msg)
 
@@ -94,10 +96,12 @@ def traceback() -> None:
 
     from rich.console import Console
 
+    _garantir_handler()
     Console(stderr=True).print_exception(show_locals=False)
     _logger.error(_tb.format_exc())
 
 
 def aviso(msg: str) -> None:
+    _garantir_handler()
     print(f"  ⚠️  {msg}")
     _logger.warning("  ⚠️  %s", msg)
