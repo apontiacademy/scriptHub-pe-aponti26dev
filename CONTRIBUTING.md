@@ -395,12 +395,12 @@ def test_algo(mocker):
     mocker.patch("scripthub.scripts.<modulo>.<arquivo>.<funcao>", return_value=...)
 ```
 
-**Config loading** — substituir `DIRETORIO_BASE` via `monkeypatch`:
+**Config loading** — substituir `_diretorio_config`/`_diretorio_dados` via `monkeypatch`, e a senha do Moodle via mock de `keyring_moodle.obter_senha_moodle` (não existe mais `.env`: usuário do Moodle vem de `settings.toml`, senha vem do keyring do SO — ver issue #78):
 ```python
-def test_config(tmp_path, monkeypatch):
-    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
-    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+def test_config(tmp_path, monkeypatch, mocker):
+    (tmp_path / "settings.toml").write_bytes(tomli_w.dumps(settings).encode())
+    monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path)
+    mocker.patch("scripthub.scripts.<modulo>.<arquivo>.keyring_moodle.obter_senha_moodle", return_value="pass")
 ```
 
 **Casos data-driven** — usar `@pytest.mark.parametrize`:
