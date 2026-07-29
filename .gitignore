@@ -1,12 +1,9 @@
 *.csv
 *.xlsx
-logs/
 __pycache__/
 *.pyc
-.env
 credentials.json
 .vscode/
-settings.json
 *.png
 post.md
 docs/superpowers/*
