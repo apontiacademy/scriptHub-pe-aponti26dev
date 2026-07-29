@@ -17,6 +17,20 @@ Alguns scripts usam Playwright para automação de navegador. Se for mexer em um
 playwright install chromium
 ```
 
+## Criando issues
+
+Toda proposta de funcionalidade ou mudança de comportamento começa como uma issue estruturada como **spec reutilizável** — o corpo da issue (`.github/ISSUE_TEMPLATE/spec.md`, usado automaticamente ao clicar em "New issue" no GitHub) segue estas seções:
+
+| Seção | Conteúdo |
+|---|---|
+| **Contexto e objetivo** | Por que a mudança é necessária, qual problema resolve, o que acontece hoje |
+| **Escopo** | O que está dentro e o que está explicitamente fora da mudança |
+| **Critérios de aceite** | Condições verificáveis que definem "pronto", cada uma no formato **Given-When-Then** |
+| **Exemplos concretos** | Casos de uso, cenários, exemplos de input/output |
+| **Restrições técnicas** | Limitações, dependências, compatibilidade, decisões já tomadas |
+
+O corpo da issue é a spec em si e vai sendo **refinado ao longo do tempo** — os comentários carregam a discussão e as decisões tomadas, e essas decisões são incorporadas de volta ao corpo conforme a spec amadurece. A spec serve de base direta para o plano de implementação da mudança.
+
 ## Fluxo de contribuição
 
 ### Branches
