@@ -1,13 +1,19 @@
-import json
-import os
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-from dotenv import load_dotenv
-
+from scripthub.services import diretorios, keyring_moodle, perfil
 from scripthub.services.erros import ErroConfiguracao
 
-DIRETORIO_BASE = Path(__file__).resolve().parent
+DOMINIO = "torpedo"
+
+
+def _diretorio_config() -> Path:
+    return diretorios.caminho_config(perfil.resolver_perfil(), DOMINIO)
+
+
+def _diretorio_dados() -> Path:
+    return diretorios.caminho_dados(perfil.resolver_perfil(), DOMINIO)
 
 
 @dataclass
@@ -28,44 +34,41 @@ class Config:
 
     @staticmethod
     def load() -> "Config":
-        dados_env = Config.__carregar_env()
-        dados_settings = Config.__carregar_settings_json()
-
-        moodle_json = dados_settings.get("moodle", {})
+        dados_settings = Config.__carregar_settings_toml()
+        moodle_toml = dados_settings.get("moodle", {})
+        usuario, senha = Config.__carregar_credenciais_moodle(moodle_toml)
 
         moodle_config = MoodleConfig(
-            usuario=dados_env["moodle_usuario"],
-            senha=dados_env["moodle_senha"],
-            url_login=moodle_json["urlLogin"],
-            urls_foruns=[i.strip() for i in moodle_json["urlsForuns"]],
-            headless=moodle_json.get("headless", True),
-            post_delay=moodle_json.get("postDelay", 3),
-            caminho_post_file=DIRETORIO_BASE / moodle_json.get("caminhoPostFile", "post.md"),
-            caminho_imagem=DIRETORIO_BASE / moodle_json["caminhoImagem"] if moodle_json.get("caminhoImagem") else None,
+            usuario=usuario,
+            senha=senha,
+            url_login=moodle_toml["urlLogin"],
+            urls_foruns=[i.strip() for i in moodle_toml["urlsForuns"]],
+            headless=moodle_toml.get("headless", True),
+            post_delay=moodle_toml.get("postDelay", 3),
+            caminho_post_file=_diretorio_dados() / moodle_toml.get("caminhoPostFile", "post.md"),
+            caminho_imagem=_diretorio_dados() / moodle_toml["caminhoImagem"] if moodle_toml.get("caminhoImagem") else None,
         )
 
         return Config(moodle=moodle_config)
 
     @staticmethod
-    def __carregar_env() -> dict:
-        load_dotenv(dotenv_path=DIRETORIO_BASE / ".env")
+    def __carregar_credenciais_moodle(moodle_toml: dict) -> tuple[str, str]:
+        usuario = moodle_toml.get("usuario")
+        senha = keyring_moodle.obter_senha_moodle(DOMINIO)
 
-        dados = {
-            "moodle_usuario": os.getenv("MOODLE_USUARIO"),
-            "moodle_senha": os.getenv("MOODLE_SENHA"),
-        }
-
-        if not dados["moodle_usuario"] or not dados["moodle_senha"]:
-            raise ErroConfiguracao("MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env")
-        return dados
+        if not usuario or not senha:
+            raise ErroConfiguracao(
+                "moodle.usuario deve estar em settings.toml e a senha do Moodle deve estar salva no keyring "
+                f"do sistema. Configure com: scripthub config {DOMINIO}"
+            )
+        return usuario, senha
 
     @staticmethod
-    def __carregar_settings_json() -> dict:
-        caminho_settings = DIRETORIO_BASE / "settings.json"
+    def __carregar_settings_toml() -> dict:
+        caminho_settings = _diretorio_config() / "settings.toml"
 
         if not caminho_settings.exists():
             raise ErroConfiguracao(f"O arquivo {caminho_settings} não foi encontrado.")
 
-        with open(caminho_settings, encoding="utf-8") as f:
-            dados = json.load(f)
-            return dados
+        with open(caminho_settings, "rb") as f:
+            return tomllib.load(f)
