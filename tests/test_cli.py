@@ -13,6 +13,7 @@ from scripthub.cli import (
     executar_script,
     relatorios_app,
 )
+from scripthub.services import perfil as perfil_module
 from scripthub.services.erros import ErroConfiguracao, ErroIntegracao, ErroUsoCLI, FalhaParcial
 from scripthub.services.escopo import Escopo
 
@@ -501,3 +502,57 @@ def test_frequencias_extrair_resolve_passo_real_nos_escopos(mocker):
     finally:
         # Restaurar o Escopo original
         ESCOPOS_EXTRAIR[0] = original_escopo
+
+
+# --- --profile, set-profile, unset-profile ---
+
+
+def test_callback_com_profile_define_override():
+    ctx = SimpleNamespace(invoked_subcommand="frequencias")
+
+    cli_module._callback(ctx, versao=False, aliases=False, debug=False, profile="equipe-noturna")
+
+    assert perfil_module._override == "equipe-noturna"
+    perfil_module.definir_override(None)
+
+
+def test_callback_sem_profile_nao_define_override():
+    ctx = SimpleNamespace(invoked_subcommand="frequencias")
+    perfil_module.definir_override("sobrando")
+
+    cli_module._callback(ctx, versao=False, aliases=False, debug=False, profile=None)
+
+    assert perfil_module._override is None
+
+
+def test_set_profile_persiste_e_loga_ok(mocker, tmp_path):
+    mocker.patch("scripthub.services.perfil.diretorios.caminho_arquivo_perfil", return_value=tmp_path / "Profile")
+    mock_log = mocker.patch("scripthub.cli.log")
+
+    cli_module.set_profile("equipe-noturna")
+
+    assert perfil_module.perfil_persistido() == "equipe-noturna"
+    mock_log.ok.assert_called_once()
+
+
+def test_unset_profile_quando_ja_default_loga_aviso(mocker, tmp_path):
+    mocker.patch("scripthub.services.perfil.diretorios.caminho_arquivo_perfil", return_value=tmp_path / "Profile")
+    mock_log = mocker.patch("scripthub.cli.log")
+
+    cli_module.unset_profile()
+
+    mock_log.aviso.assert_called_once()
+    mock_log.ok.assert_not_called()
+
+
+def test_unset_profile_quando_nao_default_remove_e_loga_ok(mocker, tmp_path):
+    mocker.patch("scripthub.services.perfil.diretorios.caminho_arquivo_perfil", return_value=tmp_path / "Profile")
+    mock_log = mocker.patch("scripthub.cli.log")
+    cli_module.set_profile("equipe-noturna")
+    mock_log.reset_mock()
+
+    cli_module.unset_profile()
+
+    assert perfil_module.perfil_persistido() == perfil_module.PADRAO
+    mock_log.ok.assert_called_once()
+    mock_log.aviso.assert_not_called()
