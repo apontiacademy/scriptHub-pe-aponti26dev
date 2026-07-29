@@ -134,17 +134,17 @@ def test_limpar_sem_scripts_com_esquema_loga_aviso_nao_erro(mocker):
 
 def test_priorizar_por_script_none_mantem_ordem_original():
     campos = [
-        Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("compilar",)),
-        Campo(chave="b", rotulo="B", tipo="texto", origem="env"),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="settings", scripts=("compilar",)),
+        Campo(chave="b", rotulo="B", tipo="texto", origem="settings"),
     ]
 
     assert _priorizar_por_script(campos, None) == campos
 
 
 def test_priorizar_por_script_coloca_campos_do_script_primeiro():
-    comum = Campo(chave="comum", rotulo="Comum", tipo="texto", origem="env")
-    so_compilar = Campo(chave="c", rotulo="C", tipo="texto", origem="env", scripts=("compilar",))
-    so_auditar = Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("auditar",))
+    comum = Campo(chave="comum", rotulo="Comum", tipo="texto", origem="settings")
+    so_compilar = Campo(chave="c", rotulo="C", tipo="texto", origem="settings", scripts=("compilar",))
+    so_auditar = Campo(chave="a", rotulo="A", tipo="texto", origem="settings", scripts=("auditar",))
 
     resultado = _priorizar_por_script([so_compilar, comum, so_auditar], "auditar")
 
@@ -153,8 +153,8 @@ def test_priorizar_por_script_coloca_campos_do_script_primeiro():
 
 def test_config_com_script_prioriza_campos_na_selecao(mocker):
     campos = [
-        Campo(chave="c", rotulo="C", tipo="texto", origem="env", scripts=("compilar",)),
-        Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("auditar",)),
+        Campo(chave="c", rotulo="C", tipo="texto", origem="settings", scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="settings", scripts=("auditar",)),
     ]
     mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
     mocker.patch(f"{_PATCH}.carregar_valores", return_value={})
@@ -170,17 +170,17 @@ def test_config_com_script_prioriza_campos_na_selecao(mocker):
 
 def test_escopar_por_script_none_mantem_obrigatorio_original():
     campos = [
-        Campo(chave="a", rotulo="A", tipo="texto", origem="env", obrigatorio=True, scripts=("auditar",)),
-        Campo(chave="b", rotulo="B", tipo="texto", origem="env", obrigatorio=True),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="settings", obrigatorio=True, scripts=("auditar",)),
+        Campo(chave="b", rotulo="B", tipo="texto", origem="settings", obrigatorio=True),
     ]
 
     assert _escopar_por_script(campos, None) == campos
 
 
 def test_escopar_por_script_torna_nao_obrigatorio_campo_de_outro_script():
-    so_auditar = Campo(chave="a", rotulo="A", tipo="texto", origem="env", obrigatorio=True, scripts=("auditar",))
-    so_compilar = Campo(chave="c", rotulo="C", tipo="texto", origem="env", obrigatorio=True, scripts=("compilar",))
-    comum = Campo(chave="comum", rotulo="Comum", tipo="texto", origem="env", obrigatorio=True)
+    so_auditar = Campo(chave="a", rotulo="A", tipo="texto", origem="settings", obrigatorio=True, scripts=("auditar",))
+    so_compilar = Campo(chave="c", rotulo="C", tipo="texto", origem="settings", obrigatorio=True, scripts=("compilar",))
+    comum = Campo(chave="comum", rotulo="Comum", tipo="texto", origem="settings", obrigatorio=True)
 
     resultado = _escopar_por_script([so_auditar, so_compilar, comum], "auditar")
 
@@ -190,8 +190,8 @@ def test_escopar_por_script_torna_nao_obrigatorio_campo_de_outro_script():
 
 def test_config_com_script_nao_marca_campo_de_outro_script_como_obrigatorio(mocker):
     campos = [
-        Campo(chave="c", rotulo="C", tipo="texto", origem="env", obrigatorio=True, scripts=("compilar",)),
-        Campo(chave="a", rotulo="A", tipo="texto", origem="env", obrigatorio=True, scripts=("auditar",)),
+        Campo(chave="c", rotulo="C", tipo="texto", origem="settings", obrigatorio=True, scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="settings", obrigatorio=True, scripts=("auditar",)),
     ]
     mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
     mocker.patch(f"{_PATCH}.carregar_valores", return_value={})
@@ -208,8 +208,8 @@ def test_config_com_script_nao_marca_campo_de_outro_script_como_obrigatorio(mock
 
 def test_visualizar_com_script_nao_marca_campo_de_outro_script_como_obrigatorio(mocker):
     campos = [
-        Campo(chave="c", rotulo="C", tipo="texto", origem="env", obrigatorio=True, scripts=("compilar",)),
-        Campo(chave="a", rotulo="A", tipo="texto", origem="env", obrigatorio=True, scripts=("auditar",)),
+        Campo(chave="c", rotulo="C", tipo="texto", origem="settings", obrigatorio=True, scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="settings", obrigatorio=True, scripts=("auditar",)),
     ]
     mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
     mocker.patch(f"{_PATCH}.carregar_valores", return_value={})
@@ -225,8 +225,8 @@ def test_visualizar_com_script_nao_marca_campo_de_outro_script_como_obrigatorio(
 
 def test_config_script_invalido_levanta_erro_uso_cli(mocker):
     campos = [
-        Campo(chave="c", rotulo="C", tipo="texto", origem="env", scripts=("compilar",)),
-        Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("auditar",)),
+        Campo(chave="c", rotulo="C", tipo="texto", origem="settings", scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="settings", scripts=("auditar",)),
     ]
     mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
     mock_log = mocker.patch(f"{_PATCH}.log")
@@ -240,8 +240,8 @@ def test_config_script_invalido_levanta_erro_uso_cli(mocker):
 
 def test_visualizar_script_invalido_levanta_erro_uso_cli(mocker):
     campos = [
-        Campo(chave="c", rotulo="C", tipo="texto", origem="env", scripts=("compilar",)),
-        Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("auditar",)),
+        Campo(chave="c", rotulo="C", tipo="texto", origem="settings", scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="settings", scripts=("auditar",)),
     ]
     mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
     mock_log = mocker.patch(f"{_PATCH}.log")
@@ -255,8 +255,8 @@ def test_visualizar_script_invalido_levanta_erro_uso_cli(mocker):
 
 def test_config_script_valido_nao_levanta_erro(mocker):
     campos = [
-        Campo(chave="c", rotulo="C", tipo="texto", origem="env", scripts=("compilar",)),
-        Campo(chave="a", rotulo="A", tipo="texto", origem="env", scripts=("auditar",)),
+        Campo(chave="c", rotulo="C", tipo="texto", origem="settings", scripts=("compilar",)),
+        Campo(chave="a", rotulo="A", tipo="texto", origem="settings", scripts=("auditar",)),
     ]
     mocker.patch(f"{_PATCH}.ESQUEMAS", {"relatorios": campos})
     mocker.patch(f"{_PATCH}.carregar_valores", return_value={})
@@ -268,7 +268,7 @@ def test_config_script_valido_nao_levanta_erro(mocker):
 
 
 def test_config_script_em_dominio_sem_scripts_internos_levanta_erro(mocker):
-    campos = [Campo(chave="x", rotulo="X", tipo="texto", origem="env")]
+    campos = [Campo(chave="x", rotulo="X", tipo="texto", origem="settings")]
     mocker.patch(f"{_PATCH}.ESQUEMAS", {"frequencias": campos})
     mock_log = mocker.patch(f"{_PATCH}.log")
 
