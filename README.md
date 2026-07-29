@@ -97,10 +97,25 @@ O comando exibe cada opção com um ícone de status:
 
 No modo de edição, selecione quais opções modificar (estilo `gh` CLI) e preencha os valores. Inputs são adaptados ao tipo do campo: texto, senha (oculta), URL, caminho, booleano, inteiro, listas de URLs e dicionários (com sub-menus de adicionar/editar/remover).
 
-As configurações são persistidas em dois arquivos dentro de cada módulo:
+As configurações são persistidas nos diretórios padrão do sistema operacional (via `platformdirs`), divididas por **profile** — permitindo múltiplos contextos isolados na mesma máquina (ex.: duas pessoas usando a mesma instalação, ou alternar entre configs de dev/produção):
 
-- `.env` — credenciais (`MOODLE_USUARIO`, `MOODLE_SENHA`)
-- `settings.json` — demais parâmetros
+- `settings.toml` — todos os parâmetros de cada domínio, exceto a senha do Moodle
+- Senha do Moodle — armazenada no keyring do sistema operacional (Keychain no macOS, Credential Locker no Windows, Secret Service/KWallet no Linux), com uma entrada própria por domínio
+
+Por padrão, tudo roda sob o profile `default`. Para trocar de profile:
+
+```bash
+uv run scripthub set-profile equipe-noturna     # define o profile ativo (persiste)
+uv run scripthub frequencias auditar            # usa o profile equipe-noturna
+uv run scripthub --profile equipe-diurna frequencias auditar   # override pontual, não persiste
+uv run scripthub unset-profile                  # volta para default (no-op se já for default)
+```
+
+Quem já usava uma versão anterior do scriptHub (`.env`/`settings.json` dentro do próprio pacote instalado) roda uma vez o comando de migração depreciado, que move essa configuração para o novo layout sem apagar os arquivos originais:
+
+```bash
+uv run scripthub migrate-legacy-config
+```
 
 Se um script for executado sem as opções obrigatórias preenchidas, a CLI indica o comando exato para corrigi-las.
 
