@@ -173,7 +173,7 @@ Cada pacote de script segue um dos dois padrões:
 **Padrão A — pipeline por escopos** (`frequencias`, `relatorios/extrair`):
 - `__init__.py` — declara `CLI_CMD`, exporta `ESCOPOS` e `get_config`
 - `ESCOPOS`: lista de `Escopo(slug, nome, func, aliases)` — ver `services/escopo.py`
-- `get_config()`: retorna a dataclass de configuração (carrega `.env` + `settings.json`)
+- `get_config()`: retorna a dataclass de configuração (carrega `settings.toml` + senha do keyring)
 - O CLI usa `executar_script()` para iterar os escopos com log por passo e captura de exceção
 - O `--passo <slug>` (ou alias de uma letra) executa apenas o passo correspondente
 
@@ -290,18 +290,17 @@ Os campos configuráveis de cada script são declarados em `services/config/esqu
 ESQUEMAS: dict[str, list[Campo]] = {
     "nome_do_modulo": [
         Campo(
-            chave="moodle_usuario",
-            rotulo="Usuário do Moodle",
-            tipo="texto",
-            origem="env",           # "env" → .env  |  "settings" → settings.json
-            env_var="MOODLE_USUARIO",
+            chave="moodle_senha",
+            rotulo="Senha do Moodle",
+            tipo="senha",
+            origem="keyring",        # "keyring" → keyring do SO  |  "settings" → settings.toml
         ),
         Campo(
             chave="moodle_url_login",
             rotulo="URL de login",
             tipo="url",
             origem="settings",
-            json_chaves=["moodle", "urlLogin"],   # caminho de acesso no JSON
+            json_chaves=["moodle", "urlLogin"],   # caminho de acesso aninhado no TOML
             obrigatorio=True,
         ),
     ],

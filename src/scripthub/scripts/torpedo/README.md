@@ -14,39 +14,27 @@ Posta tópicos em fóruns do Moodle a partir de um arquivo Markdown. Suporta mú
 uv run scripthub torpedo
 ```
 
-O arquivo de conteúdo e a imagem (opcional) são lidos do `settings.json` (`moodle.caminhoPostFile` e `moodle.caminhoImagem`), não de argumentos de linha de comando.
+O arquivo de conteúdo e a imagem (opcional) são lidos do `settings.toml` (`moodle.caminhoPostFile` e `moodle.caminhoImagem`), não de argumentos de linha de comando.
 
 ## Configuração
 
-> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config torpedo` configura essas mesmas opções interativamente.
+> `uv run scripthub config torpedo` configura essas opções interativamente (usuário do Moodle e demais parâmetros em `settings.toml`; a senha do Moodle é pedida e salva no keyring do sistema operacional — nunca fica em texto plano). O `settings.toml` vive no diretório de config do profile ativo para o domínio `torpedo` (`uv run scripthub set-profile`/`--profile` para trocar de profile).
 
-### 1. Variáveis de ambiente
-
-```bash
-cp .env.example .env
-```
-
-```env
-MOODLE_USUARIO=seu_usuario@aponti.org.br
-MOODLE_SENHA=sua_senha
-```
-
-### 2. settings.json
-
-```bash
-cp settings.example.json settings.json
-```
+### settings.toml
 
 | Chave | Descrição |
 |---|---|
+| `moodle.usuario` | Login de acesso ao Moodle |
 | `moodle.urlLogin` | URL de login do Moodle |
 | `moodle.urlsForuns` | Lista de URLs dos fóruns onde o tópico será postado |
 | `moodle.headless` | `true` para rodar o navegador sem interface gráfica |
 | `moodle.postDelay` | Intervalo em segundos entre postagens |
-| `moodle.caminhoPostFile` | Caminho do arquivo Markdown com o conteúdo |
-| `moodle.caminhoImagem` | Caminho da imagem (opcional, `null` para ignorar) |
+| `moodle.caminhoPostFile` | Caminho do arquivo Markdown com o conteúdo, relativo ao diretório de dados do domínio se não for absoluto |
+| `moodle.caminhoImagem` | Caminho da imagem (opcional, omita a chave para ignorar), relativo ao diretório de dados do domínio se não for absoluto |
 
-### 3. Arquivo de conteúdo (post.md)
+A senha do Moodle (`moodle.senha`) não fica em `settings.toml` — é armazenada no keyring do sistema operacional.
+
+### Arquivo de conteúdo (post.md)
 
 A primeira linha com `#` vira o título do tópico. O restante vira o corpo em HTML:
 
@@ -65,4 +53,4 @@ Texto do post com **negrito**, *itálico* e [links](https://exemplo.com).
 |---|---|
 | `requests` + `beautifulsoup4` | Login via HTTP, cujo cookie de sessão é injetado no navegador |
 | `playwright` | Automação do navegador (preenchimento de formulário, upload) |
-| `python-dotenv` | Leitura do `.env` |
+| `keyring` | Senha do Moodle no keyring do sistema operacional |

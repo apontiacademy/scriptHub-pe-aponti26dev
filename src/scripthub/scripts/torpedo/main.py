@@ -363,7 +363,7 @@ def publicar_no_forum(
 def main() -> None:
     log.secao("AUTOMAÇÃO DE POSTAGEM EM FÓRUNS (MOODLE)")
 
-    # Carrega as configurações unificadas (settings.json + .env)
+    # Carrega as configurações unificadas (settings.toml + keyring)
     config = Config.load()
 
     login_url = config.moodle.url_login
@@ -379,7 +379,7 @@ def main() -> None:
         raise ErroConfiguracao(f"Arquivo de post não encontrado em: {post_file}")
 
     if not forum_urls:
-        raise ErroConfiguracao("Nenhuma URL de fórum encontrada no settings.json")
+        raise ErroConfiguracao("Nenhuma URL de fórum encontrada no settings.toml")
 
     log.passo(f"Carregando conteúdo: {post_file.name}")
     title, html_content = carregar_conteudo(post_file)

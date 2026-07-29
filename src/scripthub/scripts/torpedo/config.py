@@ -1,6 +1,7 @@
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+
+import tomllib
 
 from scripthub.services import diretorios, keyring_moodle, perfil
 from scripthub.services.erros import ErroConfiguracao
@@ -38,6 +39,8 @@ class Config:
         moodle_toml = dados_settings.get("moodle", {})
         usuario, senha = Config.__carregar_credenciais_moodle(moodle_toml)
 
+        caminho_imagem_raw = moodle_toml.get("caminhoImagem")
+
         moodle_config = MoodleConfig(
             usuario=usuario,
             senha=senha,
@@ -46,7 +49,7 @@ class Config:
             headless=moodle_toml.get("headless", True),
             post_delay=moodle_toml.get("postDelay", 3),
             caminho_post_file=_diretorio_dados() / moodle_toml.get("caminhoPostFile", "post.md"),
-            caminho_imagem=_diretorio_dados() / moodle_toml["caminhoImagem"] if moodle_toml.get("caminhoImagem") else None,
+            caminho_imagem=_diretorio_dados() / caminho_imagem_raw if caminho_imagem_raw else None,
         )
 
         return Config(moodle=moodle_config)

@@ -1,8 +1,8 @@
-import tomllib
 from pathlib import Path
 from typing import Any
 
 import tomli_w
+import tomllib
 
 from .. import diretorios, keyring_moodle, log, perfil
 from .campo import Campo

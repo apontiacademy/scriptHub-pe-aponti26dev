@@ -43,7 +43,7 @@ def main(config: Config) -> None:
     diretorio_download = config.moodle.caminho_download
 
     if not meses:
-        raise ErroConfiguracao("Nenhum mês configurado em settings.json (moodle.meses)")
+        raise ErroConfiguracao("Nenhum mês configurado em settings.toml (moodle.meses)")
 
     diretorio_download.mkdir(parents=True, exist_ok=True)
 

@@ -9,7 +9,7 @@ mensagem de log.
 | --- | --- | --- | --- |
 | 0 | Sucesso | Pipeline (ou comando informativo, ex.: `--version`) terminou sem erros | — |
 | 1 | Erro genérico / inesperado | Qualquer exceção não classificada nas categorias abaixo — normalmente indica um bug. Rode com `--debug` para ver o traceback completo no terminal | fallback `except Exception` do handler global |
-| 2 | Configuração inválida ou ausente | `.env`, `settings.json`, credenciais do Google, ou um arquivo/diretório local que um passo anterior do pipeline deveria ter gerado | `scripthub.services.erros.ErroConfiguracao` |
+| 2 | Configuração inválida ou ausente | `settings.toml`, senha do Moodle no keyring, credenciais do Google, ou um arquivo/diretório local que um passo anterior do pipeline deveria ter gerado | `scripthub.services.erros.ErroConfiguracao` |
 | 3 | Uso inválido da CLI | `--passo` desconhecido, flags conflitantes (`--opcoes` + `--limpar`), `modo` inválido em `relatorios`, script desconhecido em `config` | `scripthub.services.erros.ErroUsoCLI` |
 | 4 | Falha parcial | Parte de um lote de itens falhou (N de M PDFs, fóruns, arquivos), mas o restante foi processado | `scripthub.services.erros.FalhaParcial` |
 | 5 | Falha de integração externa | Moodle ou Google Sheets/Drive retornaram algo inesperado (HTML mudou, planilha/aba não encontrada, API falhou) | `scripthub.services.erros.ErroIntegracao` |
@@ -64,7 +64,7 @@ sobrescrever uma `dica` que a exceção já tenha recebido na origem.
 Pergunta prática: qual é a causa raiz mais próxima de algo que o usuário
 consiga corrigir?
 
-- Falta algo no `.env`/`settings.json`/credenciais, ou um arquivo/diretório
+- Falta algo no `settings.toml`/keyring/credenciais, ou um arquivo/diretório
   que um passo anterior do pipeline deveria ter gerado → `ErroConfiguracao` (2)
 - Uso inválido da própria CLI (opção/passo/flag/argumento inválidos,
   validados antes do script rodar) → `ErroUsoCLI` (3)
@@ -88,11 +88,11 @@ ao classificar um novo `raise`.
 
 ### `ErroConfiguracao` (2)
 
-- `.env`/`settings.json` ausentes ou incompletos: `config.py` de todos os 5 pacotes
+- `settings.toml` ausente/incompleto ou senha do Moodle ausente no keyring: `config.py` de todos os 5 pacotes
 - Precondição de um passo anterior não satisfeita: `frequencias/auditar/integracao_google_sheets.py` (diretório de exportação, XLSX ausentes), `frequencias/compilar/gerar_atas.py` (nenhum XLSX de frequência encontrado), `relatorios/compilar/compilar_pdfs.py` (nenhum dado de aluno nos CSVs)
 - Credenciais/IDs do Google ausentes: `frequencias/auditar/integracao_google_sheets.py`
 - Arquivo/URL de entrada do próprio script ausente: `frequencias/auditar/extrair_frequencias.py`, `frequencias/compilar/extrair_frequencias.py` (URLs de frequência), `relatorios/extrair/download_de_relatorios.py` (URLs de relatório), `relatorios/compilar/download_de_relatorios.py` (meses), `torpedo/main.py` (post `.md`, URLs de fórum, título do `.md`, imagem de override)
-- Falha de autenticação no Moodle (usuário/senha errados no `.env`): `services/moodle/sessao.py` (`MoodleSessao.login`, usado por todos os scripts que baixam do Moodle via HTTP)
+- Falha de autenticação no Moodle (usuário/senha errados): `services/moodle/sessao.py` (`MoodleSessao.login`, usado por todos os scripts que baixam do Moodle via HTTP)
 - `gsheets.caminhoJsonCredenciais` não é um caminho absoluto: `frequencias/auditar/config.py`
 
 ### `FalhaParcial` (4)

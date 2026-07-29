@@ -5,10 +5,10 @@ origem — só copia/persiste no novo layout, para não arriscar perda de dados.
 
 import json
 import shutil
-import tomllib
 from pathlib import Path
 
 import tomli_w
+import tomllib
 
 import scripthub
 

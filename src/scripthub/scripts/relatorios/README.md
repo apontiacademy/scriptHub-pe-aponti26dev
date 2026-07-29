@@ -58,34 +58,22 @@ relatorios/compilar/
 
 ## Configuração
 
-Compartilhada entre `compilar` e `extrair` — `.env` e `settings.json` vivem na raiz de `relatorios/`, não em cada subpasta.
+Compartilhada entre `compilar` e `extrair` — o `settings.toml` vive no diretório de config do profile ativo para o domínio `relatorios` (`uv run scripthub set-profile`/`--profile` para trocar de profile), não em cada subpasta.
 
-> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config relatorios` configura essas opções interativamente. Use `--script compilar` ou `--script extrair` para priorizar os campos daquele script na tela de edição.
+> `uv run scripthub config relatorios` configura essas opções interativamente (usuário do Moodle e demais parâmetros em `settings.toml`; a senha do Moodle é pedida e salva no keyring do sistema operacional — nunca fica em texto plano). Use `--script compilar` ou `--script extrair` para priorizar os campos daquele script na tela de edição.
 
-### 1. Variáveis de ambiente
-
-```bash
-cp .env.example .env
-```
-
-```env
-MOODLE_USUARIO=seu_usuario@aponti.org.br
-MOODLE_SENHA=sua_senha
-```
-
-### 2. settings.json
-
-```bash
-cp settings.example.json settings.json
-```
+### settings.toml
 
 | Chave | Usado por | Descrição |
 |---|---|---|
+| `moodle.usuario` | `compilar`, `extrair` | Login de acesso ao Moodle |
 | `moodle.urlLogin` | `compilar`, `extrair` | URL de login do Moodle |
 | `moodle.urlsRelatorios` | `extrair` | Lista de URLs dos formulários de relatório |
 | `moodle.caminhoDownloadRelatorio` | `extrair` | Diretório onde os CSVs baixados do Moodle serão salvos |
-| `moodle.meses` | `compilar` | Dicionário `{ "Nome do Mês": ["URL semana 1", "URL semana 2", ...] }` |
+| `moodle.meses` | `compilar` | Tabela `{ "Nome do Mês" = ["URL semana 1", "URL semana 2", ...] }` |
 | `pdf.caminhoSaida` | `compilar` | Pasta onde os PDFs serão salvos |
+
+A senha do Moodle (`moodle.senha`) não fica em `settings.toml` — é armazenada no keyring do sistema operacional.
 
 Um script individual roda mesmo que campos usados só pelo outro estejam vazios — `compilar` não precisa de `moodle.urlsRelatorios`/`caminhoDownloadRelatorio`, `extrair` não precisa de `moodle.meses`/`pdf.caminhoSaida`.
 
@@ -96,4 +84,4 @@ Um script individual roda mesmo que campos usados só pelo outro estejam vazios 
 | `requests` + `beautifulsoup4` | Login e download dos relatórios via HTTP (sem navegador) |
 | `fpdf2` | Geração dos PDFs (`compilar`) |
 | `questionary` | Confirmação interativa para rebaixar relatórios já existentes (`compilar`) |
-| `python-dotenv` | Leitura do `.env` |
+| `keyring` | Senha do Moodle no keyring do sistema operacional |

@@ -55,7 +55,9 @@ def test_load_sem_caminho_json_credenciais_levanta_key_error(tmp_path, monkeypat
         Config.load()
 
 
-def test_load_caminho_json_credenciais_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
+def test_load_caminho_json_credenciais_relativo_levanta_erro_configuracao(
+    tmp_path, monkeypatch, mocker, settings_valido
+):
     settings_valido["gsheets"]["caminhoJsonCredenciais"] = "credentials.json"
     _preparar(tmp_path, monkeypatch, mocker, settings_valido)
 

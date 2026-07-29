@@ -10,7 +10,7 @@ def main(config: Config) -> None:
     caminho_saida = config.moodle.caminho_exportacao
 
     if not urls_frequencias:
-        raise ErroConfiguracao("Nenhuma URL de frequência encontrada no settings.json")
+        raise ErroConfiguracao("Nenhuma URL de frequência encontrada no settings.toml")
 
     caminho_saida.mkdir(parents=True, exist_ok=True)
 
