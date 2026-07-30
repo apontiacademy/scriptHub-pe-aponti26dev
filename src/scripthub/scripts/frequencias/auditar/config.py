@@ -13,7 +13,7 @@ def _diretorio_config() -> Path:
 
 
 def _diretorio_cache() -> Path:
-    return diretorios.caminho_cache(perfil.resolver_perfil(), DOMINIO)
+    return diretorios.caminho_cache(perfil.resolver_perfil(), DOMINIO, "auditar")
 
 
 @dataclass
@@ -65,7 +65,7 @@ class Config:
         return Config(
             moodle=moodle_config,
             gsheets=gsheets_config,
-            diretorio_download=_diretorio_cache() / "auditar",
+            diretorio_download=_diretorio_cache(),
         )
 
     @staticmethod

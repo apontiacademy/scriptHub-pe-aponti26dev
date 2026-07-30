@@ -18,8 +18,8 @@ def caminho_dados(perfil: str, dominio: str) -> Path:
     return Path(_dirs().user_data_dir) / perfil / dominio / "dados"
 
 
-def caminho_cache(perfil: str, dominio: str) -> Path:
-    return Path(_dirs().user_cache_dir) / perfil / dominio
+def caminho_cache(perfil: str, dominio: str, script: str) -> Path:
+    return Path(_dirs().user_cache_dir) / perfil / dominio / script
 
 
 def caminho_log(perfil: str) -> Path:

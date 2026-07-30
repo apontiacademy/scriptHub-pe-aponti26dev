@@ -26,7 +26,7 @@ def settings_valido(tmp_path):
 def _preparar(tmp_path, monkeypatch, mocker, settings_valido, senha="pass"):
     (tmp_path / "settings.toml").write_bytes(tomli_w.dumps(settings_valido).encode())
     monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path)
-    monkeypatch.setattr(cfg_module, "_diretorio_cache", lambda: tmp_path / "cache")
+    monkeypatch.setattr(cfg_module, "_diretorio_cache", lambda: tmp_path / "cache" / "compilar")
     mocker.patch("scripthub.scripts.frequencias.compilar.config.keyring_moodle.obter_senha_moodle", return_value=senha)
 
 

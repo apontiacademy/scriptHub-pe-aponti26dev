@@ -27,7 +27,7 @@ def _preparar(tmp_path, monkeypatch, mocker, settings_valido, senha="pass"):
     (tmp_path / "config").mkdir(parents=True, exist_ok=True)
     (tmp_path / "config" / "settings.toml").write_bytes(tomli_w.dumps(settings_valido).encode())
     monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path / "config")
-    monkeypatch.setattr(cfg_module, "_diretorio_cache", lambda: tmp_path / "cache")
+    monkeypatch.setattr(cfg_module, "_diretorio_cache", lambda: tmp_path / "cache" / "compilar")
     mocker.patch("scripthub.scripts.relatorios.compilar.config.keyring_moodle.obter_senha_moodle", return_value=senha)
 
 
@@ -49,7 +49,7 @@ def test_load_caminho_download_e_relativo_ao_diretorio_de_cache(tmp_path, monkey
 
     config = Config.load()
 
-    assert config.moodle.caminho_download == tmp_path / "cache" / "relatorios"
+    assert config.moodle.caminho_download == tmp_path / "cache" / "compilar"
 
 
 def test_load_sem_senha_no_keyring_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
