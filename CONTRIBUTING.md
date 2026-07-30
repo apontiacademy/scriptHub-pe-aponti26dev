@@ -300,7 +300,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             rotulo="URL de login",
             tipo="url",
             origem="settings",
-            json_chaves=["moodle", "urlLogin"],   # caminho de acesso aninhado no TOML
+            settings_chaves=["moodle", "urlLogin"],   # caminho de acesso aninhado no TOML
             obrigatorio=True,
         ),
     ],

@@ -24,7 +24,7 @@ class Campo:
     origem: OrigemCampo
     descricao: str = ""
     obrigatorio: bool = True
-    json_chaves: list[str] = field(default_factory=list)
+    settings_chaves: list[str] = field(default_factory=list)
     depende_de: str | None = None
     caminho_absoluto: bool = False
     scripts: tuple[str, ...] = field(default_factory=tuple)

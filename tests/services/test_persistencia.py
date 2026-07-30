@@ -11,13 +11,13 @@ def _campo_keyring(chave):
     return Campo(chave=chave, rotulo="r", tipo="senha", origem="keyring")
 
 
-def _campo_settings(chave, *json_chaves, obrigatorio=True):
+def _campo_settings(chave, *settings_chaves, obrigatorio=True):
     return Campo(
         chave=chave,
         rotulo="r",
         tipo="texto",
         origem="settings",
-        json_chaves=list(json_chaves),
+        settings_chaves=list(settings_chaves),
         obrigatorio=obrigatorio,
     )
 
@@ -163,7 +163,7 @@ def test_persistir_valor_none_remove_chave_opcional_existente(tmp_path):
     assert dados["moodle"]["outraChave"] == "mantida"
 
 
-def test_persistir_valor_none_com_json_chaves_vazio_nao_gera_indexerror(tmp_path):
+def test_persistir_valor_none_com_settings_chaves_vazio_nao_gera_indexerror(tmp_path):
     _script_dir(tmp_path, "meu_script")
     campo = _campo_settings("campo_sem_caminho", obrigatorio=False)
 

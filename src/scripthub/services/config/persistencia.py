@@ -41,7 +41,7 @@ def carregar_valores(nome_script: str, campos: list[Campo]) -> dict[str, Any]:
             valores[campo.chave] = keyring_moodle.obter_senha_moodle(nome_script)
         else:
             node: Any = settings
-            for chave in campo.json_chaves:
+            for chave in campo.settings_chaves:
                 if isinstance(node, dict):
                     node = node.get(chave)
                 else:
@@ -81,12 +81,12 @@ def persistir(nome_script: str, campos: list[Campo], valores: dict[str, Any]) ->
             novo = valores.get(campo.chave)
             if novo is None:
                 if not campo.obrigatorio:
-                    _remover_chave_toml(settings, campo.json_chaves)
+                    _remover_chave_toml(settings, campo.settings_chaves)
                 continue
             node = settings
-            for chave in campo.json_chaves[:-1]:
+            for chave in campo.settings_chaves[:-1]:
                 node = node.setdefault(chave, {})
-            chave_final = campo.json_chaves[-1]
+            chave_final = campo.settings_chaves[-1]
             node[chave_final] = novo
 
         with open(settings_path, "wb") as f:

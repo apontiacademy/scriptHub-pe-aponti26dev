@@ -11,7 +11,7 @@ def _campo(chave_modulo, chave_campo):
 def test_esquema_moodle_url_usa_chave_urlbase():
     campo = _campo("softskills", "moodle_url")
 
-    assert campo.json_chaves == ["moodle", "urlBase"]
+    assert campo.settings_chaves == ["moodle", "urlBase"]
 
 
 def test_esquema_frequencias_caminho_json_credenciais_exige_absoluto():
@@ -70,7 +70,7 @@ def test_moodle_usuario_vem_de_settings_toml(dominio):
     campo = _campo(dominio, "moodle_usuario")
 
     assert campo.origem == "settings"
-    assert campo.json_chaves == ["moodle", "usuario"]
+    assert campo.settings_chaves == ["moodle", "usuario"]
 
 
 @pytest.mark.parametrize("dominio", ["frequencias", "relatorios", "softskills", "torpedo"])

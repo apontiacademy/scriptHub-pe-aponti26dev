@@ -19,7 +19,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="texto",
             origem="settings",
             descricao="Login de acesso ao Moodle",
-            json_chaves=["moodle", "usuario"],
+            settings_chaves=["moodle", "usuario"],
         ),
         Campo(
             chave="moodle_senha",
@@ -34,7 +34,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="url",
             origem="settings",
             descricao="Página de login do Moodle (ex: https://moodle.inst.edu/login/index.php)",
-            json_chaves=["moodle", "urlLogin"],
+            settings_chaves=["moodle", "urlLogin"],
         ),
         Campo(
             chave="moodle_urls_frequencias",
@@ -42,7 +42,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="dict_str_url",
             origem="settings",
             descricao="Mapeamento de nome da turma → URL da frequência no Moodle",
-            json_chaves=["moodle", "urlsFrequencias"],
+            settings_chaves=["moodle", "urlsFrequencias"],
         ),
         Campo(
             chave="moodle_caminho_exportacao",
@@ -50,7 +50,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="caminho",
             origem="settings",
             descricao="Diretório onde os arquivos XLSX de frequência serão salvos",
-            json_chaves=["moodle", "caminhoExportacao"],
+            settings_chaves=["moodle", "caminhoExportacao"],
             scripts=("auditar", "extrair"),
         ),
         Campo(
@@ -59,7 +59,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="texto",
             origem="settings",
             descricao="ID da planilha de destino no Google Sheets",
-            json_chaves=["gsheets", "idPlanilha"],
+            settings_chaves=["gsheets", "idPlanilha"],
             scripts=("auditar",),
         ),
         Campo(
@@ -68,7 +68,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="caminho",
             origem="settings",
             descricao="Caminho para o arquivo credentials.json da conta de serviço Google",
-            json_chaves=["gsheets", "caminhoJsonCredenciais"],
+            settings_chaves=["gsheets", "caminhoJsonCredenciais"],
             caminho_absoluto=True,
             scripts=("auditar",),
         ),
@@ -78,7 +78,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="caminho",
             origem="settings",
             descricao="Diretório onde as atas de frequência (PDF) serão salvas",
-            json_chaves=["atas", "caminhoSaida"],
+            settings_chaves=["atas", "caminhoSaida"],
             scripts=("compilar",),
         ),
         Campo(
@@ -88,7 +88,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Imagem exibida no topo da capa da ata (deixe vazio para nenhuma)",
             obrigatorio=False,
-            json_chaves=["atas", "caminhoLogo"],
+            settings_chaves=["atas", "caminhoLogo"],
             scripts=("compilar",),
         ),
         Campo(
@@ -98,7 +98,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Imagem exibida no rodapé da capa da ata (deixe vazio para nenhuma)",
             obrigatorio=False,
-            json_chaves=["atas", "caminhoAssinatura"],
+            settings_chaves=["atas", "caminhoAssinatura"],
             scripts=("compilar",),
         ),
     ],
@@ -108,7 +108,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             rotulo="Usuário do Moodle",
             tipo="texto",
             origem="settings",
-            json_chaves=["moodle", "usuario"],
+            settings_chaves=["moodle", "usuario"],
         ),
         Campo(
             chave="moodle_senha",
@@ -121,7 +121,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             rotulo="URL de login do Moodle",
             tipo="url",
             origem="settings",
-            json_chaves=["moodle", "urlLogin"],
+            settings_chaves=["moodle", "urlLogin"],
         ),
         Campo(
             chave="moodle_urls_relatorios",
@@ -129,7 +129,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="lista_url",
             origem="settings",
             descricao="Lista de URLs das páginas de feedback do Moodle",
-            json_chaves=["moodle", "urlsRelatorios"],
+            settings_chaves=["moodle", "urlsRelatorios"],
             scripts=("extrair",),
         ),
         Campo(
@@ -138,7 +138,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="caminho",
             origem="settings",
             descricao="Diretório onde os CSVs baixados do Moodle serão salvos",
-            json_chaves=["moodle", "caminhoDownloadRelatorio"],
+            settings_chaves=["moodle", "caminhoDownloadRelatorio"],
             scripts=("extrair",),
         ),
         Campo(
@@ -147,7 +147,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="dict_str_lista_url",
             origem="settings",
             descricao="Mapeamento de nome do mês → lista de URLs semanais de feedback",
-            json_chaves=["moodle", "meses"],
+            settings_chaves=["moodle", "meses"],
             scripts=("compilar",),
         ),
         Campo(
@@ -156,7 +156,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="caminho",
             origem="settings",
             descricao="Diretório onde os PDFs compilados serão salvos",
-            json_chaves=["pdf", "caminhoSaida"],
+            settings_chaves=["pdf", "caminhoSaida"],
             scripts=("compilar",),
         ),
     ],
@@ -166,7 +166,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             rotulo="Usuário do Moodle",
             tipo="texto",
             origem="settings",
-            json_chaves=["moodle", "usuario"],
+            settings_chaves=["moodle", "usuario"],
         ),
         Campo(
             chave="moodle_senha",
@@ -180,7 +180,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="url",
             origem="settings",
             descricao="URL raiz do Moodle sem path (ex: https://moodle.inst.edu)",
-            json_chaves=["moodle", "urlBase"],
+            settings_chaves=["moodle", "urlBase"],
         ),
         Campo(
             chave="moodle_bootcamp_cat_id",
@@ -188,7 +188,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="texto",
             origem="settings",
             descricao="ID da categoria de cursos do bootcamp",
-            json_chaves=["moodle", "bootcampCatId"],
+            settings_chaves=["moodle", "bootcampCatId"],
         ),
         Campo(
             chave="moodle_aprovados_cat_id",
@@ -196,7 +196,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="texto",
             origem="settings",
             descricao="ID da categoria de cursos dos aprovados",
-            json_chaves=["moodle", "aprovadosCatId"],
+            settings_chaves=["moodle", "aprovadosCatId"],
         ),
         Campo(
             chave="drive_folder_id",
@@ -204,7 +204,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="texto",
             origem="settings",
             descricao="ID da pasta de destino para upload no Google Drive",
-            json_chaves=["drive", "folderId"],
+            settings_chaves=["drive", "folderId"],
         ),
         Campo(
             chave="drive_credentials_path",
@@ -212,7 +212,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="caminho",
             origem="settings",
             descricao="Caminho para o arquivo credentials.json da conta de serviço",
-            json_chaves=["drive", "credentialsPath"],
+            settings_chaves=["drive", "credentialsPath"],
         ),
         Campo(
             chave="output_dir",
@@ -220,7 +220,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="caminho",
             origem="settings",
             descricao="Diretório onde os CSVs das turmas serão salvos (padrão: bootcamps)",
-            json_chaves=["outputDir"],
+            settings_chaves=["outputDir"],
         ),
         Campo(
             chave="aprovados_dir",
@@ -228,7 +228,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="caminho",
             origem="settings",
             descricao="Diretório onde os CSVs dos aprovados serão salvos (padrão: aprovados)",
-            json_chaves=["aprovadosDir"],
+            settings_chaves=["aprovadosDir"],
         ),
     ],
     "torpedo": [
@@ -237,7 +237,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             rotulo="Usuário do Moodle",
             tipo="texto",
             origem="settings",
-            json_chaves=["moodle", "usuario"],
+            settings_chaves=["moodle", "usuario"],
         ),
         Campo(
             chave="moodle_senha",
@@ -250,7 +250,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             rotulo="URL de login do Moodle",
             tipo="url",
             origem="settings",
-            json_chaves=["moodle", "urlLogin"],
+            settings_chaves=["moodle", "urlLogin"],
         ),
         Campo(
             chave="moodle_urls_foruns",
@@ -258,7 +258,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="lista_url",
             origem="settings",
             descricao="Lista de URLs dos fóruns onde a postagem será feita",
-            json_chaves=["moodle", "urlsForuns"],
+            settings_chaves=["moodle", "urlsForuns"],
         ),
         Campo(
             chave="moodle_headless",
@@ -266,7 +266,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="bool",
             origem="settings",
             descricao="Se verdadeiro, o navegador roda em segundo plano",
-            json_chaves=["moodle", "headless"],
+            settings_chaves=["moodle", "headless"],
         ),
         Campo(
             chave="moodle_post_delay",
@@ -274,7 +274,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="int",
             origem="settings",
             descricao="Tempo de espera em segundos entre cada postagem em fórum",
-            json_chaves=["moodle", "postDelay"],
+            settings_chaves=["moodle", "postDelay"],
         ),
         Campo(
             chave="moodle_caminho_post_file",
@@ -282,7 +282,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             tipo="caminho",
             origem="settings",
             descricao="Caminho para o arquivo .md com o conteúdo da postagem",
-            json_chaves=["moodle", "caminhoPostFile"],
+            settings_chaves=["moodle", "caminhoPostFile"],
         ),
         Campo(
             chave="moodle_caminho_imagem",
@@ -291,7 +291,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Caminho para imagem a ser anexada à postagem (deixe vazio para nenhuma)",
             obrigatorio=False,
-            json_chaves=["moodle", "caminhoImagem"],
+            settings_chaves=["moodle", "caminhoImagem"],
         ),
     ],
 }

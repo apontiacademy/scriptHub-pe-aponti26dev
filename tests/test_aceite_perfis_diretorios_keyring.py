@@ -164,7 +164,7 @@ def test_dois_profiles_com_config_propria_nao_vazam_um_para_o_outro(tmp_path, mo
     _fake_platformdirs(tmp_path, mocker)
     from scripthub.services.config import persistencia
 
-    campo = Campo(chave="url", rotulo="r", tipo="texto", origem="settings", json_chaves=["moodle", "urlLogin"])
+    campo = Campo(chave="url", rotulo="r", tipo="texto", origem="settings", settings_chaves=["moodle", "urlLogin"])
 
     perfil.definir_perfil("equipe-diurna")
     persistencia.persistir("frequencias", [campo], {"url": "https://diurna.example.com"})
@@ -217,7 +217,7 @@ def test_config_nao_le_mais_dot_env_usuario_em_settings_senha_no_keyring_por_scr
     from scripthub.services.config import persistencia
 
     campo_usuario = Campo(
-        chave="moodle_usuario", rotulo="r", tipo="texto", origem="settings", json_chaves=["moodle", "usuario"]
+        chave="moodle_usuario", rotulo="r", tipo="texto", origem="settings", settings_chaves=["moodle", "usuario"]
     )
     campo_senha = Campo(chave="moodle_senha", rotulo="r", tipo="senha", origem="keyring")
 

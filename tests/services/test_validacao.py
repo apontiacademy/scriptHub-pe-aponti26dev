@@ -10,7 +10,7 @@ def _campo(tipo, obrigatorio=True, caminho_absoluto=False):
         rotulo="r",
         tipo=tipo,
         origem="settings",
-        json_chaves=["k"],
+        settings_chaves=["k"],
         obrigatorio=obrigatorio,
         caminho_absoluto=caminho_absoluto,
     )
