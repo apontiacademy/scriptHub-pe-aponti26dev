@@ -12,15 +12,3 @@ Registro cumulativo do que já está em `dev`, mas ainda não foi promovido para
 Quando os snapshots de uma versão são promovidos para `nightly`, as entradas correspondentes saem daqui e viram a seção `[Unreleased]` de `CHANGELOG.md`. Quando `nightly` vira release em `main`, `[Unreleased]` vira `## [x.y.z] - data`.
 
 Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyproject.toml` (`chore(changelog)`/`chore(release)`) não geram uma entrada própria — ver "Commits de changelog/release" em [CONTRIBUTING.md](CONTRIBUTING.md).
-
-### 0.21.2.dev1 - 2026-07-29 - (PR#123)
-
-- **Added**: `.github/ISSUE_TEMPLATE/spec.md` — template padrão de issue estruturado como spec reutilizável (contexto/objetivo, escopo, critérios de aceite em Given-When-Then, exemplos concretos, restrições técnicas)
-- **Changed**: `CONTRIBUTING.md` — nova seção "Criando issues" documentando esse padrão como convenção oficial para criação de issues
-
-### 0.21.2.dev2 - 2026-07-30 - (PR#124)
-
-- **Added**: `services/diretorios.py`, `services/perfil.py`, `services/keyring_moodle.py` — resolvem config/dados/cache/state por `<profile>/<domínio>` via `platformdirs`, e a senha do Moodle por `<profile>/<domínio>` no keyring do SO; comandos `--profile` (override pontual, nível superior), `set-profile`, `unset-profile` e `migrate-legacy-config` (depreciado, migra `.env`/`settings.json`/`dados/` do layout antigo sem apagar os originais)
-- **Changed**: `settings.json` → `settings.toml` em todo o sistema de config (comando interativo `scripthub config` e os 7 `config.py` de script); `.env` deixa de ser lido — usuário do Moodle vai para `settings.toml`, senha para o keyring; `services/log.py` passa a criar o handler de arquivo sob demanda (lazy), já que o profile só é conhecido após o parsing da CLI
-- **Changed**: XLSX/CSV transitórios de `frequencias/auditar`, `frequencias/compilar` e `relatorios/compilar` passam a viver no diretório de **cache** do SO em vez do diretório de dados persistente, recriados a cada execução; lógica de download antes duplicada 3x extraída para `frequencias/extrair_frequencias.py::extrair_todas_frequencias`, compartilhada por `auditar`/`extrair`/`compilar`
-- **Removed**: templates `.env.example`/`settings.example.json` (obsoletos — config nasce via `scripthub config` interativo ou via `migrate-legacy-config`)
