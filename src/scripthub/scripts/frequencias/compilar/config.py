@@ -12,6 +12,10 @@ def _diretorio_config() -> Path:
     return diretorios.caminho_config(perfil.resolver_perfil(), DOMINIO)
 
 
+def _diretorio_dados() -> Path:
+    return diretorios.caminho_dados(perfil.resolver_perfil(), DOMINIO)
+
+
 @dataclass
 class MoodleConfig:
     usuario: str
@@ -31,6 +35,7 @@ class AtasConfig:
 class Config:
     moodle: MoodleConfig
     atas: AtasConfig
+    diretorio_download: Path
 
     @staticmethod
     def load() -> "Config":
@@ -52,7 +57,11 @@ class Config:
             caminho_assinatura=Path(atas_toml["caminhoAssinatura"]) if atas_toml.get("caminhoAssinatura") else None,
         )
 
-        return Config(moodle=moodle_config, atas=atas_config)
+        return Config(
+            moodle=moodle_config,
+            atas=atas_config,
+            diretorio_download=_diretorio_dados() / "frequencias",
+        )
 
     @staticmethod
     def __carregar_credenciais_moodle(moodle_toml: dict) -> tuple[str, str]:

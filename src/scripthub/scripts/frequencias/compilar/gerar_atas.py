@@ -13,7 +13,6 @@ from scripthub.services import log
 from scripthub.services.erros import ErroConfiguracao, FalhaParcial
 
 from .config import Config
-from .extrair_frequencias import _diretorio_download
 from .parser_frequencias import (
     CORES_STATUS,
     Sessao,
@@ -476,7 +475,7 @@ def _gerar_pdf_turma(
 
 def main(config: Config) -> None:
     """Gera uma ata de frequência (PDF) por turma a partir dos XLSX extraídos."""
-    arquivos_xlsx = list(_diretorio_download().glob("*.xlsx"))
+    arquivos_xlsx = list(config.diretorio_download.glob("*.xlsx"))
     if not arquivos_xlsx:
         raise ErroConfiguracao(
             "Nenhum XLSX de frequência encontrado. Execute `frequencias compilar --passo extrair` antes."

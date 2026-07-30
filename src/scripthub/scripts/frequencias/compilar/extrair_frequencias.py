@@ -1,14 +1,7 @@
-from pathlib import Path
-
-from scripthub.services import diretorios, perfil
 from scripthub.services.erros import ErroConfiguracao
 from scripthub.services.moodle import MoodleSessao, extrair_frequencia
 
-from .config import DOMINIO, Config
-
-
-def _diretorio_download() -> Path:
-    return diretorios.caminho_dados(perfil.resolver_perfil(), DOMINIO) / "frequencias"
+from .config import Config
 
 
 def main(config: Config) -> None:
@@ -18,7 +11,7 @@ def main(config: Config) -> None:
     if not urls_frequencias:
         raise ErroConfiguracao("Nenhuma URL de frequência encontrada no settings.toml")
 
-    diretorio_download = _diretorio_download()
+    diretorio_download = config.diretorio_download
     diretorio_download.mkdir(parents=True, exist_ok=True)
 
     sessao = MoodleSessao(
