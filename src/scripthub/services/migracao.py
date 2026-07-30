@@ -1,7 +1,11 @@
 """Migração do layout legado (settings.json/.env/dados dentro do pacote instalado)
 para o novo layout (diretórios do SO via platformdirs + keyring), usada pelo comando
 depreciado `scripthub migrate-legacy-config`. Não apaga nenhum arquivo/pasta de
-origem — só copia/persiste no novo layout, para não arriscar perda de dados."""
+origem — só copia/persiste no novo layout, para não arriscar perda de dados.
+Cada arquivo/chave/senha só é migrado uma vez: se o destino já tiver conteúdo
+(settings.toml já existe, moodle.usuario já preenchido, já há senha no keyring),
+a migração pula esse item — reexecutar o comando depois de editar a configuração
+manualmente não sobrescreve as edições."""
 
 import json
 import shutil
@@ -41,13 +45,17 @@ def _migrar_settings_json(raiz: Path, novo_config_dir: Path) -> bool:
     if not settings_json_path.exists():
         return False
 
+    settings_toml_path = novo_config_dir / "settings.toml"
+    if settings_toml_path.exists():
+        return False
+
     with open(settings_json_path, encoding="utf-8") as f:
         settings = json.load(f)
 
     novo_config_dir.mkdir(parents=True, exist_ok=True)
-    with open(novo_config_dir / "settings.toml", "wb") as f:
+    with open(settings_toml_path, "wb") as f:
         tomli_w.dump(settings, f)
-    log.ok(f"{settings_json_path} → {novo_config_dir / 'settings.toml'}")
+    log.ok(f"{settings_json_path} → {settings_toml_path}")
     return True
 
 
@@ -63,20 +71,21 @@ def _migrar_env(raiz: Path, nome_dominio: str, novo_config_dir: Path) -> bool:
     senha = valores.get("MOODLE_SENHA")
     migrou = False
 
-    if usuario:
+    settings_toml_path = novo_config_dir / "settings.toml"
+    settings: dict = {}
+    if settings_toml_path.exists():
+        with open(settings_toml_path, "rb") as f:
+            settings = tomllib.load(f)
+
+    if usuario and not settings.get("moodle", {}).get("usuario"):
         novo_config_dir.mkdir(parents=True, exist_ok=True)
-        settings_toml_path = novo_config_dir / "settings.toml"
-        settings: dict = {}
-        if settings_toml_path.exists():
-            with open(settings_toml_path, "rb") as f:
-                settings = tomllib.load(f)
         settings.setdefault("moodle", {})["usuario"] = usuario
         with open(settings_toml_path, "wb") as f:
             tomli_w.dump(settings, f)
         log.ok(f"{env_path}: MOODLE_USUARIO → {settings_toml_path} (moodle.usuario)")
         migrou = True
 
-    if senha:
+    if senha and not keyring_moodle.obter_senha_moodle(nome_dominio):
         keyring_moodle.definir_senha_moodle(nome_dominio, senha)
         log.ok(f"{env_path}: MOODLE_SENHA → keyring do sistema (domínio: {nome_dominio})")
         migrou = True
@@ -97,7 +106,10 @@ def _migrar_dados_legados(nome_dominio: str, novo_dados_dir: Path) -> bool:
             destino = novo_dados_dir / item.name
             if destino.exists():
                 continue
-            shutil.move(str(item), str(destino))
+            if item.is_dir():
+                shutil.copytree(item, destino)
+            else:
+                shutil.copy2(item, destino)
         log.ok(f"{pasta_dados} → {novo_dados_dir}")
         migrou = True
     return migrou

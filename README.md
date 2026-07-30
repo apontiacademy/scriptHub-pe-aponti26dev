@@ -111,7 +111,7 @@ uv run scripthub --profile equipe-diurna frequencias auditar   # override pontua
 uv run scripthub unset-profile                  # volta para default (no-op se já for default)
 ```
 
-Quem já usava uma versão anterior do scriptHub (`.env`/`settings.json` dentro do próprio pacote instalado) roda uma vez o comando de migração depreciado, que move essa configuração para o novo layout sem apagar os arquivos originais:
+Quem já usava uma versão anterior do scriptHub (`.env`/`settings.json` dentro do próprio pacote instalado) roda o comando de migração depreciado, que copia essa configuração para o novo layout sem apagar os arquivos originais. É seguro executar mais de uma vez: cada arquivo/chave/senha só é migrado se o destino ainda não tiver conteúdo, então edições feitas depois de uma migração anterior não são sobrescritas:
 
 ```bash
 uv run scripthub migrate-legacy-config

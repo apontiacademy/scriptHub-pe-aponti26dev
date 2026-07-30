@@ -56,6 +56,7 @@ def test_migra_env_usuario_para_settings_toml_e_senha_para_keyring(tmp_path, mon
     raiz = _preparar_scripts_folder(tmp_path, monkeypatch)
     _mock_destinos(tmp_path, mocker)
     (raiz["softskills"] / ".env").write_text("MOODLE_USUARIO=user1\nMOODLE_SENHA=segredo\n")
+    mocker.patch("scripthub.services.migracao.keyring_moodle.obter_senha_moodle", return_value=None)
     mock_definir_senha = mocker.patch("scripthub.services.migracao.keyring_moodle.definir_senha_moodle")
 
     migracao.migrar_configuracao_legada()
@@ -77,6 +78,19 @@ def test_migra_pasta_de_dados_legada(tmp_path, monkeypatch, mocker):
     novo = tmp_path / "novo_dados" / "default" / "relatorios" / "arquivo.csv"
     assert novo.exists()
     assert novo.read_text() == "a,b\n1,2\n"
+
+
+def test_migra_pasta_de_dados_legada_preserva_arquivo_original(tmp_path, monkeypatch, mocker):
+    raiz = _preparar_scripts_folder(tmp_path, monkeypatch)
+    _mock_destinos(tmp_path, mocker)
+    pasta_dados = raiz["relatorios"] / "compilar" / "dados"
+    pasta_dados.mkdir(parents=True)
+    original = pasta_dados / "arquivo.csv"
+    original.write_text("a,b\n1,2\n")
+
+    migracao.migrar_configuracao_legada()
+
+    assert original.exists()
 
 
 def test_layout_novo_sem_arquivos_legados_e_no_op(tmp_path, monkeypatch, mocker):
@@ -115,3 +129,50 @@ def test_todos_dominios_sao_migrados_mesmo_quando_um_ja_migrou(tmp_path, monkeyp
 
     novo_torpedo = tmp_path / "novo_config" / "default" / "torpedo" / "settings.toml"
     assert novo_torpedo.exists()
+
+
+def test_migracao_nao_sobrescreve_settings_toml_editado_apos_primeira_migracao(tmp_path, monkeypatch, mocker):
+    raiz = _preparar_scripts_folder(tmp_path, monkeypatch)
+    _mock_destinos(tmp_path, mocker)
+    (raiz["torpedo"] / "settings.json").write_text(json.dumps({"moodle": {"urlLogin": "https://legado.com"}}))
+    migracao.migrar_configuracao_legada()
+
+    novo = tmp_path / "novo_config" / "default" / "torpedo" / "settings.toml"
+    novo.write_bytes(b'[moodle]\nurlLogin = "https://editado-manualmente.com"\n')
+
+    migracao.migrar_configuracao_legada()
+
+    assert tomllib.loads(novo.read_text(encoding="utf-8"))["moodle"]["urlLogin"] == "https://editado-manualmente.com"
+
+
+def test_migracao_nao_sobrescreve_usuario_ja_presente_no_settings_toml(tmp_path, monkeypatch, mocker):
+    raiz = _preparar_scripts_folder(tmp_path, monkeypatch)
+    _mock_destinos(tmp_path, mocker)
+    mocker.patch("scripthub.services.migracao.keyring_moodle.obter_senha_moodle", return_value=None)
+    mocker.patch("scripthub.services.migracao.keyring_moodle.definir_senha_moodle")
+    (raiz["softskills"] / ".env").write_text("MOODLE_USUARIO=legado\n")
+    migracao.migrar_configuracao_legada()
+
+    novo = tmp_path / "novo_config" / "default" / "softskills" / "settings.toml"
+    settings = tomllib.loads(novo.read_text(encoding="utf-8"))
+    settings["moodle"]["usuario"] = "editado-manualmente"
+    with open(novo, "wb") as f:
+        import tomli_w
+
+        tomli_w.dump(settings, f)
+
+    migracao.migrar_configuracao_legada()
+
+    assert tomllib.loads(novo.read_text(encoding="utf-8"))["moodle"]["usuario"] == "editado-manualmente"
+
+
+def test_migracao_nao_sobrescreve_senha_ja_presente_no_keyring(tmp_path, monkeypatch, mocker):
+    raiz = _preparar_scripts_folder(tmp_path, monkeypatch)
+    _mock_destinos(tmp_path, mocker)
+    mocker.patch("scripthub.services.migracao.keyring_moodle.obter_senha_moodle", return_value="ja-rotacionada")
+    mock_definir_senha = mocker.patch("scripthub.services.migracao.keyring_moodle.definir_senha_moodle")
+    (raiz["softskills"] / ".env").write_text("MOODLE_USUARIO=user1\nMOODLE_SENHA=legado\n")
+
+    migracao.migrar_configuracao_legada()
+
+    mock_definir_senha.assert_not_called()
