@@ -29,8 +29,8 @@ O arquivo de conteúdo e a imagem (opcional) são lidos do `settings.toml` (`moo
 | `moodle.urlsForuns` | Lista de URLs dos fóruns onde o tópico será postado |
 | `moodle.headless` | `true` para rodar o navegador sem interface gráfica |
 | `moodle.postDelay` | Intervalo em segundos entre postagens |
-| `moodle.caminhoPostFile` | Caminho do arquivo Markdown com o conteúdo, relativo ao diretório de dados do domínio se não for absoluto |
-| `moodle.caminhoImagem` | Caminho da imagem (opcional, omita a chave para ignorar), relativo ao diretório de dados do domínio se não for absoluto |
+| `moodle.caminhoPostFile` | Caminho do arquivo Markdown com o conteúdo — deve ser um **caminho absoluto**; caminhos relativos são rejeitados |
+| `moodle.caminhoImagem` | Caminho da imagem (opcional, omita a chave para ignorar) — deve ser um **caminho absoluto**; caminhos relativos são rejeitados |
 
 A senha do Moodle (`moodle.senha`) não fica em `settings.toml` — é armazenada no keyring do sistema operacional.
 

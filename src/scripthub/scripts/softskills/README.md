@@ -42,7 +42,7 @@ uv run scripthub menu
 | `moodle.bootcampCatId` | ID da categoria das turmas do bootcamp |
 | `moodle.aprovadosCatId` | ID da categoria dos cursos de aprovados por trilha |
 | `drive.folderId` | ID da pasta no Google Drive onde a planilha será enviada |
-| `drive.credentialsPath` | Caminho do `credentials.json` (use um caminho absoluto; se relativo, resolve a partir do diretório de config do domínio — `scripthub config softskills --opcoes` mostra o caminho ativo) |
+| `drive.credentialsPath` | Caminho do `credentials.json` — deve ser um **caminho absoluto**; caminhos relativos são rejeitados |
 | `outputDir` | Pasta para salvar os dados do bootcamp, relativa ao diretório de dados do domínio (padrão: `bootcamps`) |
 | `aprovadosDir` | Pasta para salvar os dados dos aprovados, relativa ao diretório de dados do domínio (padrão: `aprovados`) |
 
@@ -50,7 +50,7 @@ A senha do Moodle (`moodle.senha`) não fica em `settings.toml` — é armazenad
 
 ### credentials.json
 
-Credenciais de conta de serviço do Google. O caminho é definido por `drive.credentialsPath` (padrão: `credentials.json`) e pode ficar em qualquer lugar — use um caminho **absoluto** para evitar ambiguidade. Se for relativo, é resolvido a partir do diretório de config do domínio (não da raiz do projeto). Compartilhe a pasta do Drive com o e-mail da conta de serviço.
+Credenciais de conta de serviço do Google. O caminho é definido por `drive.credentialsPath` em `settings.toml` (ou via `scripthub config -s softskills`) e deve ser um **caminho absoluto** — caminhos relativos são rejeitados. Compartilhe a pasta do Drive com o e-mail da conta de serviço.
 
 > A pasta de destino pode ser um Shared Drive (Drive compartilhado do Google Workspace) — o módulo suporta isso via `supportsAllDrives`.
 

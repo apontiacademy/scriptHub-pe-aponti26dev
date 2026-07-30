@@ -142,12 +142,12 @@ Compartilhada entre `auditar`, `compilar` e `extrair` — o `settings.toml` vive
 | `moodle.usuario` | `auditar`, `compilar`, `extrair` | Login de acesso ao Moodle |
 | `moodle.urlLogin` | `auditar`, `compilar`, `extrair` | URL de login do Moodle |
 | `moodle.urlsFrequencias` | `auditar`, `compilar`, `extrair` | Tabela `{ "Nome da Turma" = "URL do módulo de presença" }` |
-| `moodle.caminhoExportacao` | `auditar`, `extrair` | Pasta onde os `.xlsx` serão salvos |
+| `moodle.caminhoExportacao` | `auditar`, `extrair` | Pasta onde os `.xlsx` serão salvos — caminho absoluto (relativos são rejeitados) |
 | `gsheets.idPlanilha` | `auditar` | ID da planilha do Google Sheets |
 | `gsheets.caminhoJsonCredenciais` | `auditar` | Caminho absoluto para o `credentials.json` da conta de serviço Google |
-| `atas.caminhoSaida` | `compilar` | Pasta onde as atas em PDF serão salvas |
-| `atas.caminhoLogo` | `compilar` | Imagem do logo do programa exibida na capa (opcional) |
-| `atas.caminhoAssinatura` | `compilar` | Imagem da assinatura de logos da Aponti exibida no rodapé da capa (opcional) |
+| `atas.caminhoSaida` | `compilar` | Pasta onde as atas em PDF serão salvas — caminho absoluto (relativos são rejeitados) |
+| `atas.caminhoLogo` | `compilar` | Imagem do logo do programa exibida na capa (opcional) — caminho absoluto quando definida |
+| `atas.caminhoAssinatura` | `compilar` | Imagem da assinatura de logos da Aponti exibida no rodapé da capa (opcional) — caminho absoluto quando definida |
 
 A senha do Moodle (`moodle.senha`) não fica em `settings.toml` — é armazenada no keyring do sistema operacional.
 
