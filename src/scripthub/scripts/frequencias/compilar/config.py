@@ -78,13 +78,13 @@ class Config:
         return Config(
             moodle=moodle_config,
             atas=atas_config,
-            diretorio_download=_diretorio_cache() / "frequencias",
+            diretorio_download=_diretorio_cache() / "compilar",
         )
 
     @staticmethod
     def __carregar_credenciais_moodle(moodle_toml: dict) -> tuple[str, str]:
         usuario = moodle_toml.get("usuario")
-        senha = keyring_moodle.obter_senha_moodle(DOMINIO)
+        senha = keyring_moodle.obter_senha_moodle(DOMINIO, perfil.resolver_perfil())
 
         if not usuario or not senha:
             raise ErroConfiguracao(

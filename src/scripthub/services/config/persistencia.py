@@ -38,7 +38,7 @@ def carregar_valores(nome_script: str, campos: list[Campo]) -> dict[str, Any]:
     valores: dict[str, Any] = {}
     for campo in campos:
         if campo.origem == "keyring":
-            valores[campo.chave] = keyring_moodle.obter_senha_moodle(nome_script)
+            valores[campo.chave] = keyring_moodle.obter_senha_moodle(nome_script, perfil.resolver_perfil())
         else:
             node: Any = settings
             for chave in campo.settings_chaves:
@@ -64,7 +64,7 @@ def persistir(nome_script: str, campos: list[Campo], valores: dict[str, Any]) ->
     for campo in campos_keyring:
         novo = valores.get(campo.chave)
         if novo is not None:
-            keyring_moodle.definir_senha_moodle(nome_script, str(novo))
+            keyring_moodle.definir_senha_moodle(nome_script, perfil.resolver_perfil(), str(novo))
 
     if campos_settings:
         if settings_path.exists():

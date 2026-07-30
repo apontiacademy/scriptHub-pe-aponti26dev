@@ -135,8 +135,9 @@ def test_limpar_sem_scripts_com_esquema_loga_aviso_nao_erro(mocker):
 @pytest.fixture
 def keyring_fake_main(mocker):
     armazem: dict[str, str] = {}
-    mocker.patch(f"{_PATCH}.keyring_moodle.obter_senha_moodle", side_effect=lambda d: armazem.get(d))
-    mocker.patch(f"{_PATCH}.keyring_moodle.remover_senha_moodle", side_effect=lambda d: armazem.pop(d, None))
+    mocker.patch(f"{_PATCH}.perfil.resolver_perfil", return_value="default")
+    mocker.patch(f"{_PATCH}.keyring_moodle.obter_senha_moodle", side_effect=lambda d, p: armazem.get(d))
+    mocker.patch(f"{_PATCH}.keyring_moodle.remover_senha_moodle", side_effect=lambda d, p: armazem.pop(d, None))
     return armazem
 
 

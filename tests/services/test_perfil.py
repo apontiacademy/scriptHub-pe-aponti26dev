@@ -1,7 +1,7 @@
 import pytest
 
 from scripthub.services import perfil
-from scripthub.services.erros import ErroUsoCLI
+from scripthub.services.erros import ErroConfiguracao, ErroUsoCLI
 
 
 @pytest.fixture(autouse=True)
@@ -64,3 +64,25 @@ def test_definir_perfil_rejeita_nome_invalido(_arquivo_perfil, nome_invalido):
 def test_definir_override_rejeita_nome_invalido(_arquivo_perfil, nome_invalido):
     with pytest.raises(ErroUsoCLI):
         perfil.definir_override(nome_invalido)
+
+
+@pytest.mark.parametrize("nome_reservado", ["Profile", "profile", "PROFILE"])
+def test_definir_perfil_rejeita_nome_reservado_profile(_arquivo_perfil, nome_reservado):
+    """Regressão: 'Profile' é o nome do arquivo-marcador (caminho_arquivo_perfil()
+    → user_config_dir/Profile) — um profile com esse nome faria
+    caminho_config('Profile', dominio) colidir com esse arquivo no mesmo
+    segmento de caminho. Bloqueado case-insensitive por sistemas de arquivos
+    case-insensitive (macOS/Windows)."""
+    with pytest.raises(ErroUsoCLI):
+        perfil.definir_perfil(nome_reservado)
+
+
+def test_perfil_persistido_levanta_erro_configuracao_para_conteudo_invalido_editado_manualmente(_arquivo_perfil):
+    """A validação de nome só rodava na escrita (definir_perfil/definir_override),
+    não na leitura — um arquivo-marcador editado manualmente com conteúdo inválido
+    era usado sem validação. perfil_persistido() deve validar também na leitura."""
+    _arquivo_perfil.parent.mkdir(parents=True, exist_ok=True)
+    _arquivo_perfil.write_text("a/b", encoding="utf-8")
+
+    with pytest.raises(ErroConfiguracao):
+        perfil.perfil_persistido()

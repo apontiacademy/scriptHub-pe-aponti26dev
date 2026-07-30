@@ -43,7 +43,7 @@ def test_load_valido(tmp_path, monkeypatch, mocker, settings_valido):
         "Turma A": "https://example.com/freq?id=1",
         "Turma B": "https://example.com/freq?id=2",
     }
-    assert config.diretorio_download == tmp_path / "cache" / "frequencias"
+    assert config.diretorio_download == tmp_path / "cache" / "auditar"
     assert config.gsheets.caminho_json_credenciais == tmp_path / "credentials.json"
 
 

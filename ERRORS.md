@@ -93,7 +93,7 @@ ao classificar um novo `raise`.
 - Credenciais/IDs do Google ausentes: `frequencias/auditar/integracao_google_sheets.py`
 - Arquivo/URL de entrada do próprio script ausente: `frequencias/auditar/extrair_frequencias.py`, `frequencias/compilar/extrair_frequencias.py` (URLs de frequência), `relatorios/extrair/download_de_relatorios.py` (URLs de relatório), `relatorios/compilar/download_de_relatorios.py` (meses), `torpedo/main.py` (post `.md`, URLs de fórum, título do `.md`, imagem de override)
 - Falha de autenticação no Moodle (usuário/senha errados): `services/moodle/sessao.py` (`MoodleSessao.login`, usado por todos os scripts que baixam do Moodle via HTTP)
-- `gsheets.caminhoJsonCredenciais` não é um caminho absoluto: `frequencias/auditar/config.py`
+- Campo de caminho de arquivo/diretório externo não é um caminho absoluto: `gsheets.caminhoJsonCredenciais` (`frequencias/auditar/config.py`), `atas.caminhoSaida`/`caminhoLogo`/`caminhoAssinatura` (`frequencias/compilar/config.py`), `moodle.caminhoExportacao` (`frequencias/extrair/config.py`), `moodle.caminhoDownloadRelatorio` (`relatorios/extrair/config.py`), `pdf.caminhoSaida` (`relatorios/compilar/config.py`), `drive.credentialsPath` (`softskills/config.py`), `moodle.caminhoPostFile`/`caminhoImagem` (`torpedo/config.py`)
 
 ### `FalhaParcial` (4)
 

@@ -96,7 +96,7 @@ class Config:
     @staticmethod
     def __carregar_credenciais_moodle(moodle_toml: dict) -> tuple[str, str]:
         usuario = moodle_toml.get("usuario")
-        senha = keyring_moodle.obter_senha_moodle(DOMINIO)
+        senha = keyring_moodle.obter_senha_moodle(DOMINIO, perfil.resolver_perfil())
 
         if not usuario:
             raise ErroConfiguracao(f"moodle.usuario deve estar definido em settings.toml (domínio: {DOMINIO})")

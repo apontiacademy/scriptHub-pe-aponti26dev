@@ -45,7 +45,7 @@ def test_load_valido(tmp_path, monkeypatch, mocker, settings_valido):
     assert config.atas.caminho_saida == tmp_path / "atas"
     assert config.atas.caminho_logo is None
     assert config.atas.caminho_assinatura is None
-    assert config.diretorio_download == tmp_path / "cache" / "frequencias"
+    assert config.diretorio_download == tmp_path / "cache" / "compilar"
 
 
 def test_load_com_logo_e_assinatura_opcionais(tmp_path, monkeypatch, mocker, settings_valido):

@@ -1,14 +1,23 @@
 from . import diretorios
-from .erros import ErroUsoCLI
+from .erros import ErroConfiguracao, ErroUsoCLI
 
 PADRAO = "default"
+
+_NOME_ARQUIVO_MARCADOR = "profile"
 
 _override: str | None = None
 
 
+def _nome_invalido(nome: str) -> bool:
+    return not nome or "/" in nome or "\\" in nome or nome in (".", "..") or nome.lower() == _NOME_ARQUIVO_MARCADOR
+
+
 def _validar_nome(nome: str) -> None:
-    if not nome or "/" in nome or "\\" in nome or nome in (".", ".."):
-        raise ErroUsoCLI(f"Nome de profile inválido: '{nome}'. Não pode conter '/', '\\', nem ser '.'/'..'.")
+    if _nome_invalido(nome):
+        raise ErroUsoCLI(
+            f"Nome de profile inválido: '{nome}'. Não pode conter '/', '\\', ser '.'/'..', "
+            "nem o nome reservado 'Profile'."
+        )
 
 
 def perfil_persistido() -> str:
@@ -16,7 +25,14 @@ def perfil_persistido() -> str:
     if not caminho.exists():
         return PADRAO
     conteudo = caminho.read_text(encoding="utf-8").strip()
-    return conteudo or PADRAO
+    if not conteudo:
+        return PADRAO
+    if _nome_invalido(conteudo):
+        raise ErroConfiguracao(
+            f"O arquivo de profile ({caminho}) contém um nome inválido: '{conteudo}'. "
+            "Corrija manualmente ou rode `scripthub unset-profile`."
+        )
+    return conteudo
 
 
 def definir_perfil(nome: str) -> None:

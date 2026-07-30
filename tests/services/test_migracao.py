@@ -63,7 +63,7 @@ def test_migra_env_usuario_para_settings_toml_e_senha_para_keyring(tmp_path, mon
 
     novo = tmp_path / "novo_config" / "default" / "softskills" / "settings.toml"
     assert tomllib.loads(novo.read_text(encoding="utf-8"))["moodle"]["usuario"] == "user1"
-    mock_definir_senha.assert_called_once_with("softskills", "segredo")
+    mock_definir_senha.assert_called_once_with("softskills", "default", "segredo")
 
 
 def test_migra_pasta_de_dados_legada(tmp_path, monkeypatch, mocker):
@@ -164,6 +164,48 @@ def test_migracao_nao_sobrescreve_usuario_ja_presente_no_settings_toml(tmp_path,
     migracao.migrar_configuracao_legada()
 
     assert tomllib.loads(novo.read_text(encoding="utf-8"))["moodle"]["usuario"] == "editado-manualmente"
+
+
+def test_merge_de_pastas_de_dados_legadas_com_arquivo_duplicado_avisa_e_preserva_o_primeiro(
+    tmp_path, monkeypatch, mocker
+):
+    """softskills mescla duas pastas legadas (bootcamps, aprovados) no mesmo
+    destino; se ambas tiverem um arquivo de mesmo nome, o segundo era
+    descartado silenciosamente (if destino.exists(): continue). Deve avisar o
+    usuário e preservar o conteúdo já copiado (do primeiro)."""
+    raiz = _preparar_scripts_folder(tmp_path, monkeypatch)
+    _mock_destinos(tmp_path, mocker)
+    bootcamps = raiz["softskills"] / "bootcamps"
+    aprovados = raiz["softskills"] / "aprovados"
+    bootcamps.mkdir(parents=True)
+    aprovados.mkdir(parents=True)
+    (bootcamps / "aluno.csv").write_text("de-bootcamps")
+    (aprovados / "aluno.csv").write_text("de-aprovados")
+    mock_log = mocker.patch("scripthub.services.migracao.log")
+
+    migracao.migrar_configuracao_legada()
+
+    novo = tmp_path / "novo_dados" / "default" / "softskills" / "aluno.csv"
+    assert novo.read_text() == "de-bootcamps"
+    avisos = [c.args[0] for c in mock_log.aviso.call_args_list]
+    assert any("aluno.csv" in aviso for aviso in avisos)
+
+
+def test_settings_json_corrompido_nao_aborta_migracao_dos_demais_dominios(tmp_path, monkeypatch, mocker):
+    """Regressão: json.load sem try/except levantaria JSONDecodeError e abortaria
+    a list comprehension inteira, pulando a migração dos domínios seguintes."""
+    raiz = _preparar_scripts_folder(tmp_path, monkeypatch)
+    _mock_destinos(tmp_path, mocker)
+    (raiz["frequencias"] / "settings.json").write_text("{invalido")
+    (raiz["torpedo"] / "settings.json").write_text(json.dumps({"moodle": {"urlLogin": "https://b.com"}}))
+    mock_log = mocker.patch("scripthub.services.migracao.log")
+
+    migracao.migrar_configuracao_legada()
+
+    novo_torpedo = tmp_path / "novo_config" / "default" / "torpedo" / "settings.toml"
+    assert novo_torpedo.exists()
+    mock_log.aviso.assert_called_once()
+    assert "frequencias" in mock_log.aviso.call_args[0][0]
 
 
 def test_migracao_nao_sobrescreve_senha_ja_presente_no_keyring(tmp_path, monkeypatch, mocker):

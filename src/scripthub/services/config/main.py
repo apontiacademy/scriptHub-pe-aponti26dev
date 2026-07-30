@@ -7,7 +7,7 @@ import questionary
 
 import scripthub
 
-from .. import keyring_moodle, log
+from .. import keyring_moodle, log, perfil
 from ..erros import ErroUsoCLI
 from .campo import Campo, resolver_dependencias
 from .esquemas import ALIASES_CLI, ESQUEMAS
@@ -203,7 +203,7 @@ def limpar(nome_script: str | None = None) -> None:
     pasta = _script_dir(nome_script)
     arquivo_settings = pasta / "settings.toml"
     existe_settings = arquivo_settings.exists()
-    existe_senha = keyring_moodle.obter_senha_moodle(nome_script) is not None
+    existe_senha = keyring_moodle.obter_senha_moodle(nome_script, perfil.resolver_perfil()) is not None
 
     if not existe_settings and not existe_senha:
         log.aviso(f"Nenhuma configuração encontrada para '{nome_script}'.")
@@ -223,6 +223,6 @@ def limpar(nome_script: str | None = None) -> None:
         arquivo_settings.unlink()
         log.ok(f"Removido: {arquivo_settings.name}")
     if existe_senha:
-        keyring_moodle.remover_senha_moodle(nome_script)
+        keyring_moodle.remover_senha_moodle(nome_script, perfil.resolver_perfil())
         log.ok("Senha do Moodle removida do keyring.")
     log.ok(f"Configuração de {nome_script} limpa com sucesso!")

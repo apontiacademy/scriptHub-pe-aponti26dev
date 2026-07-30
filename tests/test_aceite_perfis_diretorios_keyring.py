@@ -223,8 +223,8 @@ def test_config_nao_le_mais_dot_env_usuario_em_settings_senha_no_keyring_por_scr
 
     persistencia.persistir("frequencias", [campo_usuario], {"moodle_usuario": "user-freq"})
     persistencia.persistir("torpedo", [campo_usuario], {"moodle_usuario": "user-torpedo"})
-    keyring_moodle.definir_senha_moodle("frequencias", "senha-frequencias")
-    keyring_moodle.definir_senha_moodle("torpedo", "senha-torpedo")
+    keyring_moodle.definir_senha_moodle("frequencias", "default", "senha-frequencias")
+    keyring_moodle.definir_senha_moodle("torpedo", "default", "senha-torpedo")
 
     # nenhum .env em lugar nenhum — se algum código ainda dependesse dele, estas
     # duas chamadas levantariam ErroConfiguracao por falta de credenciais
@@ -234,6 +234,33 @@ def test_config_nao_le_mais_dot_env_usuario_em_settings_senha_no_keyring_por_scr
     assert valores_freq == {"moodle_usuario": "user-freq", "moodle_senha": "senha-frequencias"}
     assert valores_torpedo == {"moodle_usuario": "user-torpedo", "moodle_senha": "senha-torpedo"}
     assert not (tmp_path / "config" / "default" / "frequencias" / ".env").exists()
+
+
+# ── 7b. senha do Moodle no keyring também é isolada por profile ────────────────
+
+
+def test_dois_profiles_sob_o_mesmo_script_nao_compartilham_senha_no_keyring(tmp_path, mocker):
+    """Given dois profiles diferentes usando o mesmo script (achado #3 da revisão
+    da PR #124: dois profiles rodando `frequencias` compartilhariam a senha do
+    Moodle no keyring do SO, já que a chave usava só o nome do domínio),
+    when cada profile define sua própria senha do Moodle para o mesmo script,
+    then cada um lê de volta só a própria senha — sem vazamento entre profiles."""
+    _fake_platformdirs(tmp_path, mocker)
+    _fake_keyring(mocker)
+    from scripthub.services import keyring_moodle
+
+    perfil.definir_perfil("equipe-diurna")
+    keyring_moodle.definir_senha_moodle("frequencias", perfil.resolver_perfil(), "senha-diurna")
+
+    perfil.definir_perfil("equipe-noturna")
+    keyring_moodle.definir_senha_moodle("frequencias", perfil.resolver_perfil(), "senha-noturna")
+    senha_noturna = keyring_moodle.obter_senha_moodle("frequencias", perfil.resolver_perfil())
+
+    perfil.definir_perfil("equipe-diurna")
+    senha_diurna = keyring_moodle.obter_senha_moodle("frequencias", perfil.resolver_perfil())
+
+    assert senha_diurna == "senha-diurna"
+    assert senha_noturna == "senha-noturna"
 
 
 # ── 8. migrate-legacy-config migra sem perda de dados; credentials.json não se move ──
@@ -310,7 +337,7 @@ def test_migrate_legacy_config_migra_sem_perda_e_nao_move_credentials_json(tmp_p
 
     from scripthub.services import keyring_moodle
 
-    assert keyring_moodle.obter_senha_moodle("frequencias") == "segredo"
+    assert keyring_moodle.obter_senha_moodle("frequencias", "default") == "segredo"
 
     novo_dado = tmp_path / "data" / "default" / "relatorios" / "dados" / "turma1.csv"
     assert novo_dado.read_text(encoding="utf-8") == "a,b\n1,2\n"

@@ -38,12 +38,13 @@ def scripts_folder(tmp_path, monkeypatch):
 def keyring_fake(mocker):
     armazem: dict[str, str] = {}
 
-    def _get(nome_dominio):
+    def _get(nome_dominio, perfil):
         return armazem.get(nome_dominio)
 
-    def _set(nome_dominio, senha):
+    def _set(nome_dominio, perfil, senha):
         armazem[nome_dominio] = senha
 
+    mocker.patch("scripthub.services.config.persistencia.perfil.resolver_perfil", return_value="default")
     mocker.patch("scripthub.services.config.persistencia.keyring_moodle.obter_senha_moodle", side_effect=_get)
     mocker.patch("scripthub.services.config.persistencia.keyring_moodle.definir_senha_moodle", side_effect=_set)
     return armazem

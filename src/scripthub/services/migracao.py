@@ -59,7 +59,7 @@ def _migrar_settings_json(raiz: Path, novo_config_dir: Path) -> bool:
     return True
 
 
-def _migrar_env(raiz: Path, nome_dominio: str, novo_config_dir: Path) -> bool:
+def _migrar_env(raiz: Path, nome_dominio: str, perfil_ativo: str, novo_config_dir: Path) -> bool:
     env_path = raiz / ".env"
     if not env_path.exists():
         return False
@@ -85,8 +85,8 @@ def _migrar_env(raiz: Path, nome_dominio: str, novo_config_dir: Path) -> bool:
         log.ok(f"{env_path}: MOODLE_USUARIO → {settings_toml_path} (moodle.usuario)")
         migrou = True
 
-    if senha and not keyring_moodle.obter_senha_moodle(nome_dominio):
-        keyring_moodle.definir_senha_moodle(nome_dominio, senha)
+    if senha and not keyring_moodle.obter_senha_moodle(nome_dominio, perfil_ativo):
+        keyring_moodle.definir_senha_moodle(nome_dominio, perfil_ativo, senha)
         log.ok(f"{env_path}: MOODLE_SENHA → keyring do sistema (domínio: {nome_dominio})")
         migrou = True
 
@@ -105,6 +105,7 @@ def _migrar_dados_legados(nome_dominio: str, novo_dados_dir: Path) -> bool:
         for item in itens:
             destino = novo_dados_dir / item.name
             if destino.exists():
+                log.aviso(f"{destino} já existe (de outra pasta legada), {item} não foi copiado.")
                 continue
             if item.is_dir():
                 shutil.copytree(item, destino)
@@ -121,8 +122,13 @@ def _migrar_dominio(nome_dominio: str) -> bool:
     novo_config_dir = diretorios.caminho_config(perfil_ativo, nome_dominio)
     novo_dados_dir = diretorios.caminho_dados(perfil_ativo, nome_dominio)
 
-    migrou_settings = _migrar_settings_json(raiz, novo_config_dir)
-    migrou_env = _migrar_env(raiz, nome_dominio, novo_config_dir)
+    try:
+        migrou_settings = _migrar_settings_json(raiz, novo_config_dir)
+    except json.JSONDecodeError as e:
+        log.aviso(f"settings.json de '{nome_dominio}' está corrompido, pulando: {e}")
+        migrou_settings = False
+
+    migrou_env = _migrar_env(raiz, nome_dominio, perfil_ativo, novo_config_dir)
     migrou_dados = _migrar_dados_legados(nome_dominio, novo_dados_dir)
 
     return migrou_settings or migrou_env or migrou_dados
