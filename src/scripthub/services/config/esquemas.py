@@ -52,7 +52,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Diretório onde os arquivos XLSX de frequência serão salvos",
             settings_chaves=["moodle", "caminhoExportacao"],
             caminho_absoluto=True,
-            scripts=("auditar", "extrair"),
+            scripts=("extrair",),
         ),
         Campo(
             chave="gsheets_id_planilha",

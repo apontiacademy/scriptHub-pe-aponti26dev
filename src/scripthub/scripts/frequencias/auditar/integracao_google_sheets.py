@@ -9,7 +9,7 @@ from .config import Config
 
 def main(config: Config) -> None:
     """Integra os arquivos XLSX de frequência com o Google Sheets."""
-    caminho_exportacao = config.moodle.caminho_exportacao
+    caminho_exportacao = config.diretorio_download
     caminho_credenciais = config.gsheets.caminho_json_credenciais
     id_planilha = config.gsheets.id_planilha
 

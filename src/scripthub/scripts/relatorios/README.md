@@ -32,7 +32,7 @@ Etapa 1 — Download dos relatórios por mês (Moodle, via HTTP)
 Etapa 2 — Compilação de um PDF por aluno
 ```
 
-> Se os CSVs já foram baixados anteriormente (pasta `dados/relatorios/`), a etapa 1 pergunta antes de baixar novamente.
+> Se os CSVs já foram baixados anteriormente (diretório de cache do domínio), a etapa 1 pergunta antes de baixar novamente.
 
 ### Como rodar
 
@@ -42,15 +42,10 @@ uv run scripthub relatorios compilar
 
 ### Estrutura de saída
 
-```
-relatorios/compilar/
-└── dados/
-    └── relatorios/
-        ├── abril_2026_1.csv
-        ├── abril_2026_2.csv
-        └── ...
+Os CSVs baixados na etapa 1 são cache do domínio (não configurável); só os PDFs por aluno vão para um caminho persistente:
 
-<caminhoSaida>/
+```
+<pdf.caminhoSaida>/
 └── <Estado>/
     └── <Empresa>/
         └── <Nome do Aluno>.pdf

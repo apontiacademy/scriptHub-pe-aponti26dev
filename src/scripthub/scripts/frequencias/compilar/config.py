@@ -12,8 +12,8 @@ def _diretorio_config() -> Path:
     return diretorios.caminho_config(perfil.resolver_perfil(), DOMINIO)
 
 
-def _diretorio_dados() -> Path:
-    return diretorios.caminho_dados(perfil.resolver_perfil(), DOMINIO)
+def _diretorio_cache() -> Path:
+    return diretorios.caminho_cache(perfil.resolver_perfil(), DOMINIO)
 
 
 @dataclass
@@ -78,7 +78,7 @@ class Config:
         return Config(
             moodle=moodle_config,
             atas=atas_config,
-            diretorio_download=_diretorio_dados() / "frequencias",
+            diretorio_download=_diretorio_cache() / "frequencias",
         )
 
     @staticmethod

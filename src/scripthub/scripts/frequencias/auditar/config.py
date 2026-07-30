@@ -12,13 +12,16 @@ def _diretorio_config() -> Path:
     return diretorios.caminho_config(perfil.resolver_perfil(), DOMINIO)
 
 
+def _diretorio_cache() -> Path:
+    return diretorios.caminho_cache(perfil.resolver_perfil(), DOMINIO)
+
+
 @dataclass
 class MoodleConfig:
     usuario: str
     senha: str
     url_login: str
     urls_frequencias: dict[str, str]
-    caminho_exportacao: Path
 
 
 @dataclass
@@ -31,6 +34,7 @@ class GsheetsConfig:
 class Config:
     moodle: MoodleConfig
     gsheets: GsheetsConfig
+    diretorio_download: Path
 
     @staticmethod
     def load() -> "Config":
@@ -39,19 +43,11 @@ class Config:
         gsheets_toml = dados_settings.get("gsheets", {})
         usuario, senha = Config.__carregar_credenciais_moodle(moodle_toml)
 
-        caminho_exportacao = Path(moodle_toml["caminhoExportacao"])
-        if not caminho_exportacao.is_absolute():
-            raise ErroConfiguracao(
-                "moodle.caminhoExportacao deve ser um caminho absoluto. "
-                "Configure com `scripthub config -s frequencias`."
-            )
-
         moodle_config = MoodleConfig(
             usuario=usuario,
             senha=senha,
             url_login=moodle_toml["urlLogin"],
             urls_frequencias=moodle_toml["urlsFrequencias"],
-            caminho_exportacao=caminho_exportacao,
         )
 
         caminho_json_credenciais = Path(gsheets_toml["caminhoJsonCredenciais"])
@@ -66,7 +62,11 @@ class Config:
             caminho_json_credenciais=caminho_json_credenciais,
         )
 
-        return Config(moodle=moodle_config, gsheets=gsheets_config)
+        return Config(
+            moodle=moodle_config,
+            gsheets=gsheets_config,
+            diretorio_download=_diretorio_cache() / "frequencias",
+        )
 
     @staticmethod
     def __carregar_credenciais_moodle(moodle_toml: dict) -> tuple[str, str]:

@@ -8,6 +8,7 @@ def _fake_platformdirs(tmp_path, mocker):
         user_config_dir=str(tmp_path / "config"),
         user_data_dir=str(tmp_path / "data"),
         user_state_dir=str(tmp_path / "state"),
+        user_cache_dir=str(tmp_path / "cache"),
     )
     mocker.patch.object(diretorios.platformdirs, "PlatformDirs", return_value=fake)
     return fake
@@ -27,6 +28,14 @@ def test_caminho_dados_junta_perfil_dominio_e_subpasta_dados(tmp_path, mocker):
     resultado = diretorios.caminho_dados("default", "frequencias")
 
     assert resultado == tmp_path / "data" / "default" / "frequencias" / "dados"
+
+
+def test_caminho_cache_junta_perfil_e_dominio(tmp_path, mocker):
+    _fake_platformdirs(tmp_path, mocker)
+
+    resultado = diretorios.caminho_cache("default", "frequencias")
+
+    assert resultado == tmp_path / "cache" / "default" / "frequencias"
 
 
 def test_caminho_log_e_dividido_so_por_perfil(tmp_path, mocker):

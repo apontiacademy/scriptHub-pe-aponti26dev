@@ -16,7 +16,6 @@ def settings_valido(tmp_path):
                 "Turma A": "https://example.com/freq?id=1",
                 "Turma B": "https://example.com/freq?id=2",
             },
-            "caminhoExportacao": str(tmp_path / "output"),
         },
         "gsheets": {
             "idPlanilha": "planilha-id-123",
@@ -28,6 +27,7 @@ def settings_valido(tmp_path):
 def _preparar(tmp_path, monkeypatch, mocker, settings_valido, senha="pass"):
     (tmp_path / "settings.toml").write_bytes(tomli_w.dumps(settings_valido).encode())
     monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path)
+    monkeypatch.setattr(cfg_module, "_diretorio_cache", lambda: tmp_path / "cache")
     mocker.patch("scripthub.scripts.frequencias.auditar.config.keyring_moodle.obter_senha_moodle", return_value=senha)
 
 
@@ -43,7 +43,7 @@ def test_load_valido(tmp_path, monkeypatch, mocker, settings_valido):
         "Turma A": "https://example.com/freq?id=1",
         "Turma B": "https://example.com/freq?id=2",
     }
-    assert config.moodle.caminho_exportacao == tmp_path / "output"
+    assert config.diretorio_download == tmp_path / "cache" / "frequencias"
     assert config.gsheets.caminho_json_credenciais == tmp_path / "credentials.json"
 
 
@@ -62,14 +62,6 @@ def test_load_caminho_json_credenciais_relativo_levanta_erro_configuracao(
     _preparar(tmp_path, monkeypatch, mocker, settings_valido)
 
     with pytest.raises(ErroConfiguracao, match="caminhoJsonCredenciais"):
-        Config.load()
-
-
-def test_load_caminho_exportacao_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
-    settings_valido["moodle"]["caminhoExportacao"] = "output"
-    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
-
-    with pytest.raises(ErroConfiguracao, match="caminhoExportacao"):
         Config.load()
 
 

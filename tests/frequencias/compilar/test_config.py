@@ -26,7 +26,7 @@ def settings_valido(tmp_path):
 def _preparar(tmp_path, monkeypatch, mocker, settings_valido, senha="pass"):
     (tmp_path / "settings.toml").write_bytes(tomli_w.dumps(settings_valido).encode())
     monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path)
-    monkeypatch.setattr(cfg_module, "_diretorio_dados", lambda: tmp_path / "dados")
+    monkeypatch.setattr(cfg_module, "_diretorio_cache", lambda: tmp_path / "cache")
     mocker.patch("scripthub.scripts.frequencias.compilar.config.keyring_moodle.obter_senha_moodle", return_value=senha)
 
 
@@ -45,7 +45,7 @@ def test_load_valido(tmp_path, monkeypatch, mocker, settings_valido):
     assert config.atas.caminho_saida == tmp_path / "atas"
     assert config.atas.caminho_logo is None
     assert config.atas.caminho_assinatura is None
-    assert config.diretorio_download == tmp_path / "dados" / "frequencias"
+    assert config.diretorio_download == tmp_path / "cache" / "frequencias"
 
 
 def test_load_com_logo_e_assinatura_opcionais(tmp_path, monkeypatch, mocker, settings_valido):

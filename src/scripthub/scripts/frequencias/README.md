@@ -44,18 +44,13 @@ uv run scripthub frequencias auditar --passo integrar    # só integra com Sheet
 uv run scripthub frequencias auditar
 ```
 
-### Estrutura de saída
+### Arquivos XLSX
 
-```
-<caminhoExportacao>/
-├── Turma 01.xlsx
-├── Turma 02.xlsx
-└── ...
-```
+Os `.xlsx` baixados no passo `extrair` são um artefato transitório — servem só de entrada para `integrar` (Google Sheets) — e por isso vivem no diretório de **cache** do domínio, não em um caminho configurável pelo usuário. Não há `settings.toml` para esse local; ele é resolvido internamente e recriado a cada execução.
 
 ## `extrair`
 
-Baixa as frequências de todas as turmas do Moodle e exporta um `.xlsx` por turma — sem sincronizar com o Google Sheets (isso é feito por `auditar`). Implementação própria, independente de `auditar`, embora hoje produza o mesmo resultado que o passo `extrair` de lá.
+Baixa as frequências de todas as turmas do Moodle e exporta um `.xlsx` por turma — sem sincronizar com o Google Sheets (isso é feito por `auditar`). Compartilha a lógica de download com `auditar`/`compilar`, mas escreve num diretório persistente e configurável pelo usuário (`moodle.caminhoExportacao`), já que aqui os `.xlsx` são o produto final, não um artefato intermediário.
 
 ### Como rodar
 
@@ -88,7 +83,7 @@ Passo 2 — gerar:   Geração de atas em PDF
 
 | Slug | Alias | Descrição |
 |---|---|---|
-| `extrair` | `e` | Baixa as frequências do Moodle (cópia própria, independente de `auditar`) |
+| `extrair` | `e` | Baixa as frequências do Moodle (mesma lógica de download de `auditar`, mas para o cache próprio de `compilar`) |
 | `gerar` | `g` | Gera as atas em PDF a partir dos XLSX já extraídos |
 
 ```bash
@@ -116,13 +111,9 @@ uv run scripthub frequencias compilar
 
 ### Estrutura de saída
 
-```
-frequencias/compilar/
-└── dados/
-    └── frequencias/
-        ├── Turma 01.xlsx
-        └── ...
+Os `.xlsx` baixados no passo `extrair` são artefato transitório (cache do domínio, recriado a cada execução — não configurável); só as atas em PDF vão para um caminho persistente:
 
+```
 <atas.caminhoSaida>/
 ├── Turma 01.pdf
 ├── Turma 02.pdf
@@ -142,7 +133,7 @@ Compartilhada entre `auditar`, `compilar` e `extrair` — o `settings.toml` vive
 | `moodle.usuario` | `auditar`, `compilar`, `extrair` | Login de acesso ao Moodle |
 | `moodle.urlLogin` | `auditar`, `compilar`, `extrair` | URL de login do Moodle |
 | `moodle.urlsFrequencias` | `auditar`, `compilar`, `extrair` | Tabela `{ "Nome da Turma" = "URL do módulo de presença" }` |
-| `moodle.caminhoExportacao` | `auditar`, `extrair` | Pasta onde os `.xlsx` serão salvos — caminho absoluto (relativos são rejeitados) |
+| `moodle.caminhoExportacao` | `extrair` | Pasta onde os `.xlsx` serão salvos — caminho absoluto (relativos são rejeitados). `auditar`/`compilar` não têm esse campo: seus `.xlsx` são artefato transitório, salvos num diretório de cache interno (não configurável) |
 | `gsheets.idPlanilha` | `auditar` | ID da planilha do Google Sheets |
 | `gsheets.caminhoJsonCredenciais` | `auditar` | Caminho absoluto para o `credentials.json` da conta de serviço Google |
 | `atas.caminhoSaida` | `compilar` | Pasta onde as atas em PDF serão salvas — caminho absoluto (relativos são rejeitados) |
@@ -159,7 +150,7 @@ Exemplo de `moodle.urlsFrequencias`:
 "Turma 02" = "https://moodle.aponti.org.br/mod/attendance/view.php?id=5678"
 ```
 
-Um script individual roda mesmo que campos usados só pelo outro estejam vazios — `compilar` não precisa de `gsheets.*`/`moodle.caminhoExportacao`, `auditar` não precisa de `atas.caminhoSaida`.
+Um script individual roda mesmo que campos usados só pelo outro estejam vazios — `compilar` não precisa de `gsheets.*`, `auditar` não precisa de `atas.caminhoSaida`.
 
 ### credentials.json
 

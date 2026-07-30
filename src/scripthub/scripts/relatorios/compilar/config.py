@@ -12,8 +12,8 @@ def _diretorio_config() -> Path:
     return diretorios.caminho_config(perfil.resolver_perfil(), DOMINIO)
 
 
-def _diretorio_dados() -> Path:
-    return diretorios.caminho_dados(perfil.resolver_perfil(), DOMINIO)
+def _diretorio_cache() -> Path:
+    return diretorios.caminho_cache(perfil.resolver_perfil(), DOMINIO)
 
 
 @dataclass
@@ -49,7 +49,7 @@ class Config:
             meses={
                 k: [url.strip() for url in (v if isinstance(v, list) else [v])] for k, v in moodle_toml["meses"].items()
             },
-            caminho_download=_diretorio_dados() / "relatorios",
+            caminho_download=_diretorio_cache() / "relatorios",
         )
 
         caminho_saida = Path(pdf_toml["caminhoSaida"])

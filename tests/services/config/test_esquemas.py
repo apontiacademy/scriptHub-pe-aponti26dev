@@ -44,10 +44,10 @@ def test_esquema_relatorios_campo_comum_tem_scripts_vazio():
     assert campo.scripts == ()
 
 
-def test_esquema_frequencias_campo_de_extracao_tem_scripts_auditar_e_extrair():
+def test_esquema_frequencias_campo_de_extracao_tem_scripts_so_extrair():
     campo = _campo("frequencias", "moodle_caminho_exportacao")
 
-    assert campo.scripts == ("auditar", "extrair")
+    assert campo.scripts == ("extrair",)
 
 
 def test_esquema_relatorios_nao_tem_mais_campos_de_auditar():
