@@ -39,12 +39,19 @@ class Config:
         gsheets_toml = dados_settings.get("gsheets", {})
         usuario, senha = Config.__carregar_credenciais_moodle(moodle_toml)
 
+        caminho_exportacao = Path(moodle_toml["caminhoExportacao"])
+        if not caminho_exportacao.is_absolute():
+            raise ErroConfiguracao(
+                "moodle.caminhoExportacao deve ser um caminho absoluto. "
+                "Configure com `scripthub config -s frequencias`."
+            )
+
         moodle_config = MoodleConfig(
             usuario=usuario,
             senha=senha,
             url_login=moodle_toml["urlLogin"],
             urls_frequencias=moodle_toml["urlsFrequencias"],
-            caminho_exportacao=Path(moodle_toml["caminhoExportacao"]),
+            caminho_exportacao=caminho_exportacao,
         )
 
         caminho_json_credenciais = Path(gsheets_toml["caminhoJsonCredenciais"])

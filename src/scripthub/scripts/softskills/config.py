@@ -54,10 +54,15 @@ class Config:
         drive_toml = dados_settings.get("drive", {})
         usuario, senha = Config.__carregar_credenciais_moodle(moodle_toml)
 
-        credentials_raw = drive_toml.get("credentialsPath", "credentials.json")
+        credentials_raw = drive_toml.get("credentialsPath")
+        if not credentials_raw:
+            raise ErroConfiguracao(f"settings.toml deve conter a chave 'drive.credentialsPath' (domínio: {DOMINIO})")
+
         credentials_path = Path(credentials_raw)
         if not credentials_path.is_absolute():
-            credentials_path = (_diretorio_config() / credentials_path).resolve()
+            raise ErroConfiguracao(
+                "drive.credentialsPath deve ser um caminho absoluto. Configure com `scripthub config -s softskills`."
+            )
 
         output_dir_raw = dados_settings.get("outputDir", "bootcamps")
         aprovados_dir_raw = dados_settings.get("aprovadosDir", "aprovados")

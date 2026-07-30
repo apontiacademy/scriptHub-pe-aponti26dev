@@ -52,9 +52,13 @@ class Config:
             caminho_download=_diretorio_dados() / "relatorios",
         )
 
-        pdf_config = PdfConfig(
-            caminho_saida=Path(pdf_toml["caminhoSaida"]),
-        )
+        caminho_saida = Path(pdf_toml["caminhoSaida"])
+        if not caminho_saida.is_absolute():
+            raise ErroConfiguracao(
+                "pdf.caminhoSaida deve ser um caminho absoluto. Configure com `scripthub config -s relatorios`."
+            )
+
+        pdf_config = PdfConfig(caminho_saida=caminho_saida)
 
         return Config(moodle=moodle_config, pdf=pdf_config)
 

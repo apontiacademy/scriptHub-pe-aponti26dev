@@ -59,6 +59,14 @@ def test_load_sem_senha_no_keyring_levanta_erro_configuracao(tmp_path, monkeypat
         Config.load()
 
 
+def test_load_caminho_saida_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
+    settings_valido["pdf"]["caminhoSaida"] = "pdfs"
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
+
+    with pytest.raises(ErroConfiguracao, match="caminhoSaida"):
+        Config.load()
+
+
 def test_load_sem_settings_levanta_erro_configuracao(tmp_path, monkeypatch):
     monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path / "config")
 

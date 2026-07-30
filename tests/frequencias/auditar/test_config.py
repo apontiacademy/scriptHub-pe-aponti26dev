@@ -65,6 +65,14 @@ def test_load_caminho_json_credenciais_relativo_levanta_erro_configuracao(
         Config.load()
 
 
+def test_load_caminho_exportacao_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
+    settings_valido["moodle"]["caminhoExportacao"] = "output"
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
+
+    with pytest.raises(ErroConfiguracao, match="caminhoExportacao"):
+        Config.load()
+
+
 def test_load_sem_senha_no_keyring_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
     _preparar(tmp_path, monkeypatch, mocker, settings_valido, senha=None)
 

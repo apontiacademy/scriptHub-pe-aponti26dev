@@ -51,10 +51,28 @@ class Config:
             urls_frequencias=moodle_toml["urlsFrequencias"],
         )
 
+        caminho_saida = Path(atas_toml["caminhoSaida"])
+        if not caminho_saida.is_absolute():
+            raise ErroConfiguracao(
+                "atas.caminhoSaida deve ser um caminho absoluto. Configure com `scripthub config -s frequencias`."
+            )
+
+        caminho_logo = Path(atas_toml["caminhoLogo"]) if atas_toml.get("caminhoLogo") else None
+        if caminho_logo is not None and not caminho_logo.is_absolute():
+            raise ErroConfiguracao(
+                "atas.caminhoLogo deve ser um caminho absoluto. Configure com `scripthub config -s frequencias`."
+            )
+
+        caminho_assinatura = Path(atas_toml["caminhoAssinatura"]) if atas_toml.get("caminhoAssinatura") else None
+        if caminho_assinatura is not None and not caminho_assinatura.is_absolute():
+            raise ErroConfiguracao(
+                "atas.caminhoAssinatura deve ser um caminho absoluto. Configure com `scripthub config -s frequencias`."
+            )
+
         atas_config = AtasConfig(
-            caminho_saida=Path(atas_toml["caminhoSaida"]),
-            caminho_logo=Path(atas_toml["caminhoLogo"]) if atas_toml.get("caminhoLogo") else None,
-            caminho_assinatura=Path(atas_toml["caminhoAssinatura"]) if atas_toml.get("caminhoAssinatura") else None,
+            caminho_saida=caminho_saida,
+            caminho_logo=caminho_logo,
+            caminho_assinatura=caminho_assinatura,
         )
 
         return Config(

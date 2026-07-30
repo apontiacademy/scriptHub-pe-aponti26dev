@@ -67,6 +67,30 @@ def test_load_sem_caminho_saida_levanta_key_error(tmp_path, monkeypatch, mocker,
         Config.load()
 
 
+def test_load_caminho_saida_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
+    settings_valido["atas"]["caminhoSaida"] = "atas"
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
+
+    with pytest.raises(ErroConfiguracao, match="caminhoSaida"):
+        Config.load()
+
+
+def test_load_caminho_logo_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
+    settings_valido["atas"]["caminhoLogo"] = "logo.png"
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
+
+    with pytest.raises(ErroConfiguracao, match="caminhoLogo"):
+        Config.load()
+
+
+def test_load_caminho_assinatura_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
+    settings_valido["atas"]["caminhoAssinatura"] = "assinatura.png"
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
+
+    with pytest.raises(ErroConfiguracao, match="caminhoAssinatura"):
+        Config.load()
+
+
 def test_load_sem_senha_no_keyring_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
     _preparar(tmp_path, monkeypatch, mocker, settings_valido, senha=None)
 

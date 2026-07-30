@@ -51,6 +51,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Diretório onde os arquivos XLSX de frequência serão salvos",
             settings_chaves=["moodle", "caminhoExportacao"],
+            caminho_absoluto=True,
             scripts=("auditar", "extrair"),
         ),
         Campo(
@@ -79,6 +80,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Diretório onde as atas de frequência (PDF) serão salvas",
             settings_chaves=["atas", "caminhoSaida"],
+            caminho_absoluto=True,
             scripts=("compilar",),
         ),
         Campo(
@@ -89,6 +91,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Imagem exibida no topo da capa da ata (deixe vazio para nenhuma)",
             obrigatorio=False,
             settings_chaves=["atas", "caminhoLogo"],
+            caminho_absoluto=True,
             scripts=("compilar",),
         ),
         Campo(
@@ -99,6 +102,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Imagem exibida no rodapé da capa da ata (deixe vazio para nenhuma)",
             obrigatorio=False,
             settings_chaves=["atas", "caminhoAssinatura"],
+            caminho_absoluto=True,
             scripts=("compilar",),
         ),
     ],
@@ -139,6 +143,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Diretório onde os CSVs baixados do Moodle serão salvos",
             settings_chaves=["moodle", "caminhoDownloadRelatorio"],
+            caminho_absoluto=True,
             scripts=("extrair",),
         ),
         Campo(
@@ -157,6 +162,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Diretório onde os PDFs compilados serão salvos",
             settings_chaves=["pdf", "caminhoSaida"],
+            caminho_absoluto=True,
             scripts=("compilar",),
         ),
     ],
@@ -213,6 +219,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Caminho para o arquivo credentials.json da conta de serviço",
             settings_chaves=["drive", "credentialsPath"],
+            caminho_absoluto=True,
         ),
         Campo(
             chave="output_dir",
@@ -283,6 +290,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             origem="settings",
             descricao="Caminho para o arquivo .md com o conteúdo da postagem",
             settings_chaves=["moodle", "caminhoPostFile"],
+            caminho_absoluto=True,
         ),
         Campo(
             chave="moodle_caminho_imagem",
@@ -292,6 +300,7 @@ ESQUEMAS: dict[str, list[Campo]] = {
             descricao="Caminho para imagem a ser anexada à postagem (deixe vazio para nenhuma)",
             obrigatorio=False,
             settings_chaves=["moodle", "caminhoImagem"],
+            caminho_absoluto=True,
         ),
     ],
 }

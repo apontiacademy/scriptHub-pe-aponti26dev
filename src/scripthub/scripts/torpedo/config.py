@@ -13,10 +13,6 @@ def _diretorio_config() -> Path:
     return diretorios.caminho_config(perfil.resolver_perfil(), DOMINIO)
 
 
-def _diretorio_dados() -> Path:
-    return diretorios.caminho_dados(perfil.resolver_perfil(), DOMINIO)
-
-
 @dataclass
 class MoodleConfig:
     usuario: str
@@ -39,7 +35,22 @@ class Config:
         moodle_toml = dados_settings.get("moodle", {})
         usuario, senha = Config.__carregar_credenciais_moodle(moodle_toml)
 
+        caminho_post_file_raw = moodle_toml.get("caminhoPostFile")
+        if not caminho_post_file_raw:
+            raise ErroConfiguracao(f"settings.toml deve conter a chave 'moodle.caminhoPostFile' (domínio: {DOMINIO})")
+
+        caminho_post_file = Path(caminho_post_file_raw)
+        if not caminho_post_file.is_absolute():
+            raise ErroConfiguracao(
+                "moodle.caminhoPostFile deve ser um caminho absoluto. Configure com `scripthub config -s torpedo`."
+            )
+
         caminho_imagem_raw = moodle_toml.get("caminhoImagem")
+        caminho_imagem = Path(caminho_imagem_raw) if caminho_imagem_raw else None
+        if caminho_imagem is not None and not caminho_imagem.is_absolute():
+            raise ErroConfiguracao(
+                "moodle.caminhoImagem deve ser um caminho absoluto. Configure com `scripthub config -s torpedo`."
+            )
 
         moodle_config = MoodleConfig(
             usuario=usuario,
@@ -48,8 +59,8 @@ class Config:
             urls_foruns=[i.strip() for i in moodle_toml["urlsForuns"]],
             headless=moodle_toml.get("headless", True),
             post_delay=moodle_toml.get("postDelay", 3),
-            caminho_post_file=_diretorio_dados() / moodle_toml.get("caminhoPostFile", "post.md"),
-            caminho_imagem=_diretorio_dados() / caminho_imagem_raw if caminho_imagem_raw else None,
+            caminho_post_file=caminho_post_file,
+            caminho_imagem=caminho_imagem,
         )
 
         return Config(moodle=moodle_config)

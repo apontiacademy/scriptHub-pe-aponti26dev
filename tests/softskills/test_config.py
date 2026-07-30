@@ -17,7 +17,7 @@ def settings_valido(tmp_path):
         },
         "drive": {
             "folderId": "folder-id-123",
-            "credentialsPath": "credentials.json",
+            "credentialsPath": str(tmp_path / "credentials.json"),
         },
         "outputDir": "bootcamps",
         "aprovadosDir": "aprovados",
@@ -42,6 +42,7 @@ def test_load_valido(tmp_path, monkeypatch, mocker, settings_valido):
     assert config.moodle.bootcamp_cat_id == "136"
     assert config.moodle.aprovados_cat_id == "140"
     assert config.drive.folder_id == "folder-id-123"
+    assert config.drive.credentials_path == tmp_path / "credentials.json"
     assert config.output_dir == tmp_path / "dados" / "bootcamps"
     assert config.aprovados_dir == tmp_path / "dados" / "aprovados"
 
@@ -68,11 +69,20 @@ def test_load_sem_settings_levanta_excecao(tmp_path, monkeypatch):
         Config.load()
 
 
-def test_credentials_path_relativo_resolve_contra_diretorio_config(tmp_path, monkeypatch, mocker, settings_valido):
+def test_credentials_path_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
+    settings_valido["drive"]["credentialsPath"] = "credentials.json"
     _preparar(tmp_path, monkeypatch, mocker, settings_valido)
 
-    config = Config.load()
-    assert config.drive.credentials_path == (tmp_path / "config" / "credentials.json").resolve()
+    with pytest.raises(ErroConfiguracao, match="credentialsPath"):
+        Config.load()
+
+
+def test_credentials_path_ausente_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
+    del settings_valido["drive"]["credentialsPath"]
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
+
+    with pytest.raises(ErroConfiguracao, match="credentialsPath"):
+        Config.load()
 
 
 def test_load_com_urlbase_nova_chave(tmp_path, monkeypatch, mocker, settings_valido):

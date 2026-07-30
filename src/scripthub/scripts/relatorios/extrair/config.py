@@ -31,10 +31,17 @@ class Config:
         moodle_toml = dados_settings.get("moodle", {})
         usuario, senha = Config.__carregar_credenciais_moodle(moodle_toml)
 
+        caminho_download_relatorio = Path(moodle_toml["caminhoDownloadRelatorio"])
+        if not caminho_download_relatorio.is_absolute():
+            raise ErroConfiguracao(
+                "moodle.caminhoDownloadRelatorio deve ser um caminho absoluto. "
+                "Configure com `scripthub config -s relatorios`."
+            )
+
         moodle_config = MoodleConfig(
             usuario=usuario,
             senha=senha,
-            caminho_download_relatorio=Path(moodle_toml["caminhoDownloadRelatorio"]),
+            caminho_download_relatorio=caminho_download_relatorio,
             url_login=moodle_toml["urlLogin"],
             urls_relatorios=[i.strip() for i in moodle_toml["urlsRelatorios"]],
         )

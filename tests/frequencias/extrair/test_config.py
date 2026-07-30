@@ -37,6 +37,17 @@ def test_load_valido(tmp_path, monkeypatch, mocker):
     assert config.moodle.caminho_exportacao == tmp_path / "output"
 
 
+def test_load_caminho_exportacao_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker):
+    dados = _settings_valido(tmp_path)
+    dados["moodle"]["caminhoExportacao"] = "output"
+    (tmp_path / "settings.toml").write_bytes(tomli_w.dumps(dados).encode())
+    monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path)
+    mocker.patch("scripthub.scripts.frequencias.extrair.config.keyring_moodle.obter_senha_moodle", return_value="pass")
+
+    with pytest.raises(ErroConfiguracao, match="caminhoExportacao"):
+        Config.load()
+
+
 def test_load_sem_senha_no_keyring_levanta_erro_configuracao(tmp_path, monkeypatch, mocker):
     (tmp_path / "settings.toml").write_bytes(tomli_w.dumps(_settings_valido(tmp_path)).encode())
     monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path)

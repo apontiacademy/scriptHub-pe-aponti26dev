@@ -78,3 +78,13 @@ def test_load_sem_caminho_download_relatorio_levanta_key_error(tmp_path, monkeyp
 
     with pytest.raises(KeyError):
         Config.load()
+
+
+def test_load_caminho_download_relatorio_relativo_levanta_erro_configuracao(
+    tmp_path, monkeypatch, mocker, settings_valido
+):
+    settings_valido["moodle"]["caminhoDownloadRelatorio"] = "downloads"
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
+
+    with pytest.raises(ErroConfiguracao, match="caminhoDownloadRelatorio"):
+        Config.load()
