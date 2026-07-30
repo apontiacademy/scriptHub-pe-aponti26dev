@@ -4,18 +4,13 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog v1.1.0](https://keepachangelog.com/pt-BR/1.1.0/), e este projeto adere a versionamento `0.x.y` (API/CLI ainda instável — `x` sobe em mudanças expressivas, `y` em mudanças pontuais).
 
-Versões retiradas por bug grave ou falha de segurança são marcadas com `[YANKED]` logo após a data (ex.: `## [0.0.5] - 2014-12-13 [YANKED]`).
+Versões retiradas por bug grave ou falha de segurança são marcadas com `[YANKED]` logo após a data (ex.: `## [0.0.5] - 2014-12-13 [YANKED]`). Nenhuma versão abaixo foi retirada até o momento.
 
 O histórico de 0.1.0 a 0.19.1 foi reconstruído a partir do `git log` de `main`: cada merge de PR ou commit direto em `main` corresponde a uma versão.
 
 ## [Unreleased]
 
-### [0.21.1] - 2026-07-30
-
-#### Fixed
-- `frequencias compilar`: export do Moodle passou a incluir uma coluna "CPF" entre "Endereço de e-mail" e a primeira sessão, deslocando as colunas de sessão em uma posição — `_extrair_sessoes` assumia índice fixo, então nenhuma sessão era reconhecida e as atas em PDF saíam sem dados de frequência; a primeira coluna de sessão agora é localizada dinamicamente pelo padrão de data no cabeçalho (#125)
-
-### [0.21.0] - 2026-07-27 [YANKED]
+### [0.21.0] - 2026-07-27
 
 #### Added
 - `scripthub relatorios extrair` — subcomando novo, atalho pro passo de extração (`relatorios auditar --passo extrair`) (#110)

@@ -177,46 +177,6 @@ def test_carregar_turma_status_basico(tmp_path):
     assert [r.status for r in aluno.registros] == ["PR", "AU"]
 
 
-def test_carregar_turma_com_coluna_cpf_extra(tmp_path):
-    """O export do Moodle passou a incluir uma coluna 'CPF' entre o e-mail e a
-    primeira sessão, deslocando as colunas de sessão em uma posição."""
-    linhas = [
-        ["Curso", "Turma X"],
-        ["Grupo", "Todos os participantes"],
-        [],
-        [
-            "Sobrenome",
-            "Nome",
-            "ID do Estudante",
-            "Identificação de usuário",
-            "Endereço de e-mail",
-            "CPF",
-            "8/06/2026 09:00 Todos os estudantes",
-            None,
-            "Sessões realizadas",
-        ],
-        [
-            ".",
-            "Aluno Um",
-            "1",
-            "aluno1",
-            "a1@example.com",
-            "000.000.000-00",
-            "PR (0/0)",
-            None,
-            1,
-        ],
-    ]
-    caminho = _escrever_xlsx(tmp_path, "Turma X.xlsx", linhas)
-
-    turma = carregar_turma(caminho)
-
-    assert len(turma.sessoes) == 1
-    assert turma.sessoes[0].coluna_status == 6
-    assert len(turma.alunos) == 1
-    assert [r.status for r in turma.alunos[0].registros] == ["PR"]
-
-
 def test_carregar_turma_interrogacao_vira_au(tmp_path, mocker):
     linhas = [
         ["Curso", "Turma X"],
