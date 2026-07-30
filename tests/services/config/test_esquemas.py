@@ -1,3 +1,5 @@
+import pytest
+
 from scripthub.services.config.esquemas import ESQUEMAS
 
 
@@ -9,7 +11,7 @@ def _campo(chave_modulo, chave_campo):
 def test_esquema_moodle_url_usa_chave_urlbase():
     campo = _campo("softskills", "moodle_url")
 
-    assert campo.json_chaves == ["moodle", "urlBase"]
+    assert campo.settings_chaves == ["moodle", "urlBase"]
 
 
 def test_esquema_frequencias_caminho_json_credenciais_exige_absoluto():
@@ -42,10 +44,10 @@ def test_esquema_relatorios_campo_comum_tem_scripts_vazio():
     assert campo.scripts == ()
 
 
-def test_esquema_frequencias_campo_de_extracao_tem_scripts_auditar_e_extrair():
+def test_esquema_frequencias_campo_de_extracao_tem_scripts_so_extrair():
     campo = _campo("frequencias", "moodle_caminho_exportacao")
 
-    assert campo.scripts == ("auditar", "extrair")
+    assert campo.scripts == ("extrair",)
 
 
 def test_esquema_relatorios_nao_tem_mais_campos_de_auditar():
@@ -61,3 +63,18 @@ def test_esquema_relatorios_nao_tem_mais_campos_de_auditar():
     chaves_atuais = {c.chave for c in ESQUEMAS["relatorios"]}
 
     assert chaves_removidas.isdisjoint(chaves_atuais)
+
+
+@pytest.mark.parametrize("dominio", ["frequencias", "relatorios", "softskills", "torpedo"])
+def test_moodle_usuario_vem_de_settings_toml(dominio):
+    campo = _campo(dominio, "moodle_usuario")
+
+    assert campo.origem == "settings"
+    assert campo.settings_chaves == ["moodle", "usuario"]
+
+
+@pytest.mark.parametrize("dominio", ["frequencias", "relatorios", "softskills", "torpedo"])
+def test_moodle_senha_vem_do_keyring(dominio):
+    campo = _campo(dominio, "moodle_senha")
+
+    assert campo.origem == "keyring"

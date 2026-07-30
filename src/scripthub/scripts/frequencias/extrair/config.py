@@ -1,14 +1,15 @@
-import json
-import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from dotenv import load_dotenv
+import tomllib
 
+from scripthub.scripts.frequencias import DOMINIO
+from scripthub.services import diretorios, keyring_moodle, perfil
 from scripthub.services.erros import ErroConfiguracao
 
-DIRETORIO_BASE = Path(__file__).resolve().parent
-DIRETORIO_DOMINIO = DIRETORIO_BASE.parent
+
+def _diretorio_config() -> Path:
+    return diretorios.caminho_config(perfil.resolver_perfil(), DOMINIO)
 
 
 @dataclass
@@ -26,40 +27,45 @@ class Config:
 
     @staticmethod
     def load() -> "Config":
-        dados_env = Config.__carregar_env()
-        dados_settings = Config.__carregar_settings_json()
+        dados_settings = Config.__carregar_settings_toml()
+        moodle_toml = dados_settings.get("moodle", {})
+        usuario, senha = Config.__carregar_credenciais_moodle(moodle_toml)
 
-        moodle_json = dados_settings.get("moodle", {})
+        caminho_exportacao = Path(moodle_toml["caminhoExportacao"])
+        if not caminho_exportacao.is_absolute():
+            raise ErroConfiguracao(
+                "moodle.caminhoExportacao deve ser um caminho absoluto. "
+                "Configure com `scripthub config -s frequencias`."
+            )
 
         moodle_config = MoodleConfig(
-            usuario=dados_env["moodle_usuario"],
-            senha=dados_env["moodle_senha"],
-            url_login=moodle_json["urlLogin"],
-            urls_frequencias=moodle_json["urlsFrequencias"],
-            caminho_exportacao=Path(moodle_json["caminhoExportacao"]),
+            usuario=usuario,
+            senha=senha,
+            url_login=moodle_toml["urlLogin"],
+            urls_frequencias=moodle_toml["urlsFrequencias"],
+            caminho_exportacao=caminho_exportacao,
         )
 
         return Config(moodle=moodle_config)
 
     @staticmethod
-    def __carregar_env() -> dict:
-        load_dotenv(dotenv_path=DIRETORIO_DOMINIO / ".env")
+    def __carregar_credenciais_moodle(moodle_toml: dict) -> tuple[str, str]:
+        usuario = moodle_toml.get("usuario")
+        senha = keyring_moodle.obter_senha_moodle(DOMINIO, perfil.resolver_perfil())
 
-        dados = {
-            "moodle_usuario": os.getenv("MOODLE_USUARIO"),
-            "moodle_senha": os.getenv("MOODLE_SENHA"),
-        }
-
-        if not dados["moodle_usuario"] or not dados["moodle_senha"]:
-            raise ErroConfiguracao("MOODLE_USUARIO e MOODLE_SENHA devem ser definidos no arquivo .env")
-        return dados
+        if not usuario or not senha:
+            raise ErroConfiguracao(
+                "moodle.usuario deve estar em settings.toml e a senha do Moodle deve estar salva no keyring "
+                f"do sistema. Configure com: scripthub config {DOMINIO}"
+            )
+        return usuario, senha
 
     @staticmethod
-    def __carregar_settings_json() -> dict:
-        caminho_settings = DIRETORIO_DOMINIO / "settings.json"
+    def __carregar_settings_toml() -> dict:
+        caminho_settings = _diretorio_config() / "settings.toml"
 
         if not caminho_settings.exists():
             raise ErroConfiguracao(f"O arquivo {caminho_settings} não foi encontrado.")
 
-        with open(caminho_settings, encoding="utf-8") as f:
-            return json.load(f)
+        with open(caminho_settings, "rb") as f:
+            return tomllib.load(f)

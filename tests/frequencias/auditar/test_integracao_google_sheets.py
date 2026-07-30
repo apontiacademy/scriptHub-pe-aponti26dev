@@ -19,12 +19,12 @@ def config(tmp_path):
             senha="pass",
             url_login="https://example.com/login",
             urls_frequencias={"Turma A": "https://example.com/freq"},
-            caminho_exportacao=export_dir,
         ),
         gsheets=GsheetsConfig(
             id_planilha="planilha-id-123",
             caminho_json_credenciais=creds,
         ),
+        diretorio_download=export_dir,
     )
 
 
@@ -35,7 +35,7 @@ def _add_xlsx(config, nome="Turma A"):
     ws = wb.active
     ws.append(["Nome", "Nota"])
     ws.append(["Joao", 8.5])
-    path = config.moodle.caminho_exportacao / f"{nome}.xlsx"
+    path = config.diretorio_download / f"{nome}.xlsx"
     wb.save(path)
     return path
 
@@ -50,7 +50,7 @@ def _setup_mock(mocker, config):
 
 
 def test_main_levanta_runtime_sem_diretorio_exportacao(config):
-    config.moodle.caminho_exportacao.rmdir()
+    config.diretorio_download.rmdir()
 
     with pytest.raises(ErroConfiguracao, match="exportação"):
         main(config)

@@ -31,38 +31,26 @@ uv run scripthub menu
 
 ## Configuração
 
-> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config softskills` configura essas mesmas opções interativamente.
+> `uv run scripthub config softskills` configura essas opções interativamente (usuário do Moodle e demais parâmetros em `settings.toml`; a senha do Moodle é pedida e salva no keyring do sistema operacional — nunca fica em texto plano). O `settings.toml` vive no diretório de config do profile ativo para o domínio `softskills` (`uv run scripthub set-profile`/`--profile` para trocar de profile).
 
-### 1. Variáveis de ambiente
-
-```bash
-cp .env.example .env
-```
-
-```env
-MOODLE_USUARIO=seu_usuario@aponti.org.br
-MOODLE_SENHA=sua_senha
-```
-
-### 2. settings.json
-
-```bash
-cp settings.example.json settings.json
-```
+### settings.toml
 
 | Chave | Descrição |
 |---|---|
+| `moodle.usuario` | Login de acesso ao Moodle |
 | `moodle.url` | URL base do Moodle |
 | `moodle.bootcampCatId` | ID da categoria das turmas do bootcamp |
 | `moodle.aprovadosCatId` | ID da categoria dos cursos de aprovados por trilha |
 | `drive.folderId` | ID da pasta no Google Drive onde a planilha será enviada |
-| `drive.credentialsPath` | Caminho do `credentials.json` (use um caminho absoluto; se relativo, resolve a partir de `src/scripthub/scripts/`) |
-| `outputDir` | Pasta local para salvar os dados do bootcamp (padrão: `bootcamps`) |
-| `aprovadosDir` | Pasta local para salvar os dados dos aprovados (padrão: `aprovados`) |
+| `drive.credentialsPath` | Caminho do `credentials.json` — deve ser um **caminho absoluto**; caminhos relativos são rejeitados |
+| `outputDir` | Pasta para salvar os dados do bootcamp, relativa ao diretório de dados do domínio (padrão: `bootcamps`) |
+| `aprovadosDir` | Pasta para salvar os dados dos aprovados, relativa ao diretório de dados do domínio (padrão: `aprovados`) |
 
-### 3. credentials.json
+A senha do Moodle (`moodle.senha`) não fica em `settings.toml` — é armazenada no keyring do sistema operacional.
 
-Credenciais de conta de serviço do Google. O caminho é definido por `drive.credentialsPath` (padrão: `credentials.json`) e pode ficar em qualquer lugar — use um caminho **absoluto** para evitar ambiguidade. Se for relativo, é resolvido a partir de `src/scripthub/scripts/` (não da raiz do projeto). Compartilhe a pasta do Drive com o e-mail da conta de serviço.
+### credentials.json
+
+Credenciais de conta de serviço do Google. O caminho é definido por `drive.credentialsPath` em `settings.toml` (ou via `scripthub config -s softskills`) e deve ser um **caminho absoluto** — caminhos relativos são rejeitados. Compartilhe a pasta do Drive com o e-mail da conta de serviço.
 
 > A pasta de destino pode ser um Shared Drive (Drive compartilhado do Google Workspace) — o módulo suporta isso via `supportsAllDrives`.
 
@@ -117,4 +105,4 @@ Colunas geradas:
 | `gspread` | Escrita na planilha do Google Sheets |
 | `google-api-python-client` | Busca e criação de arquivos no Google Drive |
 | `google-auth` | Autenticação com conta de serviço |
-| `python-dotenv` | Leitura do `.env` |
+| `keyring` | Senha do Moodle no keyring do sistema operacional |

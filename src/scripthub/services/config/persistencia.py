@@ -1,53 +1,47 @@
-import json
 from pathlib import Path
 from typing import Any
 
-from dotenv import dotenv_values, set_key
+import tomli_w
+import tomllib
 
-from .. import log
+from .. import diretorios, keyring_moodle, log, perfil
 from .campo import Campo
-
-_SCRIPTS_FOLDER = Path(__file__).resolve().parents[2] / "scripts"
 
 
 def _script_dir(nome_script: str) -> Path:
-    return _SCRIPTS_FOLDER / nome_script
+    return diretorios.caminho_config(perfil.resolver_perfil(), nome_script)
 
 
-def _remover_chave_json(settings: dict, json_chaves: list[str]) -> None:
-    if not json_chaves:
+def _remover_chave_toml(settings: dict, chaves: list[str]) -> None:
+    if not chaves:
         return
     node = settings
-    for chave in json_chaves[:-1]:
+    for chave in chaves[:-1]:
         node = node.get(chave, {})
         if not isinstance(node, dict):
             return
-    node.pop(json_chaves[-1], None)
+    node.pop(chaves[-1], None)
 
 
 def carregar_valores(nome_script: str, campos: list[Campo]) -> dict[str, Any]:
     diretorio = _script_dir(nome_script)
 
-    env_path = diretorio / ".env"
-    env = dotenv_values(env_path) if env_path.exists() else {}
-
-    settings_path = diretorio / "settings.json"
+    settings_path = diretorio / "settings.toml"
     settings: dict = {}
     if settings_path.exists():
-        with open(settings_path, encoding="utf-8") as f:
+        with open(settings_path, "rb") as f:
             try:
-                settings = json.load(f)
-            except json.JSONDecodeError:
+                settings = tomllib.load(f)
+            except tomllib.TOMLDecodeError:
                 settings = {}
 
     valores: dict[str, Any] = {}
     for campo in campos:
-        if campo.origem == "env":
-            v = env.get(campo.env_var)
-            valores[campo.chave] = v if v is not None and v != "" else None
+        if campo.origem == "keyring":
+            valores[campo.chave] = keyring_moodle.obter_senha_moodle(nome_script, perfil.resolver_perfil())
         else:
             node: Any = settings
-            for chave in campo.json_chaves:
+            for chave in campo.settings_chaves:
                 if isinstance(node, dict):
                     node = node.get(chave)
                 else:
@@ -62,26 +56,22 @@ def persistir(nome_script: str, campos: list[Campo], valores: dict[str, Any]) ->
     diretorio = _script_dir(nome_script)
     diretorio.mkdir(parents=True, exist_ok=True)
 
-    env_path = diretorio / ".env"
-    settings_path = diretorio / "settings.json"
+    settings_path = diretorio / "settings.toml"
 
-    campos_env = [c for c in campos if c.origem == "env"]
+    campos_keyring = [c for c in campos if c.origem == "keyring"]
     campos_settings = [c for c in campos if c.origem == "settings"]
 
-    if campos_env:
-        if not env_path.exists():
-            env_path.touch()
-        for campo in campos_env:
-            novo = valores.get(campo.chave)
-            if novo is not None:
-                set_key(str(env_path), campo.env_var, str(novo))
+    for campo in campos_keyring:
+        novo = valores.get(campo.chave)
+        if novo is not None:
+            keyring_moodle.definir_senha_moodle(nome_script, perfil.resolver_perfil(), str(novo))
 
     if campos_settings:
         if settings_path.exists():
-            with open(settings_path, encoding="utf-8") as f:
+            with open(settings_path, "rb") as f:
                 try:
-                    settings: dict = json.load(f)
-                except json.JSONDecodeError:
+                    settings: dict = tomllib.load(f)
+                except tomllib.TOMLDecodeError:
                     log.aviso(f"{settings_path} estava corrompido e será reescrito.")
                     settings = {}
         else:
@@ -91,14 +81,13 @@ def persistir(nome_script: str, campos: list[Campo], valores: dict[str, Any]) ->
             novo = valores.get(campo.chave)
             if novo is None:
                 if not campo.obrigatorio:
-                    _remover_chave_json(settings, campo.json_chaves)
+                    _remover_chave_toml(settings, campo.settings_chaves)
                 continue
             node = settings
-            for chave in campo.json_chaves[:-1]:
+            for chave in campo.settings_chaves[:-1]:
                 node = node.setdefault(chave, {})
-            chave_final = campo.json_chaves[-1]
+            chave_final = campo.settings_chaves[-1]
             node[chave_final] = novo
 
-        with open(settings_path, "w", encoding="utf-8") as f:
-            json.dump(settings, f, indent=2, ensure_ascii=False)
-            f.write("\n")
+        with open(settings_path, "wb") as f:
+            tomli_w.dump(settings, f)

@@ -10,7 +10,7 @@ def main(config: Config) -> None:
     diretorio_download = config.moodle.caminho_download_relatorio
 
     if not urls_relatorios:
-        raise ErroConfiguracao("Nenhuma URL de relatório encontrada no settings.json")
+        raise ErroConfiguracao("Nenhuma URL de relatório encontrada no settings.toml")
 
     diretorio_download.mkdir(parents=True, exist_ok=True)
 

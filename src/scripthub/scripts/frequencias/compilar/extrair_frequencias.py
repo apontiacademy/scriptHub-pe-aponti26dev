@@ -1,28 +1,14 @@
-from pathlib import Path
-
-from scripthub.services.erros import ErroConfiguracao
-from scripthub.services.moodle import MoodleSessao, extrair_frequencia
+from scripthub.scripts.frequencias.extrair_frequencias import extrair_todas_frequencias
 
 from .config import Config
-
-DIRETORIO_DOWNLOAD = Path(__file__).resolve().parent / "dados" / "frequencias"
 
 
 def main(config: Config) -> None:
     """Extrai frequências de todas as turmas via HTTP, para uso exclusivo de `compilar`."""
-    urls_frequencias = config.moodle.urls_frequencias
-
-    if not urls_frequencias:
-        raise ErroConfiguracao("Nenhuma URL de frequência encontrada no settings.json")
-
-    DIRETORIO_DOWNLOAD.mkdir(parents=True, exist_ok=True)
-
-    sessao = MoodleSessao(
+    extrair_todas_frequencias(
         url_login=config.moodle.url_login,
         usuario=config.moodle.usuario,
         senha=config.moodle.senha,
+        urls_frequencias=config.moodle.urls_frequencias,
+        diretorio_saida=config.diretorio_download,
     )
-    sessao.login()
-
-    for nome_turma, url in urls_frequencias.items():
-        extrair_frequencia(sessao, url, nome_turma, DIRETORIO_DOWNLOAD)
