@@ -3,10 +3,9 @@ from pathlib import Path
 
 import tomllib
 
+from scripthub.scripts.frequencias import DOMINIO
 from scripthub.services import diretorios, keyring_moodle, perfil
 from scripthub.services.erros import ErroConfiguracao
-
-DOMINIO = "frequencias"
 
 
 def _diretorio_config() -> Path:

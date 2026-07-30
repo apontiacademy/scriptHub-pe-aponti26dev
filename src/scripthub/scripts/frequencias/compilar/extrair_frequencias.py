@@ -4,11 +4,11 @@ from scripthub.services import diretorios, perfil
 from scripthub.services.erros import ErroConfiguracao
 from scripthub.services.moodle import MoodleSessao, extrair_frequencia
 
-from .config import Config
+from .config import DOMINIO, Config
 
 
 def _diretorio_download() -> Path:
-    return diretorios.caminho_dados(perfil.resolver_perfil(), "frequencias") / "frequencias"
+    return diretorios.caminho_dados(perfil.resolver_perfil(), DOMINIO) / "frequencias"
 
 
 def main(config: Config) -> None:
