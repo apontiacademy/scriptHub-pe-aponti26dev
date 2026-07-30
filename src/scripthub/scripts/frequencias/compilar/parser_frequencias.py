@@ -20,7 +20,6 @@ CORES_STATUS: dict[str, tuple[int, int, int]] = {
 LIMITE_FALTAS_MES = 3
 
 _LINHA_CABECALHO = 3
-_PRIMEIRA_COLUNA_SESSAO = 5
 _RE_DATA_SESSAO = re.compile(r"^(\d{1,2})/(\d{2})/(\d{4})")
 _RE_STATUS = re.compile(r"^([A-Z]{2,3})\s*\(")
 _RE_MATRICULA_TARDIA = re.compile(r"Inscrição de usuários inicia (\d{1,2})\.(\d{1,2})\.(\d{4})")
@@ -100,9 +99,23 @@ def _nome_completo(nome: str, sobrenome: str) -> str:
     return re.sub(r"\s+", " ", " ".join(partes)).strip()
 
 
+def _primeira_coluna_sessao(linha_cabecalho: list) -> int | None:
+    """Localiza a primeira coluna cujo cabeçalho é uma data de sessão.
+
+    As colunas fixas que precedem as sessões variam com o export do Moodle
+    (ex.: uma coluna "CPF" foi adicionada após "Endereço de e-mail"), então a
+    posição não pode ser assumida por índice fixo."""
+    for coluna, valor in enumerate(linha_cabecalho):
+        if isinstance(valor, str) and _RE_DATA_SESSAO.match(valor):
+            return coluna
+    return None
+
+
 def _extrair_sessoes(linha_cabecalho: list) -> list[Sessao]:
     sessoes = []
-    coluna = _PRIMEIRA_COLUNA_SESSAO
+    coluna = _primeira_coluna_sessao(linha_cabecalho)
+    if coluna is None:
+        return sessoes
     while coluna < len(linha_cabecalho):
         valor = linha_cabecalho[coluna]
         if not isinstance(valor, str):
