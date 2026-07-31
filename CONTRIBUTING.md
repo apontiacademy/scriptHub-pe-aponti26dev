@@ -17,6 +17,20 @@ Alguns scripts usam Playwright para automação de navegador. Se for mexer em um
 playwright install chromium
 ```
 
+## Criando issues
+
+Toda proposta de funcionalidade ou mudança de comportamento começa como uma issue estruturada como **spec reutilizável** — o corpo da issue (`.github/ISSUE_TEMPLATE/spec.md`, usado automaticamente ao clicar em "New issue" no GitHub) segue estas seções:
+
+| Seção | Conteúdo |
+|---|---|
+| **Contexto e objetivo** | Por que a mudança é necessária, qual problema resolve, o que acontece hoje |
+| **Escopo** | O que está dentro e o que está explicitamente fora da mudança |
+| **Critérios de aceite** | Condições verificáveis que definem "pronto", cada uma no formato **Given-When-Then** |
+| **Exemplos concretos** | Casos de uso, cenários, exemplos de input/output |
+| **Restrições técnicas** | Limitações, dependências, compatibilidade, decisões já tomadas |
+
+O corpo da issue é a spec em si e vai sendo **refinado ao longo do tempo** — os comentários carregam a discussão e as decisões tomadas, e essas decisões são incorporadas de volta ao corpo conforme a spec amadurece. A spec serve de base direta para o plano de implementação da mudança.
+
 ## Fluxo de contribuição
 
 ### Branches
@@ -159,7 +173,7 @@ Cada pacote de script segue um dos dois padrões:
 **Padrão A — pipeline por escopos** (`frequencias`, `relatorios/extrair`):
 - `__init__.py` — declara `CLI_CMD`, exporta `ESCOPOS` e `get_config`
 - `ESCOPOS`: lista de `Escopo(slug, nome, func, aliases)` — ver `services/escopo.py`
-- `get_config()`: retorna a dataclass de configuração (carrega `.env` + `settings.json`)
+- `get_config()`: retorna a dataclass de configuração (carrega `settings.toml` + senha do keyring)
 - O CLI usa `executar_script()` para iterar os escopos com log por passo e captura de exceção
 - O `--passo <slug>` (ou alias de uma letra) executa apenas o passo correspondente
 
@@ -276,18 +290,17 @@ Os campos configuráveis de cada script são declarados em `services/config/esqu
 ESQUEMAS: dict[str, list[Campo]] = {
     "nome_do_modulo": [
         Campo(
-            chave="moodle_usuario",
-            rotulo="Usuário do Moodle",
-            tipo="texto",
-            origem="env",           # "env" → .env  |  "settings" → settings.json
-            env_var="MOODLE_USUARIO",
+            chave="moodle_senha",
+            rotulo="Senha do Moodle",
+            tipo="senha",
+            origem="keyring",        # "keyring" → keyring do SO  |  "settings" → settings.toml
         ),
         Campo(
             chave="moodle_url_login",
             rotulo="URL de login",
             tipo="url",
             origem="settings",
-            json_chaves=["moodle", "urlLogin"],   # caminho de acesso no JSON
+            settings_chaves=["moodle", "urlLogin"],   # caminho de acesso aninhado no TOML
             obrigatorio=True,
         ),
     ],
@@ -381,12 +394,12 @@ def test_algo(mocker):
     mocker.patch("scripthub.scripts.<modulo>.<arquivo>.<funcao>", return_value=...)
 ```
 
-**Config loading** — substituir `DIRETORIO_BASE` via `monkeypatch`:
+**Config loading** — substituir `_diretorio_config`/`_diretorio_dados` via `monkeypatch`, e a senha do Moodle via mock de `keyring_moodle.obter_senha_moodle` (não existe mais `.env`: usuário do Moodle vem de `settings.toml`, senha vem do keyring do SO — ver issue #78):
 ```python
-def test_config(tmp_path, monkeypatch):
-    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
-    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+def test_config(tmp_path, monkeypatch, mocker):
+    (tmp_path / "settings.toml").write_bytes(tomli_w.dumps(settings).encode())
+    monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path)
+    mocker.patch("scripthub.scripts.<modulo>.<arquivo>.keyring_moodle.obter_senha_moodle", return_value="pass")
 ```
 
 **Casos data-driven** — usar `@pytest.mark.parametrize`:

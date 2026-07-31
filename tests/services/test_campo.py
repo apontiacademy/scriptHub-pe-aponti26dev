@@ -8,7 +8,7 @@ def _campo(chave, obrigatorio, depende_de=None):
         tipo="texto",
         origem="settings",
         obrigatorio=obrigatorio,
-        json_chaves=[chave],
+        settings_chaves=[chave],
         depende_de=depende_de,
     )
 

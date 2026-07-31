@@ -7,7 +7,7 @@ import questionary
 
 import scripthub
 
-from .. import log
+from .. import keyring_moodle, log, perfil
 from ..erros import ErroUsoCLI
 from .campo import Campo, resolver_dependencias
 from .esquemas import ALIASES_CLI, ESQUEMAS
@@ -201,22 +201,28 @@ def limpar(nome_script: str | None = None) -> None:
             return
 
     pasta = _script_dir(nome_script)
-    arquivos = [pasta / ".env", pasta / "settings.json"]
-    existentes = [a for a in arquivos if a.exists()]
+    arquivo_settings = pasta / "settings.toml"
+    existe_settings = arquivo_settings.exists()
+    existe_senha = keyring_moodle.obter_senha_moodle(nome_script, perfil.resolver_perfil()) is not None
 
-    if not existentes:
+    if not existe_settings and not existe_senha:
         log.aviso(f"Nenhuma configuração encontrada para '{nome_script}'.")
         return
 
-    log.passo("Arquivos que serão removidos:")
-    for a in existentes:
-        log.passo(str(a))
+    log.passo("Itens que serão removidos:")
+    if existe_settings:
+        log.passo(str(arquivo_settings))
+    if existe_senha:
+        log.passo(f"Senha do Moodle no keyring do sistema (domínio: {nome_script})")
 
-    if not questionary.confirm("Deseja apagar esses arquivos?", default=False, style=STYLE).ask():
+    if not questionary.confirm("Deseja apagar esses itens?", default=False, style=STYLE).ask():
         log.aviso("Operação cancelada.")
         return
 
-    for a in existentes:
-        a.unlink()
-        log.ok(f"Removido: {a.name}")
+    if existe_settings:
+        arquivo_settings.unlink()
+        log.ok(f"Removido: {arquivo_settings.name}")
+    if existe_senha:
+        keyring_moodle.remover_senha_moodle(nome_script, perfil.resolver_perfil())
+        log.ok("Senha do Moodle removida do keyring.")
     log.ok(f"Configuração de {nome_script} limpa com sucesso!")

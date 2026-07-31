@@ -9,7 +9,7 @@ class ErroScriptHub(Exception):
 
 
 class ErroConfiguracao(ErroScriptHub):
-    """.env, settings.json, credenciais ou um arquivo/diretório esperado de um passo anterior."""
+    """settings.toml, keyring, credenciais ou um arquivo/diretório esperado de um passo anterior."""
 
     codigo_saida = 2
 

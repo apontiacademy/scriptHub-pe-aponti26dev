@@ -44,18 +44,13 @@ uv run scripthub frequencias auditar --passo integrar    # só integra com Sheet
 uv run scripthub frequencias auditar
 ```
 
-### Estrutura de saída
+### Arquivos XLSX
 
-```
-<caminhoExportacao>/
-├── Turma 01.xlsx
-├── Turma 02.xlsx
-└── ...
-```
+Os `.xlsx` baixados no passo `extrair` são um artefato transitório — servem só de entrada para `integrar` (Google Sheets) — e por isso vivem no diretório de **cache** do domínio, não em um caminho configurável pelo usuário. Não há `settings.toml` para esse local; ele é resolvido internamente e recriado a cada execução.
 
 ## `extrair`
 
-Baixa as frequências de todas as turmas do Moodle e exporta um `.xlsx` por turma — sem sincronizar com o Google Sheets (isso é feito por `auditar`). Implementação própria, independente de `auditar`, embora hoje produza o mesmo resultado que o passo `extrair` de lá.
+Baixa as frequências de todas as turmas do Moodle e exporta um `.xlsx` por turma — sem sincronizar com o Google Sheets (isso é feito por `auditar`). Compartilha a lógica de download com `auditar`/`compilar`, mas escreve num diretório persistente e configurável pelo usuário (`moodle.caminhoExportacao`), já que aqui os `.xlsx` são o produto final, não um artefato intermediário.
 
 ### Como rodar
 
@@ -88,7 +83,7 @@ Passo 2 — gerar:   Geração de atas em PDF
 
 | Slug | Alias | Descrição |
 |---|---|---|
-| `extrair` | `e` | Baixa as frequências do Moodle (cópia própria, independente de `auditar`) |
+| `extrair` | `e` | Baixa as frequências do Moodle (mesma lógica de download de `auditar`, mas para o cache próprio de `compilar`) |
 | `gerar` | `g` | Gera as atas em PDF a partir dos XLSX já extraídos |
 
 ```bash
@@ -116,13 +111,9 @@ uv run scripthub frequencias compilar
 
 ### Estrutura de saída
 
-```
-frequencias/compilar/
-└── dados/
-    └── frequencias/
-        ├── Turma 01.xlsx
-        └── ...
+Os `.xlsx` baixados no passo `extrair` são artefato transitório (cache do domínio, recriado a cada execução — não configurável); só as atas em PDF vão para um caminho persistente:
 
+```
 <atas.caminhoSaida>/
 ├── Turma 01.pdf
 ├── Turma 02.pdf
@@ -131,52 +122,39 @@ frequencias/compilar/
 
 ## Configuração
 
-Compartilhada entre `auditar`, `compilar` e `extrair` — `.env` e `settings.json` vivem na raiz de `frequencias/`, não em cada subpasta.
+Compartilhada entre `auditar`, `compilar` e `extrair` — o `settings.toml` vive no diretório de config do profile ativo para o domínio `frequencias` (`uv run scripthub set-profile`/`--profile` para trocar de profile), não em cada subpasta.
 
-> Alternativa a editar `.env`/`settings.json` manualmente: `uv run scripthub config frequencias` configura essas opções interativamente. Use `--script auditar`, `--script compilar` ou `--script extrair` para priorizar os campos daquele script na tela de edição.
+> `uv run scripthub config frequencias` configura essas opções interativamente (usuário do Moodle e demais parâmetros em `settings.toml`; a senha do Moodle é pedida e salva no keyring do sistema operacional — nunca fica em texto plano). Use `--script auditar`, `--script compilar` ou `--script extrair` para priorizar os campos daquele script na tela de edição.
 
-### 1. Variáveis de ambiente
-
-```bash
-cp .env.example .env
-```
-
-```env
-MOODLE_USUARIO=seu_usuario@aponti.org.br
-MOODLE_SENHA=sua_senha
-```
-
-### 2. settings.json
-
-```bash
-cp settings.example.json settings.json
-```
+### settings.toml
 
 | Chave | Usado por | Descrição |
 |---|---|---|
+| `moodle.usuario` | `auditar`, `compilar`, `extrair` | Login de acesso ao Moodle |
 | `moodle.urlLogin` | `auditar`, `compilar`, `extrair` | URL de login do Moodle |
-| `moodle.urlsFrequencias` | `auditar`, `compilar`, `extrair` | Dicionário `{ "Nome da Turma": "URL do módulo de presença" }` |
-| `moodle.caminhoExportacao` | `auditar`, `extrair` | Pasta onde os `.xlsx` serão salvos |
+| `moodle.urlsFrequencias` | `auditar`, `compilar`, `extrair` | Tabela `{ "Nome da Turma" = "URL do módulo de presença" }` |
+| `moodle.caminhoExportacao` | `extrair` | Pasta onde os `.xlsx` serão salvos — caminho absoluto (relativos são rejeitados). `auditar`/`compilar` não têm esse campo: seus `.xlsx` são artefato transitório, salvos num diretório de cache interno (não configurável) |
 | `gsheets.idPlanilha` | `auditar` | ID da planilha do Google Sheets |
 | `gsheets.caminhoJsonCredenciais` | `auditar` | Caminho absoluto para o `credentials.json` da conta de serviço Google |
-| `atas.caminhoSaida` | `compilar` | Pasta onde as atas em PDF serão salvas |
-| `atas.caminhoLogo` | `compilar` | Imagem do logo do programa exibida na capa (opcional) |
-| `atas.caminhoAssinatura` | `compilar` | Imagem da assinatura de logos da Aponti exibida no rodapé da capa (opcional) |
+| `atas.caminhoSaida` | `compilar` | Pasta onde as atas em PDF serão salvas — caminho absoluto (relativos são rejeitados) |
+| `atas.caminhoLogo` | `compilar` | Imagem do logo do programa exibida na capa (opcional) — caminho absoluto quando definida |
+| `atas.caminhoAssinatura` | `compilar` | Imagem da assinatura de logos da Aponti exibida no rodapé da capa (opcional) — caminho absoluto quando definida |
 
-Exemplo de `urlsFrequencias`:
+A senha do Moodle (`moodle.senha`) não fica em `settings.toml` — é armazenada no keyring do sistema operacional.
 
-```json
-{
-  "Turma 01": "https://moodle.aponti.org.br/mod/attendance/view.php?id=1234",
-  "Turma 02": "https://moodle.aponti.org.br/mod/attendance/view.php?id=5678"
-}
+Exemplo de `moodle.urlsFrequencias`:
+
+```toml
+[moodle.urlsFrequencias]
+"Turma 01" = "https://moodle.aponti.org.br/mod/attendance/view.php?id=1234"
+"Turma 02" = "https://moodle.aponti.org.br/mod/attendance/view.php?id=5678"
 ```
 
-Um script individual roda mesmo que campos usados só pelo outro estejam vazios — `compilar` não precisa de `gsheets.*`/`moodle.caminhoExportacao`, `auditar` não precisa de `atas.caminhoSaida`.
+Um script individual roda mesmo que campos usados só pelo outro estejam vazios — `compilar` não precisa de `gsheets.*`, `auditar` não precisa de `atas.caminhoSaida`.
 
-### 3. credentials.json
+### credentials.json
 
-Necessário só para `auditar` (integração com Google Sheets). O caminho é definido pela chave `gsheets.caminhoJsonCredenciais` em `settings.json` (ou via `scripthub config frequencias --script auditar`) e deve ser um **caminho absoluto** — caminhos relativos são rejeitados.
+Necessário só para `auditar` (integração com Google Sheets). O caminho é definido pela chave `gsheets.caminhoJsonCredenciais` em `settings.toml` (ou via `scripthub config frequencias --script auditar`) e deve ser um **caminho absoluto** — caminhos relativos são rejeitados. `credentials.json` não migra de lugar automaticamente: continua referenciado por esse caminho absoluto, onde quer que esteja.
 
 > A planilha deve ser compartilhada com o e-mail da conta de serviço.
 
@@ -188,4 +166,4 @@ Necessário só para `auditar` (integração com Google Sheets). O caminho é de
 | `gspread` + `pandas` | Leitura dos `.xlsx` e escrita no Google Sheets (`auditar`) |
 | `pandas` + `openpyxl` | Leitura dos `.xlsx` de frequência (`compilar`) |
 | `fpdf2` | Geração das atas em PDF (`compilar`) |
-| `python-dotenv` | Leitura do `.env` |
+| `keyring` | Senha do Moodle no keyring do sistema operacional |

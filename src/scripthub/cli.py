@@ -5,7 +5,7 @@ from typing import Annotated
 import typer
 
 from ._i18n import instalar as _instalar_i18n
-from .services import log
+from .services import log, migracao, perfil
 from .services.erros import ErroConfiguracao, ErroScriptHub, ErroUsoCLI
 
 _instalar_i18n()
@@ -48,9 +48,14 @@ def _callback(
         bool,
         typer.Option("--debug", help="Exibir traceback completo em erros inesperados (código de saída 1)."),
     ] = False,
+    profile: Annotated[
+        str | None,
+        typer.Option("--profile", help="Usar este profile só nesta execução, sem persistir."),
+    ] = None,
 ):
     global _DEBUG
     _DEBUG = debug
+    perfil.definir_override(profile)
     if versao:
         typer.echo(f"scripthub {_VERSAO}")
         raise typer.Exit()
@@ -239,6 +244,35 @@ def _torpedo_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is not None:
         return
     _executar_pipeline_simples(torpedo.main)
+
+
+# --- profile ---
+
+
+@app.command("set-profile")
+def set_profile(
+    nome: Annotated[str, typer.Argument(help="Nome do profile a ativar.")],
+):
+    """Define o profile ativo persistido (usado por todos os comandos até ser trocado de novo)."""
+    perfil.definir_perfil(nome)
+    log.ok(f"Profile ativo definido como '{nome}'.")
+
+
+@app.command("unset-profile")
+def unset_profile():
+    """Volta o profile ativo persistido para 'default' (não faz nada se já for 'default')."""
+    if perfil.perfil_persistido() == perfil.PADRAO:
+        log.aviso(f"O profile ativo já é '{perfil.PADRAO}'; nada a fazer.")
+        return
+    perfil.remover_perfil()
+    log.ok(f"Profile ativo voltou a ser '{perfil.PADRAO}'.")
+
+
+@app.command("migrate-legacy-config", deprecated=True)
+def migrate_legacy_config():
+    """[DEPRECIADO] Migra settings.json/.env/dados do layout antigo (dentro do pacote instalado)
+    para o novo layout (diretórios do SO + keyring). Será removido numa atualização futura."""
+    migracao.migrar_configuracao_legada()
 
 
 # --- config ---

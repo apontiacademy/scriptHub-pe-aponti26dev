@@ -27,9 +27,9 @@ def _todos_relatorios_existem(caminhos: dict[str, list[Path]]) -> bool:
     return all(caminho.exists() for mes_caminhos in caminhos.values() for caminho in mes_caminhos)
 
 
-def _perguntar_baixar_novamente() -> bool:
+def _perguntar_baixar_novamente(diretorio_download: Path) -> bool:
     resposta = questionary.confirm(
-        "Relatórios já encontrados em dados/relatorios. Deseja baixá-los novamente?",
+        f"Relatórios já encontrados em {diretorio_download}. Deseja baixá-los novamente?",
         default=False,
     ).ask()
     return resposta is True
@@ -43,14 +43,14 @@ def main(config: Config) -> None:
     diretorio_download = config.moodle.caminho_download
 
     if not meses:
-        raise ErroConfiguracao("Nenhum mês configurado em settings.json (moodle.meses)")
+        raise ErroConfiguracao("Nenhum mês configurado em settings.toml (moodle.meses)")
 
     diretorio_download.mkdir(parents=True, exist_ok=True)
 
     caminhos = _relatorios_existentes(meses, diretorio_download)
     if _todos_relatorios_existem(caminhos):
-        log.passo("Relatórios CSV já existem em dados/relatorios.")
-        if not _perguntar_baixar_novamente():
+        log.passo(f"Relatórios CSV já existem em {diretorio_download}.")
+        if not _perguntar_baixar_novamente(diretorio_download):
             log.passo("Download ignorado. Usando arquivos existentes.")
             return
 

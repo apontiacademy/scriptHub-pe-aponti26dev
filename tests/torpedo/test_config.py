@@ -1,7 +1,7 @@
-import json
 from pathlib import Path
 
 import pytest
+import tomli_w
 
 import scripthub.scripts.torpedo.config as cfg_module
 from scripthub.scripts.torpedo.config import Config
@@ -10,73 +10,64 @@ from scripthub.services.erros import ErroConfiguracao
 
 @pytest.fixture
 def settings_valido(tmp_path):
-    """Fixture com settings válidos para automacao_de_forum."""
     return {
         "moodle": {
+            "usuario": "user",
             "urlLogin": "https://example.com/login",
             "urlsForuns": ["https://example.com/forum1", "https://example.com/forum2"],
             "headless": True,
             "postDelay": 3,
-            "caminhoPostFile": "post.md",
-            "caminhoImagem": None,
+            "caminhoPostFile": str(tmp_path / "post.md"),
         }
     }
 
 
-def test_caminho_imagem_relativo(tmp_path, monkeypatch, settings_valido):
-    """Testa que caminhos relativos de imagem são resolvidos corretamente para DIRETORIO_BASE."""
-    # Configura settings com caminho relativo
+def _preparar(tmp_path, monkeypatch, mocker, settings_valido, senha="pass"):
+    (tmp_path / "config").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "config" / "settings.toml").write_bytes(tomli_w.dumps(settings_valido).encode())
+    monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path / "config")
+    mocker.patch("scripthub.scripts.torpedo.config.keyring_moodle.obter_senha_moodle", return_value=senha)
+
+
+def test_caminho_post_file_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
+    settings_valido["moodle"]["caminhoPostFile"] = "post.md"
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
+
+    with pytest.raises(ErroConfiguracao, match="caminhoPostFile"):
+        Config.load()
+
+
+def test_caminho_imagem_relativo_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
     settings_valido["moodle"]["caminhoImagem"] = "teste.png"
-    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
-    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
 
-    config = Config.load()
-
-    # Verifica se o caminho foi resolvido corretamente para DIRETORIO_BASE/teste.png
-    expected_path = tmp_path / "teste.png"
-    assert config.moodle.caminho_imagem == expected_path
-    assert str(config.moodle.caminho_imagem).endswith("teste.png")
+    with pytest.raises(ErroConfiguracao, match="caminhoImagem"):
+        Config.load()
 
 
-def test_caminho_imagem_absoluto(tmp_path, monkeypatch, settings_valido):
-    """Testa que caminhos absolutos de imagem são mantidos corretamente."""
-    # Configura settings com caminho absoluto
+def test_caminho_imagem_absoluto_e_mantido(tmp_path, monkeypatch, mocker, settings_valido):
     absolute_image_path = str(tmp_path / "imagens" / "teste.png")
     settings_valido["moodle"]["caminhoImagem"] = absolute_image_path
-    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
-    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
 
     config = Config.load()
 
-    # Verifica se o caminho absoluto foi mantido corretamente
     assert config.moodle.caminho_imagem == Path(absolute_image_path)
 
 
-def test_sem_caminho_imagem(tmp_path, monkeypatch, settings_valido):
-    """Testa que a ausência de caminho de imagem resulta em None."""
-    # Configura settings sem caminho de imagem
-    settings_valido["moodle"]["caminhoImagem"] = None
-    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
-    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+def test_sem_caminho_imagem_e_none(tmp_path, monkeypatch, mocker, settings_valido):
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
 
     config = Config.load()
 
-    # Verifica se caminho_imagem é None
     assert config.moodle.caminho_imagem is None
 
 
-def test_load_valido_completo(tmp_path, monkeypatch, settings_valido):
-    """Testa o carregamento completo de configurações válidas."""
-    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
-    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+def test_load_valido_completo(tmp_path, monkeypatch, mocker, settings_valido):
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
 
     config = Config.load()
 
-    # Verifica todos os campos básicos
     assert config.moodle.usuario == "user"
     assert config.moodle.senha == "pass"
     assert config.moodle.url_login == "https://example.com/login"
@@ -86,22 +77,23 @@ def test_load_valido_completo(tmp_path, monkeypatch, settings_valido):
     assert config.moodle.caminho_post_file == tmp_path / "post.md"
 
 
-def test_load_sem_credenciais_levanta_excecao(tmp_path, monkeypatch, settings_valido):
-    """Testa que a falta de credenciais levanta ValueError."""
-    (tmp_path / ".env").write_text("")
-    (tmp_path / "settings.json").write_text(json.dumps(settings_valido), encoding="utf-8")
-    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
-    monkeypatch.delenv("MOODLE_USUARIO", raising=False)
-    monkeypatch.delenv("MOODLE_SENHA", raising=False)
+def test_sem_caminho_post_file_levanta_erro_configuracao(tmp_path, monkeypatch, mocker, settings_valido):
+    del settings_valido["moodle"]["caminhoPostFile"]
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido)
 
-    with pytest.raises(ErroConfiguracao, match="MOODLE_USUARIO"):
+    with pytest.raises(ErroConfiguracao, match="caminhoPostFile"):
+        Config.load()
+
+
+def test_load_sem_credenciais_levanta_excecao(tmp_path, monkeypatch, mocker, settings_valido):
+    _preparar(tmp_path, monkeypatch, mocker, settings_valido, senha=None)
+
+    with pytest.raises(ErroConfiguracao, match="usuario|senha|Moodle"):
         Config.load()
 
 
 def test_load_sem_settings_levanta_excecao(tmp_path, monkeypatch):
-    """Testa que a falta de settings.json levanta ErroConfiguracao."""
-    (tmp_path / ".env").write_text("MOODLE_USUARIO=user\nMOODLE_SENHA=pass\n")
-    monkeypatch.setattr(cfg_module, "DIRETORIO_BASE", tmp_path)
+    monkeypatch.setattr(cfg_module, "_diretorio_config", lambda: tmp_path / "config")
 
     with pytest.raises(ErroConfiguracao):
         Config.load()
