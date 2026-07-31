@@ -2,10 +2,11 @@
 *.xlsx
 __pycache__/
 *.pyc
-credentials.json
 .vscode/
 *.png
 post.md
 docs/superpowers/*
 .coverage
 .worktrees/
+CLAUDE.md
+.claude/*
