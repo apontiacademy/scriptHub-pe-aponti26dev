@@ -10,6 +10,20 @@ O histórico de 0.1.0 a 0.19.1 foi reconstruído a partir do `git log` de `main`
 
 ## [Unreleased]
 
+### [0.21.2] - 2026-07-30
+
+#### Added
+- `.github/ISSUE_TEMPLATE/spec.md` — template padrão de issue estruturado como spec reutilizável (contexto/objetivo, escopo, critérios de aceite em Given-When-Then, exemplos concretos, restrições técnicas) (#123)
+- `services/diretorios.py`, `services/perfil.py`, `services/keyring_moodle.py` — resolvem config/dados/cache/state por `<profile>/<domínio>` via `platformdirs`, e a senha do Moodle por `<profile>/<domínio>` no keyring do SO; comandos `--profile` (override pontual, nível superior), `set-profile`, `unset-profile` e `migrate-legacy-config` (depreciado, migra `.env`/`settings.json`/`dados/` do layout antigo sem apagar os originais) (#124)
+
+#### Changed
+- `CONTRIBUTING.md` — nova seção "Criando issues" documentando esse padrão como convenção oficial para criação de issues (#123)
+- `settings.json` → `settings.toml` em todo o sistema de config (comando interativo `scripthub config` e os 7 `config.py` de script); `.env` deixa de ser lido — usuário do Moodle vai para `settings.toml`, senha para o keyring; `services/log.py` passa a criar o handler de arquivo sob demanda (lazy), já que o profile só é conhecido após o parsing da CLI (#124)
+- XLSX/CSV transitórios de `frequencias/auditar`, `frequencias/compilar` e `relatorios/compilar` passam a viver no diretório de **cache** do SO em vez do diretório de dados persistente, recriados a cada execução; lógica de download antes duplicada 3x extraída para `frequencias/extrair_frequencias.py::extrair_todas_frequencias`, compartilhada por `auditar`/`extrair`/`compilar` (#124)
+
+#### Removed
+- Templates `.env.example`/`settings.example.json` (obsoletos — config nasce via `scripthub config` interativo ou via `migrate-legacy-config`) (#124)
+
 ### [0.21.1] - 2026-07-30
 
 #### Fixed
