@@ -1,20 +1,27 @@
 from datetime import date
 
 import openpyxl
+import pytest
 
 from scripthub.scripts.frequencias.compilar.parser_frequencias import (
+    LIMITE_ATENCAO_FALTAS_MES,
     LIMITE_FALTAS_MES,
     Aluno,
     RegistroSessao,
     Sessao,
+    Turma,
     _nome_completo,
     agrupar_sessoes_por_mes,
     calcular_percentual,
     carregar_turma,
     contar_faltas,
+    eh_nao_matriculado,
+    em_atencao_faltas_mes,
     excedeu_limite_faltas_mes,
     justificativas_do_periodo,
     registros_do_periodo,
+    sessoes_realocadas,
+    status_para_contagem,
 )
 
 
@@ -69,8 +76,8 @@ def test_registros_do_periodo_filtra_por_sessoes():
     assert registros[0].sessao == s_junho
 
 
-def test_excedeu_limite_faltas_mes_no_limite_nao_destaca():
-    sessoes_mes = [_sessao(d, 6) for d in range(1, LIMITE_FALTAS_MES + 1)]
+def test_excedeu_limite_faltas_mes_abaixo_do_limite_nao_destaca():
+    sessoes_mes = [_sessao(d, 6) for d in range(1, LIMITE_FALTAS_MES)]
     aluno = Aluno(
         nome="Fulano",
         id_estudante="1",
@@ -80,6 +87,19 @@ def test_excedeu_limite_faltas_mes_no_limite_nao_destaca():
     )
 
     assert excedeu_limite_faltas_mes(aluno, sessoes_mes) is False
+
+
+def test_excedeu_limite_faltas_mes_no_limite_ja_destaca():
+    sessoes_mes = [_sessao(d, 6) for d in range(1, LIMITE_FALTAS_MES + 1)]
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(s, "AU") for s in sessoes_mes],
+    )
+
+    assert excedeu_limite_faltas_mes(aluno, sessoes_mes) is True
 
 
 def test_excedeu_limite_faltas_mes_acima_do_limite_destaca():
@@ -93,6 +113,122 @@ def test_excedeu_limite_faltas_mes_acima_do_limite_destaca():
     )
 
     assert excedeu_limite_faltas_mes(aluno, sessoes_mes) is True
+
+
+def test_em_atencao_faltas_mes_com_2_faltas_fica_em_atencao():
+    sessoes_mes = [_sessao(d, 6) for d in range(1, LIMITE_ATENCAO_FALTAS_MES + 1)]
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(s, "AU") for s in sessoes_mes],
+    )
+
+    assert em_atencao_faltas_mes(aluno, sessoes_mes) is True
+
+
+def test_em_atencao_faltas_mes_com_1_falta_nao_fica_em_atencao():
+    sessao = _sessao(1, 6)
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(sessao, "AU")],
+    )
+
+    assert em_atencao_faltas_mes(aluno, [sessao]) is False
+
+
+def test_em_atencao_faltas_mes_com_3_faltas_nao_fica_em_atencao():
+    sessoes_mes = [_sessao(d, 6) for d in range(1, LIMITE_FALTAS_MES + 1)]
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(s, "AU") for s in sessoes_mes],
+    )
+
+    assert em_atencao_faltas_mes(aluno, sessoes_mes) is False
+
+
+@pytest.mark.parametrize(
+    "status,esperado",
+    [("AR", "PR"), ("PR", "PR"), ("AU", "AU"), ("AT", "AT"), ("JU", "JU")],
+)
+def test_status_para_contagem(status, esperado):
+    assert status_para_contagem(status) == esperado
+
+
+def test_eh_nao_matriculado_true_para_ju_com_comentario_de_matricula_tardia():
+    registro = RegistroSessao(_sessao(1, 6), "JU", "Não matriculado no momento.")
+
+    assert eh_nao_matriculado(registro) is True
+
+
+def test_eh_nao_matriculado_false_para_ju_comum():
+    registro = RegistroSessao(_sessao(1, 6), "JU", "Atestado médico")
+
+    assert eh_nao_matriculado(registro) is False
+
+
+def test_eh_nao_matriculado_false_para_outros_status():
+    registro = RegistroSessao(_sessao(1, 6), "AU", "")
+
+    assert eh_nao_matriculado(registro) is False
+
+
+def test_sessoes_realocadas_identifica_sessao_com_status_ar():
+    s1, s2 = _sessao(1, 6), _sessao(2, 6)
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(s1, "AR"), RegistroSessao(s2, "PR")],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[s1, s2])
+
+    assert sessoes_realocadas(turma) == {s1.data}
+
+
+def test_sessoes_realocadas_um_unico_ar_basta_para_marcar_a_sessao():
+    s1 = _sessao(1, 6)
+    alunos = [
+        Aluno(
+            nome="A",
+            id_estudante="1",
+            identificacao_usuario="a",
+            email="a@example.com",
+            registros=[RegistroSessao(s1, "AT")],
+        ),
+        Aluno(
+            nome="B",
+            id_estudante="2",
+            identificacao_usuario="b",
+            email="b@example.com",
+            registros=[RegistroSessao(s1, "AR")],
+        ),
+    ]
+    turma = Turma(nome="Turma X", alunos=alunos, sessoes=[s1])
+
+    assert sessoes_realocadas(turma) == {s1.data}
+
+
+def test_sessoes_realocadas_vazio_quando_nenhum_ar():
+    s1 = _sessao(1, 6)
+    aluno = Aluno(
+        nome="A",
+        id_estudante="1",
+        identificacao_usuario="a",
+        email="a@example.com",
+        registros=[RegistroSessao(s1, "PR")],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[s1])
+
+    assert sessoes_realocadas(turma) == set()
 
 
 def test_justificativas_do_periodo_so_ju_com_comentario():
@@ -410,3 +546,20 @@ def test_carregar_turma_celulas_vazias_nao_geram_nan(tmp_path):
     assert aluno.id_estudante == ""
     assert aluno.identificacao_usuario == ""
     assert aluno.email == ""
+
+
+def test_carregar_turma_reconhece_status_ar(tmp_path, mocker):
+    linhas = [
+        ["Curso", "Turma X"],
+        ["Grupo", "Todos os participantes"],
+        [],
+        _cabecalho(["8/06/2026"]),
+        [".", "Aluno Um", "1", "aluno1", "a1@example.com", "AR (0/0)", None, 1, 0, 0, 0, 1, "0 / 0", "0,0"],
+    ]
+    caminho = _escrever_xlsx(tmp_path, "Turma X.xlsx", linhas)
+    mock_log = mocker.patch("scripthub.scripts.frequencias.compilar.parser_frequencias.log")
+
+    turma = carregar_turma(caminho)
+
+    assert turma.alunos[0].registros[0].status == "AR"
+    mock_log.aviso.assert_not_called()

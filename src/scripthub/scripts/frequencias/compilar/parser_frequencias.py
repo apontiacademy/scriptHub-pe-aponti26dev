@@ -15,9 +15,11 @@ CORES_STATUS: dict[str, tuple[int, int, int]] = {
     "AU": (220, 50, 50),
     "AT": (240, 200, 40),
     "JU": (80, 200, 220),
+    "AR": (0, 170, 80),  # aula realocada: mesma cor de PR (conta como presença)
 }
 
 LIMITE_FALTAS_MES = 3
+LIMITE_ATENCAO_FALTAS_MES = 2
 
 _LINHA_CABECALHO = 3
 _RE_DATA_SESSAO = re.compile(r"^(\d{1,2})/(\d{2})/(\d{4})")
@@ -83,7 +85,12 @@ def calcular_percentual(parte: int, total: int) -> float:
 
 def excedeu_limite_faltas_mes(aluno: Aluno, sessoes_mes: list[Sessao]) -> bool:
     faltas, _ = contar_faltas(registros_do_periodo(aluno, sessoes_mes))
-    return faltas > LIMITE_FALTAS_MES
+    return faltas >= LIMITE_FALTAS_MES
+
+
+def em_atencao_faltas_mes(aluno: Aluno, sessoes_mes: list[Sessao]) -> bool:
+    faltas, _ = contar_faltas(registros_do_periodo(aluno, sessoes_mes))
+    return faltas == LIMITE_ATENCAO_FALTAS_MES
 
 
 def justificativas_do_periodo(aluno: Aluno, sessoes: list[Sessao]) -> list[tuple[date, str]]:
@@ -92,6 +99,21 @@ def justificativas_do_periodo(aluno: Aluno, sessoes: list[Sessao]) -> list[tuple
         for r in registros_do_periodo(aluno, sessoes)
         if r.status == "JU" and r.comentario.strip()
     ]
+
+
+def status_para_contagem(status: str) -> str:
+    """AR (aula realocada) conta como presença (PR) para fins de cor/estatística."""
+    return "PR" if status == "AR" else status
+
+
+def eh_nao_matriculado(registro: RegistroSessao) -> bool:
+    return registro.status == "JU" and registro.comentario == _JUSTIFICATIVA_MATRICULA_TARDIA
+
+
+def sessoes_realocadas(turma: Turma) -> set[date]:
+    """Uma sessão (coluna) é considerada realocada quando qualquer aluno da turma
+    tem status AR nela — mesmo que os demais alunos tenham outro status."""
+    return {registro.sessao.data for aluno in turma.alunos for registro in aluno.registros if registro.status == "AR"}
 
 
 def _nome_completo(nome: str, sobrenome: str) -> str:
