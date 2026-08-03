@@ -5,10 +5,13 @@ import pytest
 
 from scripthub.scripts.frequencias.compilar.config import AtasConfig, Config, MoodleConfig
 from scripthub.scripts.frequencias.compilar.gerar_atas import (
+    CINZA_SESSAO_REALOCADA,
     AtaPDF,
     PaginaMensal,
+    _cor_celula_sessao,
     _gerar_pdf_turma,
     _sanitizar_nome_arquivo,
+    _texto_cabecalho_sessao,
     _truncar_para_largura,
     agrupar_justificativas_por_data,
     main,
@@ -85,7 +88,7 @@ def test_montar_paginas_mensais_linha_do_aluno():
     assert linha_junho.nome == "Fulano de Tal"
     assert linha_junho.statuses == ["PR"]
     assert linha_junho.faltas == 0
-    assert linha_junho.destacar is False
+    assert linha_junho.nivel_alerta == ""
 
     linha_julho = paginas[1].linhas[0]
     assert linha_julho.statuses == ["AU"]
@@ -93,8 +96,8 @@ def test_montar_paginas_mensais_linha_do_aluno():
     assert linha_julho.percentual == 100.0
 
 
-def test_montar_paginas_mensais_destaca_mais_de_3_faltas():
-    sessoes = [_sessao(d, 6) for d in range(1, 6)]
+def test_montar_paginas_mensais_marca_risco_com_3_ou_mais_faltas():
+    sessoes = [_sessao(d, 6) for d in range(1, 4)]
     aluno = Aluno(
         nome="Fulano",
         id_estudante="1",
@@ -106,7 +109,148 @@ def test_montar_paginas_mensais_destaca_mais_de_3_faltas():
 
     paginas = montar_paginas_mensais(turma)
 
-    assert paginas[0].linhas[0].destacar is True
+    assert paginas[0].linhas[0].nivel_alerta == "risco"
+
+
+def test_montar_paginas_mensais_marca_atencao_com_exatamente_2_faltas():
+    sessoes = [_sessao(d, 6) for d in range(1, 3)]
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(s, "AU") for s in sessoes],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=sessoes)
+
+    paginas = montar_paginas_mensais(turma)
+
+    assert paginas[0].linhas[0].nivel_alerta == "atencao"
+
+
+def test_montar_paginas_mensais_sem_alerta_com_1_falta():
+    sessao = _sessao(1, 6)
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(sessao, "AU")],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[sessao])
+
+    paginas = montar_paginas_mensais(turma)
+
+    assert paginas[0].linhas[0].nivel_alerta == ""
+
+
+def test_montar_paginas_mensais_marca_nao_matriculado():
+    sessao = _sessao(1, 6)
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(sessao, "JU", "Não matriculado no momento.")],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[sessao])
+
+    paginas = montar_paginas_mensais(turma)
+
+    assert paginas[0].linhas[0].nao_matriculado == [True]
+
+
+def test_montar_paginas_mensais_ju_comum_nao_e_nao_matriculado():
+    sessao = _sessao(1, 6)
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(sessao, "JU", "Atestado médico")],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[sessao])
+
+    paginas = montar_paginas_mensais(turma)
+
+    assert paginas[0].linhas[0].nao_matriculado == [False]
+
+
+def test_montar_paginas_mensais_marca_sessao_realocada():
+    s1, s2 = _sessao(1, 6), _sessao(2, 6)
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(s1, "AR"), RegistroSessao(s2, "PR")],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[s1, s2])
+
+    paginas = montar_paginas_mensais(turma)
+
+    assert paginas[0].sessoes_realocadas == {s1.data}
+
+
+def test_montar_resumo_geral_ar_conta_como_presenca():
+    s1 = _sessao(1, 6)
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(s1, "AR")],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[s1])
+
+    resumo = montar_resumo_geral(turma)
+
+    assert resumo[0].pr == 1
+    assert resumo[0].faltas == 0
+
+
+def test_montar_resumo_mensal_turma_ar_conta_como_presenca():
+    s1 = _sessao(1, 6)
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(s1, "AR")],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[s1])
+
+    linhas = montar_resumo_mensal_turma(turma)
+
+    assert linhas[0].percentual_pr == 100.0
+
+
+def test_texto_cabecalho_sessao_realocada_recebe_sufixo():
+    sessao = _sessao(19, 7)
+
+    assert _texto_cabecalho_sessao(sessao, {sessao.data}) == "19/07**"
+
+
+def test_texto_cabecalho_sessao_normal_sem_sufixo():
+    sessao = _sessao(19, 7)
+
+    assert _texto_cabecalho_sessao(sessao, set()) == "19/07"
+
+
+def test_cor_celula_sessao_realocada_usa_cinza_intermediario():
+    sessao = _sessao(19, 7)
+
+    cor = _cor_celula_sessao(sessao, {sessao.data}, (255, 255, 255))
+
+    assert cor == CINZA_SESSAO_REALOCADA
+    assert cor != (255, 255, 255)
+    assert cor != (210, 210, 210)
+
+
+def test_cor_celula_sessao_normal_usa_cor_da_linha():
+    sessao = _sessao(19, 7)
+
+    assert _cor_celula_sessao(sessao, set(), (245, 200, 200)) == (245, 200, 200)
 
 
 def test_montar_resumo_geral_agrega_periodo_inteiro():
@@ -422,7 +566,107 @@ def test_legenda_bolinha_e_texto_ficam_na_mesma_pagina_mesmo_perto_do_rodape(moc
 
     pdf._legenda()
 
-    assert paginas_das_bolinhas == [pdf.page_no()] * 4
+    # 4 status (PR/AU/AT/JU) + 1 marcação de "não matriculado"
+    assert paginas_das_bolinhas == [pdf.page_no()] * 5
+
+
+def test_bolinha_nao_matriculado_desenha_circulo_branco_com_borda_e_barra_diagonal(mocker):
+    pdf = AtaPDF()
+    pdf.add_page()
+    ellipse_spy = mocker.spy(AtaPDF, "ellipse")
+    line_spy = mocker.spy(AtaPDF, "line")
+
+    pdf._bolinha_nao_matriculado(50, 50, 2)
+
+    ellipse_spy.assert_called_once()
+    assert ellipse_spy.call_args.kwargs.get("style") == "FD"
+    line_spy.assert_called_once()
+
+
+def _textos_de_cell(spy):
+    textos = []
+    for chamada in spy.call_args_list:
+        if len(chamada.args) > 3:
+            textos.append(chamada.args[3])
+        elif "text" in chamada.kwargs:
+            textos.append(chamada.kwargs["text"])
+    return textos
+
+
+def test_legenda_inclui_nao_matriculado(mocker):
+    pdf = AtaPDF()
+    pdf.add_page()
+    spy = mocker.spy(AtaPDF, "cell")
+
+    pdf._legenda()
+
+    assert "Não matriculado" in _textos_de_cell(spy)
+
+
+def test_nota_sessao_realocada_aparece_quando_houve_realocacao(mocker):
+    pdf = AtaPDF()
+    pdf.pagina_resumo("Turma X", [])
+    spy = mocker.spy(AtaPDF, "cell")
+
+    pdf._nota_sessao_realocada(True)
+
+    textos = _textos_de_cell(spy)
+    assert any("Aula realocada" in (t or "") for t in textos)
+
+
+def test_nota_sessao_realocada_nao_aparece_sem_realocacao(mocker):
+    pdf = AtaPDF()
+    pdf.pagina_resumo("Turma X", [])
+    spy = mocker.spy(AtaPDF, "cell")
+
+    pdf._nota_sessao_realocada(False)
+
+    spy.assert_not_called()
+
+
+def test_pagina_mensal_marca_cabecalho_de_sessao_realocada(mocker):
+    sessao = _sessao(19, 7)
+    pagina = PaginaMensal(mes="Julho", ano=2026, sessoes=[sessao], sessoes_realocadas={sessao.data})
+    pdf = AtaPDF()
+    spy = mocker.spy(AtaPDF, "cell")
+
+    pdf.pagina_mensal("Turma X", pagina)
+
+    assert "19/07**" in _textos_de_cell(spy)
+
+
+def test_gerar_pdf_turma_com_sessao_realocada_e_nao_matriculado_nao_falha(tmp_path):
+    sessao1 = _sessao(1, 6)
+    sessao2 = _sessao(8, 6)
+    alunos = [
+        Aluno(
+            nome="Aluno Tardio",
+            id_estudante="1",
+            identificacao_usuario="tardio",
+            email="tardio@example.com",
+            registros=[
+                RegistroSessao(sessao1, "JU", "Não matriculado no momento."),
+                RegistroSessao(sessao2, "AR"),
+            ],
+        ),
+        Aluno(
+            nome="Aluno Atrasado",
+            id_estudante="2",
+            identificacao_usuario="atrasado",
+            email="atrasado@example.com",
+            registros=[
+                RegistroSessao(sessao1, "AU"),
+                RegistroSessao(sessao2, "AT"),
+            ],
+        ),
+    ]
+    turma = Turma(nome="Turma Y", alunos=alunos, sessoes=[sessao1, sessao2])
+    caminho = tmp_path / "test.pdf"
+
+    _gerar_pdf_turma(turma, caminho)
+
+    assert caminho.exists()
+    assert caminho.stat().st_size > 0
 
 
 def test_pagina_capa_adiciona_pagina_sem_imagens():

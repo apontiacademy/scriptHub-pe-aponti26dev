@@ -21,9 +21,13 @@ from .parser_frequencias import (
     calcular_percentual,
     carregar_turma,
     contar_faltas,
+    eh_nao_matriculado,
+    em_atencao_faltas_mes,
     excedeu_limite_faltas_mes,
     justificativas_do_periodo,
     registros_do_periodo,
+    sessoes_realocadas,
+    status_para_contagem,
 )
 
 _MESES_PT = {
@@ -50,14 +54,22 @@ ALTURA_ASSINATURA_MAX = 40
 ESPACAMENTO_CAPA = 8
 MARGEM_TOPO_LOGO = 28
 
+CINZA_SESSAO_REALOCADA = (232, 232, 232)  # entre o branco e o cinza de cabeçalho (210,210,210)
+CORES_ALERTA: dict[str, tuple[int, int, int]] = {
+    "": (255, 255, 255),
+    "atencao": (255, 235, 130),
+    "risco": (245, 200, 200),
+}
+
 
 @dataclass
 class LinhaAluno:
     nome: str
     statuses: list[str]
+    nao_matriculado: list[bool]
     faltas: int
     percentual: float
-    destacar: bool
+    nivel_alerta: str
 
 
 @dataclass
@@ -67,6 +79,7 @@ class PaginaMensal:
     sessoes: list[Sessao]
     linhas: list[LinhaAluno] = field(default_factory=list)
     justificativas: list[tuple[str, date, str]] = field(default_factory=list)
+    sessoes_realocadas: set[date] = field(default_factory=set)
 
 
 @dataclass
@@ -131,20 +144,44 @@ def _para_latin1(texto: str) -> str:
     return texto.encode("latin-1", errors="replace").decode("latin-1")
 
 
+def _texto_cabecalho_sessao(sessao: Sessao, sessoes_realocadas: set[date]) -> str:
+    sufixo = "**" if sessao.data in sessoes_realocadas else ""
+    return sessao.data.strftime("%d/%m") + sufixo
+
+
+def _cor_celula_sessao(
+    sessao: Sessao, sessoes_realocadas: set[date], cor_linha: tuple[int, int, int]
+) -> tuple[int, int, int]:
+    return CINZA_SESSAO_REALOCADA if sessao.data in sessoes_realocadas else cor_linha
+
+
 def montar_paginas_mensais(turma: Turma) -> list[PaginaMensal]:
+    datas_realocadas = sessoes_realocadas(turma)
     paginas = []
     for (ano, mes), sessoes_mes in agrupar_sessoes_por_mes(turma.sessoes).items():
-        pagina = PaginaMensal(mes=_MESES_PT[mes], ano=ano, sessoes=sessoes_mes)
+        pagina = PaginaMensal(
+            mes=_MESES_PT[mes],
+            ano=ano,
+            sessoes=sessoes_mes,
+            sessoes_realocadas={s.data for s in sessoes_mes if s.data in datas_realocadas},
+        )
         for aluno in turma.alunos:
             registros = registros_do_periodo(aluno, sessoes_mes)
             faltas, total = contar_faltas(registros)
+            if excedeu_limite_faltas_mes(aluno, sessoes_mes):
+                nivel_alerta = "risco"
+            elif em_atencao_faltas_mes(aluno, sessoes_mes):
+                nivel_alerta = "atencao"
+            else:
+                nivel_alerta = ""
             pagina.linhas.append(
                 LinhaAluno(
                     nome=aluno.nome,
                     statuses=[r.status for r in registros],
+                    nao_matriculado=[eh_nao_matriculado(r) for r in registros],
                     faltas=faltas,
                     percentual=calcular_percentual(faltas, total),
-                    destacar=excedeu_limite_faltas_mes(aluno, sessoes_mes),
+                    nivel_alerta=nivel_alerta,
                 )
             )
             for data_sessao, texto in justificativas_do_periodo(aluno, sessoes_mes):
@@ -173,7 +210,7 @@ def montar_resumo_mensal_turma(turma: Turma) -> list[LinhaResumoMensal]:
         total = 0
         for aluno in turma.alunos:
             for registro in registros_do_periodo(aluno, sessoes_mes):
-                contagens[registro.status] += 1
+                contagens[status_para_contagem(registro.status)] += 1
                 total += 1
         linhas.append(
             LinhaResumoMensal(
@@ -200,7 +237,7 @@ def montar_resumo_geral(turma: Turma) -> list[LinhaResumo]:
                 id_estudante=aluno.id_estudante,
                 identificacao_usuario=aluno.identificacao_usuario,
                 email=aluno.email,
-                pr=sum(1 for r in registros if r.status == "PR"),
+                pr=sum(1 for r in registros if status_para_contagem(r.status) == "PR"),
                 at=sum(1 for r in registros if r.status == "AT"),
                 ju=ju,
                 faltas=faltas,
@@ -329,7 +366,8 @@ class AtaPDF(FPDF):
         self.set_fill_color(210, 210, 210)
         self.cell(col_nome, 6, _para_latin1("Aluno"), border=1, fill=True)
         for sessao in pagina.sessoes:
-            self.cell(col_sessao, 6, sessao.data.strftime("%d/%m"), border=1, fill=True, align="C")
+            texto_cabecalho = _texto_cabecalho_sessao(sessao, pagina.sessoes_realocadas)
+            self.cell(col_sessao, 6, texto_cabecalho, border=1, fill=True, align="C")
         self.cell(col_extra, 6, _para_latin1("Faltas"), border=1, fill=True, align="C")
         self.cell(
             col_extra, 6, _para_latin1("% Faltas"), border=1, fill=True, align="C", ln=True
@@ -337,22 +375,23 @@ class AtaPDF(FPDF):
 
         self.set_font("Helvetica", "", 8)
         for linha in pagina.linhas:
-            cor_preenchimento = (245, 200, 200) if linha.destacar else (255, 255, 255)
-            self.set_fill_color(*cor_preenchimento)
-            preenchido = True
+            cor_linha = CORES_ALERTA[linha.nivel_alerta]
+            self.set_fill_color(*cor_linha)
             nome = _truncar_para_largura(self, _para_latin1(linha.nome), col_nome)
-            self.cell(col_nome, 6, nome, border=1, fill=preenchido)
+            self.cell(col_nome, 6, nome, border=1, fill=True)
             x_inicio = self.get_x()
             y_inicio = self.get_y()
-            for _status in linha.statuses:
-                self.cell(col_sessao, 6, "", border=1, fill=preenchido)
-            self.cell(col_extra, 6, str(linha.faltas), border=1, fill=preenchido, align="C")
+            for sessao in pagina.sessoes:
+                self.set_fill_color(*_cor_celula_sessao(sessao, pagina.sessoes_realocadas, cor_linha))
+                self.cell(col_sessao, 6, "", border=1, fill=True)
+            self.set_fill_color(*cor_linha)
+            self.cell(col_extra, 6, str(linha.faltas), border=1, fill=True, align="C")
             self.cell(
                 col_extra,
                 6,
                 _para_latin1(f"{linha.percentual:.1f}%"),
                 border=1,
-                fill=preenchido,
+                fill=True,
                 align="C",
                 ln=True,
             )  # TODO: substituir por new_x e new_y
@@ -361,11 +400,22 @@ class AtaPDF(FPDF):
             for i, status in enumerate(linha.statuses):
                 cx = x_inicio + col_sessao * i + col_sessao / 2
                 cy = y_inicio + 3
-                self.set_fill_color(*CORES_STATUS[status])
-                self.ellipse(cx - raio, cy - raio, raio * 2, raio * 2, style="F")
+                if linha.nao_matriculado[i]:
+                    self._bolinha_nao_matriculado(cx, cy, raio)
+                else:
+                    self.set_fill_color(*CORES_STATUS[status])
+                    self.ellipse(cx - raio, cy - raio, raio * 2, raio * 2, style="F")
 
         self._legenda()
+        self._nota_sessao_realocada(bool(pagina.sessoes_realocadas))
         self._nota_justificativas(pagina.justificativas)
+
+    def _bolinha_nao_matriculado(self, cx: float, cy: float, raio: float):
+        self.set_fill_color(255, 255, 255)
+        self.set_draw_color(0, 0, 0)
+        self.ellipse(cx - raio, cy - raio, raio * 2, raio * 2, style="FD")
+        offset = raio * 0.7071  # cos(45°): extremidades da barra diagonal a 45°
+        self.line(cx - offset, cy - offset, cx + offset, cy + offset)
 
     def _legenda(self):
         self.ln(4)
@@ -379,6 +429,23 @@ class AtaPDF(FPDF):
             self.ellipse(self.get_x() + 1, self.get_y() + 1, 3, 3, style="F")
             self.set_x(self.get_x() + 5)
             self.cell(30, 5, _para_latin1(rotulo))
+        x, y = self.get_x() + 1, self.get_y() + 1
+        self._bolinha_nao_matriculado(x + 1.5, y + 1.5, 1.5)
+        self.set_x(self.get_x() + 5)
+        self.cell(30, 5, _para_latin1("Não matriculado"))
+
+    def _nota_sessao_realocada(self, houve_realocada: bool):
+        if not houve_realocada:
+            return
+        self.ln(4)
+        self.set_font("Helvetica", "I", 8)
+        self.cell(
+            0,
+            5,
+            _para_latin1("** Aula realocada — presença marcada como AR contabilizada como presente."),
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+        )
 
     def _nota_justificativas(self, justificativas: list[tuple[str, date, str]]):
         if not justificativas:
