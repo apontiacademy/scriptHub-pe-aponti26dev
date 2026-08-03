@@ -16,9 +16,6 @@ from scripthub.services.erros import ErroConfiguracao, FalhaParcial
 _PATCH = "scripthub.scripts.frequencias.compilar.gerar_atas"
 
 
-_PATCH = "scripthub.scripts.frequencias.compilar.gerar_atas"
-
-
 def _sessao(dia, mes, ano=2026, col=5):
     return Sessao(data=date(ano, mes, dia), coluna_status=col, coluna_comentario=col + 1)
 

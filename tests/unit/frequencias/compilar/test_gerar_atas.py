@@ -19,35 +19,8 @@ from scripthub.scripts.frequencias.compilar.gerar_atas import (
 from scripthub.scripts.frequencias.compilar.parser_frequencias import Aluno, RegistroSessao, Sessao, Turma
 
 
-_PATCH = "scripthub.scripts.frequencias.compilar.gerar_atas"
-
-
 def _sessao(dia, mes, ano=2026, col=5):
     return Sessao(data=date(ano, mes, dia), coluna_status=col, coluna_comentario=col + 1)
-
-
-def _make_config(tmp_path, caminho_logo=None, caminho_assinatura=None):
-    return Config(
-        moodle=MoodleConfig(
-            usuario="user",
-            senha="pass",
-            url_login="https://moodle.example.com/login/index.php",
-            urls_frequencias={"Turma A": "https://moodle.example.com/freq?id=1"},
-        ),
-        atas=AtasConfig(
-            caminho_saida=tmp_path / "atas",
-            caminho_logo=caminho_logo,
-            caminho_assinatura=caminho_assinatura,
-        ),
-        diretorio_download=tmp_path / "dados" / "frequencias",
-    )
-
-
-def _imagem_valida(caminho: Path, tamanho=(120, 60)):
-    from PIL import Image
-
-    Image.new("RGB", tamanho, color=(255, 0, 0)).save(caminho)
-    return caminho
 
 
 def _turma_um_aluno_dois_meses():
@@ -366,6 +339,14 @@ def test_montar_paginas_mensais_coleta_justificativas_de_matricula_tardia():
     assert paginas[0].justificativas == [("Fulano", sessao.data, "Não matriculado no momento.")]
 
 
+@pytest.mark.parametrize(
+    "entrada,esperado",
+    [
+        ('Turma: A/B\\C*D?E"F<G>H|I', "Turma ABCDEFGHI"),
+        ("  Turma Normal  ", "Turma Normal"),
+        ("Turma Sem Caracteres Especiais", "Turma Sem Caracteres Especiais"),
+    ],
+)
 def test_sanitizar_nome_arquivo_remove_caracteres_invalidos(entrada, esperado):
     assert _sanitizar_nome_arquivo(entrada) == esperado
 
