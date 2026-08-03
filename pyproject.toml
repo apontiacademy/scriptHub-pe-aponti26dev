@@ -28,6 +28,7 @@ scripthub = "scripthub.cli:run"
 [dependency-groups]
 dev = [
     "pytest",
+    "pytest-bdd>=8.1.0",
     "pytest-cov",
     "pytest-mock",
     "ruff",
@@ -36,6 +37,7 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short --strict-markers --cov=scripthub --cov-report=term-missing --cov-fail-under=80"
+bdd_features_base_dir = "tests/features"
 markers = [
     "unit: testes unitários sem I/O externo",
     "integration: testes com I/O de arquivo real",
