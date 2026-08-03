@@ -16,8 +16,10 @@ CORES_STATUS: dict[str, tuple[int, int, int]] = {
     "AT": (240, 200, 40),
     "JU": (80, 200, 220),
 }
+CORES_STATUS["AR"] = CORES_STATUS["PR"]  # aula realocada: conta como presença
 
 LIMITE_FALTAS_MES = 3
+LIMITE_ATENCAO_FALTAS_MES = 2
 
 _LINHA_CABECALHO = 3
 _RE_DATA_SESSAO = re.compile(r"^(\d{1,2})/(\d{2})/(\d{4})")
@@ -81,17 +83,37 @@ def calcular_percentual(parte: int, total: int) -> float:
     return (parte / total * 100) if total else 0.0
 
 
-def excedeu_limite_faltas_mes(aluno: Aluno, sessoes_mes: list[Sessao]) -> bool:
-    faltas, _ = contar_faltas(registros_do_periodo(aluno, sessoes_mes))
-    return faltas > LIMITE_FALTAS_MES
+def excedeu_limite_faltas_mes(faltas: int) -> bool:
+    return faltas >= LIMITE_FALTAS_MES
+
+
+def em_atencao_faltas_mes(faltas: int) -> bool:
+    return faltas == LIMITE_ATENCAO_FALTAS_MES
 
 
 def justificativas_do_periodo(aluno: Aluno, sessoes: list[Sessao]) -> list[tuple[date, str]]:
+    """Não inclui matrícula tardia: ela já tem marcação visual própria (Ø) na
+    ata, então listá-la também como justificativa seria poluição visual."""
     return [
         (r.sessao.data, r.comentario)
         for r in registros_do_periodo(aluno, sessoes)
-        if r.status == "JU" and r.comentario.strip()
+        if r.status == "JU" and r.comentario.strip() and not eh_nao_matriculado(r)
     ]
+
+
+def status_para_contagem(status: str) -> str:
+    """AR (aula realocada) conta como presença (PR) para fins de cor/estatística."""
+    return "PR" if status == "AR" else status
+
+
+def eh_nao_matriculado(registro: RegistroSessao) -> bool:
+    return registro.status == "JU" and registro.comentario == _JUSTIFICATIVA_MATRICULA_TARDIA
+
+
+def sessoes_realocadas(turma: Turma) -> set[date]:
+    """Uma sessão (coluna) é considerada realocada quando qualquer aluno da turma
+    tem status AR nela — mesmo que os demais alunos tenham outro status."""
+    return {registro.sessao.data for aluno in turma.alunos for registro in aluno.registros if registro.status == "AR"}
 
 
 def _nome_completo(nome: str, sobrenome: str) -> str:
