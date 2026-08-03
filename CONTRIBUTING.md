@@ -349,29 +349,37 @@ Antes de criar qualquer arquivo em `services/`, escreva `tests/services/test_<no
 
 ```
 tests/
-├── conftest.py                          # Fixture compartilhada: moodle_env(tmp_path)
-├── menu/test_menu.py
-├── frequencias/
-│   ├── test_config.py
-│   └── test_exportar_frequencias.py
-├── relatorios/
-│   ├── compilar/
-│   │   ├── test_config.py
-│   │   └── test_compilar_pdfs.py
-│   └── extrair/
-│       ├── test_config.py
-│       └── test_download_de_relatorios.py
-├── softskills/
-│   ├── test_config.py
-│   ├── test_download_softskills.py
-│   └── test_integracao_drive.py
-├── torpedo/
-│   ├── test_config.py
-│   └── test_main.py
-└── services/
-    ├── test_validacao.py
-    └── test_persistencia.py
+├── conftest.py                          # Fixture compartilhada + hook que aplica os marcadores unit/integration
+├── unit/
+│   ├── frequencias/
+│   │   └── compilar/
+│   │       └── test_parser_frequencias.py
+│   ├── relatorios/
+│   │   └── compilar/
+│   │       └── test_compilar_pdfs.py
+│   └── services/
+│       └── test_validacao.py
+├── integration/
+│   ├── frequencias/
+│   │   └── compilar/
+│   │       └── test_parser_frequencias.py
+│   ├── relatorios/
+│   │   └── compilar/
+│   │       └── test_compilar_pdfs.py
+│   └── services/
+│       └── test_persistencia.py
+├── features/
+│   └── <domínio>/<script>/*.feature
+└── functional/
+    └── <domínio>/<script>/test_*.py
 ```
+
+`unit` e `integration` espelham `src/scripthub/scripts/<domínio>/<script>/` (e `services/`), igual à estrutura anterior — a diferença é a camada extra no topo. Quando os testes de um mesmo arquivo original misturam os dois tipos, o arquivo é dividido em dois (mesmo nome, um em cada árvore); os marcadores `unit`/`integration` (`uv run pytest -m unit`, `-m integration`) são aplicados automaticamente por um hook em `conftest.py` a partir desse diretório de topo, sem precisar decorar cada teste.
+
+- **`unit`** — lógica pura ou com toda dependência de I/O mockada (`mocker.patch`, `monkeypatch`); nenhum I/O real de disco acontece, mesmo que `tmp_path` apareça na assinatura.
+- **`integration`** — exercita I/O de arquivo real (escreve/lê `.xlsx`, `.pdf`, `.json`, `.toml`, gera PDF de verdade, etc.).
+- **`features`** — arquivos Gherkin `.feature` (BDD via `pytest-bdd`), sem código Python.
+- **`functional`** — step definitions Python que implementam os cenários dos `.feature` correspondentes.
 
 ### Comandos
 
