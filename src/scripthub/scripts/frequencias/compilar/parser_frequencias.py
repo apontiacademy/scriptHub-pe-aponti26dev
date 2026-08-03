@@ -15,8 +15,8 @@ CORES_STATUS: dict[str, tuple[int, int, int]] = {
     "AU": (220, 50, 50),
     "AT": (240, 200, 40),
     "JU": (80, 200, 220),
-    "AR": (0, 170, 80),  # aula realocada: mesma cor de PR (conta como presença)
 }
+CORES_STATUS["AR"] = CORES_STATUS["PR"]  # aula realocada: conta como presença
 
 LIMITE_FALTAS_MES = 3
 LIMITE_ATENCAO_FALTAS_MES = 2
@@ -83,13 +83,11 @@ def calcular_percentual(parte: int, total: int) -> float:
     return (parte / total * 100) if total else 0.0
 
 
-def excedeu_limite_faltas_mes(aluno: Aluno, sessoes_mes: list[Sessao]) -> bool:
-    faltas, _ = contar_faltas(registros_do_periodo(aluno, sessoes_mes))
+def excedeu_limite_faltas_mes(faltas: int) -> bool:
     return faltas >= LIMITE_FALTAS_MES
 
 
-def em_atencao_faltas_mes(aluno: Aluno, sessoes_mes: list[Sessao]) -> bool:
-    faltas, _ = contar_faltas(registros_do_periodo(aluno, sessoes_mes))
+def em_atencao_faltas_mes(faltas: int) -> bool:
     return faltas == LIMITE_ATENCAO_FALTAS_MES
 
 

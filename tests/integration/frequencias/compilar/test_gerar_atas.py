@@ -137,16 +137,6 @@ def test_gerar_pdf_turma_com_justificativas_em_meses_diferentes_gera_pagina_unic
     assert caminho.stat().st_size > 0
 
 
-def _textos_de_cell(spy):
-    textos = []
-    for chamada in spy.call_args_list:
-        if len(chamada.args) > 3:
-            textos.append(chamada.args[3])
-        elif "text" in chamada.kwargs:
-            textos.append(chamada.kwargs["text"])
-    return textos
-
-
 def test_gerar_pdf_turma_com_sessao_realocada_e_nao_matriculado_nao_falha(tmp_path):
     sessao1 = _sessao(1, 6)
     sessao2 = _sessao(8, 6)

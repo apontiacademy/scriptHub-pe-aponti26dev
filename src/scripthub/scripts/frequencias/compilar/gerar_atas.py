@@ -171,9 +171,9 @@ def montar_paginas_mensais(turma: Turma) -> list[PaginaMensal]:
         for aluno in turma.alunos:
             registros = registros_do_periodo(aluno, sessoes_mes)
             faltas, total = contar_faltas(registros)
-            if excedeu_limite_faltas_mes(aluno, sessoes_mes):
+            if excedeu_limite_faltas_mes(faltas):
                 nivel_alerta = "risco"
-            elif em_atencao_faltas_mes(aluno, sessoes_mes):
+            elif em_atencao_faltas_mes(faltas):
                 nivel_alerta = "atencao"
             else:
                 nivel_alerta = ""

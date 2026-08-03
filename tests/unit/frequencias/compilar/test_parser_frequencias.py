@@ -75,81 +75,27 @@ def test_registros_do_periodo_filtra_por_sessoes():
 
 
 def test_excedeu_limite_faltas_mes_abaixo_do_limite_nao_destaca():
-    sessoes_mes = [_sessao(d, 6) for d in range(1, LIMITE_FALTAS_MES)]
-    aluno = Aluno(
-        nome="Fulano",
-        id_estudante="1",
-        identificacao_usuario="fulano",
-        email="f@example.com",
-        registros=[RegistroSessao(s, "AU") for s in sessoes_mes],
-    )
-
-    assert excedeu_limite_faltas_mes(aluno, sessoes_mes) is False
+    assert excedeu_limite_faltas_mes(LIMITE_FALTAS_MES - 1) is False
 
 
 def test_excedeu_limite_faltas_mes_no_limite_ja_destaca():
-    sessoes_mes = [_sessao(d, 6) for d in range(1, LIMITE_FALTAS_MES + 1)]
-    aluno = Aluno(
-        nome="Fulano",
-        id_estudante="1",
-        identificacao_usuario="fulano",
-        email="f@example.com",
-        registros=[RegistroSessao(s, "AU") for s in sessoes_mes],
-    )
-
-    assert excedeu_limite_faltas_mes(aluno, sessoes_mes) is True
+    assert excedeu_limite_faltas_mes(LIMITE_FALTAS_MES) is True
 
 
 def test_excedeu_limite_faltas_mes_acima_do_limite_destaca():
-    sessoes_mes = [_sessao(d, 6) for d in range(1, LIMITE_FALTAS_MES + 2)]
-    aluno = Aluno(
-        nome="Fulano",
-        id_estudante="1",
-        identificacao_usuario="fulano",
-        email="f@example.com",
-        registros=[RegistroSessao(s, "AU") for s in sessoes_mes],
-    )
-
-    assert excedeu_limite_faltas_mes(aluno, sessoes_mes) is True
+    assert excedeu_limite_faltas_mes(LIMITE_FALTAS_MES + 1) is True
 
 
 def test_em_atencao_faltas_mes_com_2_faltas_fica_em_atencao():
-    sessoes_mes = [_sessao(d, 6) for d in range(1, LIMITE_ATENCAO_FALTAS_MES + 1)]
-    aluno = Aluno(
-        nome="Fulano",
-        id_estudante="1",
-        identificacao_usuario="fulano",
-        email="f@example.com",
-        registros=[RegistroSessao(s, "AU") for s in sessoes_mes],
-    )
-
-    assert em_atencao_faltas_mes(aluno, sessoes_mes) is True
+    assert em_atencao_faltas_mes(LIMITE_ATENCAO_FALTAS_MES) is True
 
 
 def test_em_atencao_faltas_mes_com_1_falta_nao_fica_em_atencao():
-    sessao = _sessao(1, 6)
-    aluno = Aluno(
-        nome="Fulano",
-        id_estudante="1",
-        identificacao_usuario="fulano",
-        email="f@example.com",
-        registros=[RegistroSessao(sessao, "AU")],
-    )
-
-    assert em_atencao_faltas_mes(aluno, [sessao]) is False
+    assert em_atencao_faltas_mes(LIMITE_ATENCAO_FALTAS_MES - 1) is False
 
 
 def test_em_atencao_faltas_mes_com_3_faltas_nao_fica_em_atencao():
-    sessoes_mes = [_sessao(d, 6) for d in range(1, LIMITE_FALTAS_MES + 1)]
-    aluno = Aluno(
-        nome="Fulano",
-        id_estudante="1",
-        identificacao_usuario="fulano",
-        email="f@example.com",
-        registros=[RegistroSessao(s, "AU") for s in sessoes_mes],
-    )
-
-    assert em_atencao_faltas_mes(aluno, sessoes_mes) is False
+    assert em_atencao_faltas_mes(LIMITE_FALTAS_MES) is False
 
 
 @pytest.mark.parametrize(
