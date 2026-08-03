@@ -12,3 +12,9 @@ Registro cumulativo do que já está em `dev`, mas ainda não foi promovido para
 Quando os snapshots de uma versão são promovidos para `nightly`, as entradas correspondentes saem daqui e viram a seção `[Unreleased]` de `CHANGELOG.md`. Quando `nightly` vira release em `main`, `[Unreleased]` vira `## [x.y.z] - data`.
 
 Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyproject.toml` (`chore(changelog)`/`chore(release)`) não geram uma entrada própria — ver "Commits de changelog/release" em [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### 0.21.3.dev1 - 2026-08-02 - (PR#134)
+
+- **Added**: `pytest-bdd` como dependência de dev; `tests/features/` e `tests/functional/` para cenários Gherkin (BDD) e suas step definitions
+- **Changed**: suíte de testes pré-existente reorganizada em `tests/{unit,integration}/<domínio>/<script>/`, separando lógica pura/I-O mockado de I/O real de arquivo; marcadores `unit`/`integration` (`uv run pytest -m unit`/`-m integration`) passam a ser aplicados automaticamente por um hook em `conftest.py`; convenção documentada na seção "TDD e testes" de `CONTRIBUTING.md`
+- **Changed**: teste de aceite da issue #78 (`test_aceite_perfis_diretorios_keyring.py`, pytest puro com Given/When/Then em docstring) convertido para um cenário `pytest-bdd` real (Gherkin + step definitions)
