@@ -22,3 +22,12 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 ### 0.21.3.dev2 - 2026-08-02 - (PR#136)
 
 - **Changed**: `pillow` (dependência transitiva via `fpdf2`) atualizado de 12.2.0 para 12.3.0; `pyasn1` (dependência transitiva via `pyasn1-modules`/`google-auth`) atualizado de 0.6.3 para 0.6.4 — vulnerabilidades apontadas pelo Dependabot
+
+### 0.21.3.dev3 - 2026-08-03 - (PR#135)
+
+- **Fixed**: status `AR` (aula realocada) do Moodle passa a ser reconhecido — antes caía em `AU` por padrão e gerava faltas falsas em massa; conta como presença (`PR`) no cálculo de faltas/percentual
+- **Fixed**: sessão com pelo menos um registro `AR` é marcada como realocada (coluna com sufixo `**` no cabeçalho e fundo cinza), sem alterar o status individual dos demais alunos na mesma sessão
+- **Fixed**: matrícula tardia ("não matriculado") ganha marcador visual próprio (Ø), em vez de reusar o círculo ciano de `JU`, e deixa de ser listada na seção de justificativas da página
+- **Fixed**: `LIMITE_FALTAS_MES` corrigido de `> 3` para `>= 3` para o destaque vermelho de "risco"; novo destaque amarelo de "atenção" em exatamente 2 faltas, nunca simultâneo com "risco"
+- **Fixed**: cor de alerta da linha (risco/atenção) passa a ter precedência sobre o cinza de sessão realocada, evitando que o cinza mascare um alerta de faltas ativo
+- **Fixed**: notas de rodapé `*`/`**` passam a respeitar a ordem em que os símbolos aparecem na tabela e a ficar próximas entre si, sem espaçamento excessivo

@@ -137,6 +137,40 @@ def test_gerar_pdf_turma_com_justificativas_em_meses_diferentes_gera_pagina_unic
     assert caminho.stat().st_size > 0
 
 
+def test_gerar_pdf_turma_com_sessao_realocada_e_nao_matriculado_nao_falha(tmp_path):
+    sessao1 = _sessao(1, 6)
+    sessao2 = _sessao(8, 6)
+    alunos = [
+        Aluno(
+            nome="Aluno Tardio",
+            id_estudante="1",
+            identificacao_usuario="tardio",
+            email="tardio@example.com",
+            registros=[
+                RegistroSessao(sessao1, "JU", "Não matriculado no momento."),
+                RegistroSessao(sessao2, "AR"),
+            ],
+        ),
+        Aluno(
+            nome="Aluno Atrasado",
+            id_estudante="2",
+            identificacao_usuario="atrasado",
+            email="atrasado@example.com",
+            registros=[
+                RegistroSessao(sessao1, "AU"),
+                RegistroSessao(sessao2, "AT"),
+            ],
+        ),
+    ]
+    turma = Turma(nome="Turma Y", alunos=alunos, sessoes=[sessao1, sessao2])
+    caminho = tmp_path / "test.pdf"
+
+    _gerar_pdf_turma(turma, caminho)
+
+    assert caminho.exists()
+    assert caminho.stat().st_size > 0
+
+
 def test_pagina_capa_com_logo_e_assinatura_validas(tmp_path):
     logo = _imagem_valida(tmp_path / "logo.png")
     assinatura = _imagem_valida(tmp_path / "assinatura.png", tamanho=(300, 40))

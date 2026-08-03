@@ -293,3 +293,20 @@ def test_carregar_turma_celulas_vazias_nao_geram_nan(tmp_path):
     assert aluno.id_estudante == ""
     assert aluno.identificacao_usuario == ""
     assert aluno.email == ""
+
+
+def test_carregar_turma_reconhece_status_ar(tmp_path, mocker):
+    linhas = [
+        ["Curso", "Turma X"],
+        ["Grupo", "Todos os participantes"],
+        [],
+        _cabecalho(["8/06/2026"]),
+        [".", "Aluno Um", "1", "aluno1", "a1@example.com", "AR (0/0)", None, 1, 0, 0, 0, 1, "0 / 0", "0,0"],
+    ]
+    caminho = _escrever_xlsx(tmp_path, "Turma X.xlsx", linhas)
+    mock_log = mocker.patch("scripthub.scripts.frequencias.compilar.parser_frequencias.log")
+
+    turma = carregar_turma(caminho)
+
+    assert turma.alunos[0].registros[0].status == "AR"
+    mock_log.aviso.assert_not_called()
