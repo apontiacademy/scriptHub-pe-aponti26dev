@@ -18,3 +18,7 @@ Commits que só atualizam este arquivo, `CHANGELOG.md` ou a versão em `pyprojec
 - **Added**: `pytest-bdd` como dependência de dev; `tests/features/` e `tests/functional/` para cenários Gherkin (BDD) e suas step definitions
 - **Changed**: suíte de testes pré-existente reorganizada em `tests/{unit,integration}/<domínio>/<script>/`, separando lógica pura/I-O mockado de I/O real de arquivo; marcadores `unit`/`integration` (`uv run pytest -m unit`/`-m integration`) passam a ser aplicados automaticamente por um hook em `conftest.py`; convenção documentada na seção "TDD e testes" de `CONTRIBUTING.md`
 - **Changed**: teste de aceite da issue #78 (`test_aceite_perfis_diretorios_keyring.py`, pytest puro com Given/When/Then em docstring) convertido para um cenário `pytest-bdd` real (Gherkin + step definitions)
+
+### 0.21.3.dev2 - 2026-08-02 - (PR#136)
+
+- **Changed**: `pillow` (dependência transitiva via `fpdf2`) atualizado de 12.2.0 para 12.3.0; `pyasn1` (dependência transitiva via `pyasn1-modules`/`google-auth`) atualizado de 0.6.3 para 0.6.4 — vulnerabilidades apontadas pelo Dependabot
