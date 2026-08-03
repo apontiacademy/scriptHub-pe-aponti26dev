@@ -23,9 +23,6 @@ def _sessao(session=None):
     return MoodleSessao(_LOGIN_URL, "user", "pass", _session=session or MagicMock())
 
 
-# ── login ─────────────────────────────────────────────────────────────────────
-
-
 def test_login_faz_get_na_url_de_login():
     mock = MagicMock()
     mock.get.return_value = _resp(text='<input name="logintoken" value="tok1">')
@@ -85,9 +82,6 @@ def test_login_levanta_erro_configuracao_quando_credenciais_invalidas():
         s.login()
 
 
-# ── get / post ────────────────────────────────────────────────────────────────
-
-
 def test_get_delega_para_session():
     mock = MagicMock()
     s = _sessao(mock)
@@ -113,9 +107,6 @@ def test_post_delega_para_session():
     s.post("https://moodle.example.com/action", data={"key": "val"})
 
     mock.post.assert_called_once_with("https://moodle.example.com/action", data={"key": "val"})
-
-
-# ── baixar ────────────────────────────────────────────────────────────────────
 
 
 def test_baixar_levanta_erro_integracao_quando_sessao_expira(tmp_path):

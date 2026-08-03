@@ -76,9 +76,6 @@ def _make_config(tmp_path):
     )
 
 
-# ── utilidades ────────────────────────────────────────────────────────────────
-
-
 def test_caminho_relatorio_gera_path_com_slug(tmp_path):
     p = _caminho_relatorio("Janeiro 2024", tmp_path, 1)
 
@@ -95,9 +92,6 @@ def test_todos_relatorios_existem_false_quando_algum_falta(tmp_path):
 
 def test_todos_relatorios_existem_false_para_vazio():
     assert _todos_relatorios_existem({}) is False
-
-
-# ── baixar_relatorio ──────────────────────────────────────────────────────────
 
 
 def test_baixar_relatorio_delega_para_sessao(tmp_path):
@@ -184,9 +178,6 @@ def test_baixar_relatorio_levanta_erro_quando_select_nao_oferece_csv(tmp_path):
 
     with pytest.raises(ErroIntegracao, match="[Cc][Ss][Vv]"):
         baixar_relatorio(sessao, "https://moodle.example.com/r", tmp_path / "r.csv")
-
-
-# ── main ─────────────────────────────────────────────────────────────────────
 
 
 def test_main_levanta_runtime_error_sem_meses(tmp_path, mocker):

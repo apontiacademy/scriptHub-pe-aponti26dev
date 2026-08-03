@@ -4,9 +4,6 @@ _PATCH = "scripthub.services.google.drive"
 _SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 
-# ── inicialização ─────────────────────────────────────────────────────────────
-
-
 def test_init_autentica_com_service_account(mocker, tmp_path):
     creds = tmp_path / "creds.json"
     creds.write_text("{}")

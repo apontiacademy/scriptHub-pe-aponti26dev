@@ -114,9 +114,6 @@ def _make_sessao(html=_HTML_FORM_DOWNLOAD, download_content_type="text/csv"):
     return sessao
 
 
-# ── baixar_relatorio ──────────────────────────────────────────────────────────
-
-
 def test_baixar_relatorio_faz_get_na_url(tmp_path):
     sessao = _make_sessao()
 
@@ -223,9 +220,6 @@ def test_baixar_relatorio_levanta_erro_integracao_quando_resposta_nao_e_csv(tmp_
 
     with pytest.raises(ErroIntegracao, match="[Cc][Ss][Vv]"):
         baixar_relatorio(sessao, "https://moodle.example.com/report?id=1", tmp_path / "r.csv")
-
-
-# ── _campos_de_form ───────────────────────────────────────────────────────────
 
 
 def test_campos_de_form_coleta_inputs_ocultos():

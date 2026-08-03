@@ -20,9 +20,6 @@ def _sessao(session=None):
     return MoodleSessao(_LOGIN_URL, "user", "pass", _session=session or MagicMock())
 
 
-# ── baixar ────────────────────────────────────────────────────────────────────
-
-
 def test_baixar_get_salva_bytes_no_destino(tmp_path):
     mock = MagicMock()
     mock.get.return_value = _resp(url="https://moodle.example.com/file.csv", content=b"col1,col2\n1,2")

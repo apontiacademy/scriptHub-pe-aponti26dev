@@ -15,9 +15,6 @@ def _client(mocker, creds_path=Path("creds.json")):
     return GoogleSheetsClient(creds_path)
 
 
-# ── planilha ──────────────────────────────────────────────────────────────────
-
-
 def test_planilha_abre_por_chave(mocker):
     mock_gc = MagicMock()
     mocker.patch(f"{_PATCH}.gspread.service_account", return_value=mock_gc)
@@ -36,9 +33,6 @@ def test_planilha_levanta_erro_integracao_quando_nao_encontrada(mocker):
 
     with pytest.raises(ErroIntegracao, match="[Pp]lanilha"):
         client.planilha("id-inexistente")
-
-
-# ── obter_ou_criar_aba ────────────────────────────────────────────────────────
 
 
 def test_obter_ou_criar_aba_retorna_aba_existente(mocker):

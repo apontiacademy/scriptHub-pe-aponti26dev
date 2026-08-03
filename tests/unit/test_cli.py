@@ -49,9 +49,6 @@ def test_menu_interativo_nao_e_um_comando_registrado():
     assert nomes.isdisjoint({"menu", "m"})
 
 
-# --- executar_script / _executar_pipeline_simples: só executam e propagam, sem logar/converter ---
-
-
 def test_executar_script_sucesso_loga_mensagem_padronizada_com_codigo_0(mocker):
     mock_log = mocker.patch("scripthub.cli.log")
 
@@ -145,9 +142,6 @@ def test_executar_pipeline_simples_erro_scripthub_propaga_sem_logar(mocker, exce
     mock_log.erro.assert_not_called()
 
 
-# --- _carregar_config: converte KeyError, enriquece ErroConfiguracao com dica, propaga o resto ---
-
-
 def test_carregar_config_sucesso_retorna_valor():
     assert _carregar_config(lambda: {"ok": True}, "meu_script") == {"ok": True}
 
@@ -189,9 +183,6 @@ def test_carregar_config_excecao_generica_propaga_sem_conversao():
 
     with pytest.raises(RuntimeError):
         _carregar_config(carregar, "meu_script")
-
-
-# --- _executar_com_tratamento_global: handler global único ---
 
 
 def test_tratamento_global_erro_scripthub_loga_mensagem_mesclada_e_levanta_system_exit(mocker):
@@ -304,9 +295,6 @@ def test_tratamento_global_sucesso_nao_levanta_e_nao_loga(mocker):
     mock_log.erro.assert_not_called()
 
 
-# --- flag --debug: seta o global do módulo a partir do callback ---
-
-
 def test_callback_debug_flag_seta_modulo_global():
     ctx = SimpleNamespace(invoked_subcommand="frequencias")
 
@@ -317,9 +305,6 @@ def test_callback_debug_flag_seta_modulo_global():
     assert cli_module._DEBUG is False
 
 
-# --- validações de uso da CLI viram ErroUsoCLI, sem log/typer.Exit direto ---
-
-
 def test_config_opcoes_e_limpar_juntos_levanta_erro_uso_cli(mocker):
     mock_log = mocker.patch("scripthub.cli.log")
 
@@ -328,9 +313,6 @@ def test_config_opcoes_e_limpar_juntos_levanta_erro_uso_cli(mocker):
 
     assert exc_info.value.codigo_saida == 3
     mock_log.erro.assert_not_called()
-
-
-# --- subapps: registro duplo (nome cheio + alias) resolve para o mesmo comando ---
 
 
 def test_relatorios_subapp_registrado_com_nome_cheio_e_alias():
@@ -453,9 +435,6 @@ def test_f_e_encadeia_alias_de_dominio_e_de_script(mocker):
     mock_executar.assert_called_once_with(None, mocker.ANY, "extrair", "EXTRAÇÃO DE FREQUÊNCIAS")
 
 
-# --- validação de integração: slugs reais resolvem sem mocks de executar_script ---
-
-
 def test_relatorios_extrair_resolve_passo_real_nos_escopos(mocker):
     from dataclasses import replace
 
@@ -502,9 +481,6 @@ def test_frequencias_extrair_resolve_passo_real_nos_escopos(mocker):
     finally:
         # Restaurar o Escopo original
         ESCOPOS_EXTRAIR[0] = original_escopo
-
-
-# --- --profile, set-profile, unset-profile ---
 
 
 def test_callback_com_profile_define_override():

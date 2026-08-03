@@ -3,8 +3,6 @@ import pytest
 from scripthub.scripts.torpedo.main import carregar_conteudo, encontrar_imagem
 from scripthub.services.erros import ErroConfiguracao
 
-# ── carregar_conteudo ─────────────────────────────────────────────────────────
-
 
 def test_carregar_conteudo_retorna_titulo_e_html(tmp_path):
     md = tmp_path / "post.md"
@@ -32,9 +30,6 @@ def test_carregar_conteudo_sem_titulo_levanta_erro_configuracao(tmp_path):
 
     with pytest.raises(ErroConfiguracao, match="título"):
         carregar_conteudo(md)
-
-
-# ── encontrar_imagem ──────────────────────────────────────────────────────────
 
 
 def test_encontrar_imagem_override_existente(tmp_path):

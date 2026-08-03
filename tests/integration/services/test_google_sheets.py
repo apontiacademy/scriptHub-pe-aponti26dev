@@ -5,9 +5,6 @@ from scripthub.services.google.sheets import GoogleSheetsClient
 _PATCH = "scripthub.services.google.sheets"
 
 
-# ── inicialização ─────────────────────────────────────────────────────────────
-
-
 def test_init_autentica_com_service_account(mocker, tmp_path):
     creds = tmp_path / "creds.json"
     creds.write_text("{}")

@@ -16,9 +16,6 @@ def _setup(mocker, xlsx_content=b"xlsx"):
     return mock_service
 
 
-# ── metadados ─────────────────────────────────────────────────────────────────
-
-
 def test_metadados_retorna_nome_da_planilha(mocker):
     mock_service = _setup(mocker)
     mock_service.files.return_value.get.return_value.execute.return_value = {"name": "Minha Planilha"}
@@ -29,9 +26,6 @@ def test_metadados_retorna_nome_da_planilha(mocker):
     assert resultado["name"] == "Minha Planilha"
 
 
-# ── exportar_xlsx ─────────────────────────────────────────────────────────────
-
-
 def test_exportar_xlsx_retorna_bytes(mocker):
     _setup(mocker, xlsx_content=b"PK\x03\x04binary-xlsx")
     client = GoogleDriveClient(Path("creds.json"), _SCOPES)
@@ -39,9 +33,6 @@ def test_exportar_xlsx_retorna_bytes(mocker):
     conteudo = client.exportar_xlsx("file-id")
 
     assert conteudo == b"PK\x03\x04binary-xlsx"
-
-
-# ── listar_arquivos ───────────────────────────────────────────────────────────
 
 
 def test_listar_arquivos_retorna_lista(mocker):
@@ -61,9 +52,6 @@ def test_listar_arquivos_retorna_lista_vazia_quando_nenhum(mocker):
     resultado = client.listar_arquivos("name='inexistente'")
 
     assert resultado == []
-
-
-# ── criar_arquivo ─────────────────────────────────────────────────────────────
 
 
 def test_criar_arquivo_retorna_id(mocker):

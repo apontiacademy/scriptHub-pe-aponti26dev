@@ -31,9 +31,6 @@ def _make_config(url="https://moodle.test", bootcamp_cat_id="136", aprovados_cat
     )
 
 
-# ── split_trilha ──────────────────────────────────────────────────────────────
-
-
 def test_split_trilha_formato_valido():
     trilha, turma = split_trilha("Desenvolvimento Web - Turma 3")
     assert trilha == "Desenvolvimento Web"
@@ -64,9 +61,6 @@ def test_split_trilha_espacos_extras():
     assert turma == "02"
 
 
-# ── extract_participant_name ──────────────────────────────────────────────────
-
-
 def _make_cell(html):
     return BeautifulSoup(html, "html.parser")
 
@@ -89,9 +83,6 @@ def test_extract_participant_name_sem_label():
 def test_extract_participant_name_label_sem_padrao():
     cell = _make_cell("<td><label>Texto qualquer sem aspas</label></td>")
     assert extract_participant_name(cell) == ""
-
-
-# ── get_turmas ────────────────────────────────────────────────────────────────
 
 
 def _mock_session_get(html):
@@ -149,9 +140,6 @@ def test_get_turmas_sem_duplicatas():
 def test_get_turmas_vazio():
     session = _mock_session_get("<html><body></body></html>")
     assert get_turmas(session, config=_make_config(url="https://moodle.test")) == {}
-
-
-# ── get_quiz_ids ──────────────────────────────────────────────────────────────
 
 
 def test_get_quiz_ids_encontra_atividades():
@@ -291,9 +279,6 @@ def test_get_quiz_ids_debug_true_fallback_primeiros_hrefs(mocker):
     assert any("/outro/link" in m for m in mensagens)
 
 
-# ── download_csv ──────────────────────────────────────────────────────────────
-
-
 def test_download_csv_retorna_conteudo():
     session = MagicMock()
 
@@ -358,9 +343,6 @@ def test_download_csv_post_status_erro_retorna_none():
     assert result is None
 
 
-# ── get_approved_courses ──────────────────────────────────────────────────────
-
-
 def test_get_approved_courses_retorna_cursos():
     html = """
     <html><body>
@@ -403,9 +385,6 @@ def test_get_approved_courses_ignora_links_sem_course_view():
 
     assert len(courses) == 1
     assert "3" in courses
-
-
-# ── get_course_participants ───────────────────────────────────────────────────
 
 
 def _make_participants_html(rows, include_table=True):
@@ -462,9 +441,6 @@ def test_get_course_participants_email_normalizado_para_minusculo():
     parts = get_course_participants(session, "5", "Trilha Y", config=_make_config())
 
     assert parts[0]["email"] == "ana@example.com"
-
-
-# ── carregar_aprovados_do_backup ────────────────────────────────────────────────
 
 
 def test_carregar_aprovados_do_backup_arquivo_inexistente_retorna_vazio(tmp_path):

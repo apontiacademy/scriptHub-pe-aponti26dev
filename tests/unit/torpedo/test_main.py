@@ -9,15 +9,10 @@ from scripthub.scripts.torpedo.main import (
 from scripthub.services.erros import ErroConfiguracao
 from scripthub.services.moodle import MoodleSessao
 
-# ── carregar_conteudo ─────────────────────────────────────────────────────────
-
 
 def test_carregar_conteudo_arquivo_inexistente_levanta_erro_configuracao(tmp_path):
     with pytest.raises(ErroConfiguracao):
         carregar_conteudo(tmp_path / "nao_existe.md")
-
-
-# ── _md_para_html ─────────────────────────────────────────────────────────────
 
 
 @pytest.mark.parametrize(
@@ -54,9 +49,6 @@ def test_md_para_html_nao_envolve_bloco_html_em_paragrafo():
     assert "<p><h2>" not in resultado
 
 
-# ── encontrar_imagem ──────────────────────────────────────────────────────────
-
-
 def test_encontrar_imagem_override_inexistente_levanta_erro_configuracao(tmp_path):
     with pytest.raises(ErroConfiguracao):
         encontrar_imagem(tmp_path, override=str(tmp_path / "nao_existe.png"))
@@ -66,9 +58,6 @@ def test_encontrar_imagem_sem_imagens_retorna_none(tmp_path):
     resultado = encontrar_imagem(tmp_path, override=None)
 
     assert resultado is None
-
-
-# ── _injetar_cookies ──────────────────────────────────────────────────────────
 
 
 def test_injetar_cookies_injeta_cookies_no_contexto(mocker):

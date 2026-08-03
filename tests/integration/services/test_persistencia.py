@@ -50,9 +50,6 @@ def keyring_fake(mocker):
     return armazem
 
 
-# ── carregar_valores ──────────────────────────────────────────────────────────
-
-
 def test_carregar_valores_le_senha_do_keyring(tmp_path, keyring_fake):
     keyring_fake["meu_script"] = "minhasenha"
     campo = _campo_keyring("senha")
@@ -90,9 +87,6 @@ def test_carregar_valores_sem_arquivos_retorna_nones(tmp_path):
 
     assert resultado["senha"] is None
     assert resultado["url"] is None
-
-
-# ── persistir ─────────────────────────────────────────────────────────────────
 
 
 def test_persistir_campo_keyring_grava_no_keyring(tmp_path, keyring_fake):

@@ -16,9 +16,6 @@ def _campo(tipo, obrigatorio=True, caminho_absoluto=False):
     )
 
 
-# ── validar_campo ─────────────────────────────────────────────────────────────
-
-
 @pytest.mark.parametrize(
     "tipo,valor,valido",
     [
@@ -103,9 +100,6 @@ def test_validar_campo_caminho_sem_exigir_absoluto_aceita_relativo():
     ok, _ = validar_campo(_campo("caminho", caminho_absoluto=False), "credentials.json")
 
     assert ok is True
-
-
-# ── resumo_valor ──────────────────────────────────────────────────────────────
 
 
 def test_resumo_valor_senha_retorna_mascara():
