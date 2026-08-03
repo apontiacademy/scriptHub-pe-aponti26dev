@@ -80,6 +80,12 @@ def entao_justificativa_comum_nao_marcada(contexto, marcacao):
     assert _linha(contexto, "Fulano").nao_matriculado[1] is False
 
 
+@then("a lista de justificativas da página contém apenas a justificativa comum")
+def entao_apenas_justificativa_comum_na_lista(contexto):
+    pagina: PaginaMensal = contexto["paginas"][0]
+    assert pagina.justificativas == [("Fulano", date(2026, 6, 10), "Atestado médico")]
+
+
 # --- Cenário: sessão com AR marcada como realocada --------------------------
 
 

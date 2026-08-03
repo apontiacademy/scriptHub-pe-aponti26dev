@@ -12,6 +12,12 @@ Funcionalidade: Marcações visuais e regras de faltas na ata de frequência
     Então a célula da sessão de matrícula tardia é marcada como "não matriculado"
     E a célula da sessão com justificativa comum não é marcada como "não matriculado"
 
+  Cenário: Matrícula tardia não aparece na lista de justificativas da página
+    Dado um aluno com matrícula tardia numa sessão anterior à data de início da matrícula
+    E uma justificativa comum numa sessão posterior à matrícula
+    Quando a ata mensal é gerada
+    Então a lista de justificativas da página contém apenas a justificativa comum
+
   Cenário: Sessão com status AR é marcada como realocada sem alterar os demais status
     Dado uma sessão em que um aluno tem status "AR"
     E outro aluno tem status "AT" na mesma sessão

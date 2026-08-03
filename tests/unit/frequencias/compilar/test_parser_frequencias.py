@@ -248,6 +248,24 @@ def test_justificativas_do_periodo_so_ju_com_comentario():
     assert justificativas == [(sessoes[0].data, "Atestado médico")]
 
 
+def test_justificativas_do_periodo_exclui_nao_matriculado():
+    sessoes = [_sessao(1, 6), _sessao(2, 6)]
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[
+            RegistroSessao(sessoes[0], "JU", "Não matriculado no momento."),
+            RegistroSessao(sessoes[1], "JU", "Atestado médico"),
+        ],
+    )
+
+    justificativas = justificativas_do_periodo(aluno, sessoes)
+
+    assert justificativas == [(sessoes[1].data, "Atestado médico")]
+
+
 def test_nome_completo_concatena_e_normaliza():
     assert _nome_completo("Divanildo Ferreira dos Santos", ".") == "Divanildo Ferreira dos Santos"
     assert _nome_completo("Cauan", "Abraão Rodrigues de Azevedo") == "Cauan Abraão Rodrigues de Azevedo"

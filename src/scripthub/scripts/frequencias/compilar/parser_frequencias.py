@@ -94,10 +94,12 @@ def em_atencao_faltas_mes(aluno: Aluno, sessoes_mes: list[Sessao]) -> bool:
 
 
 def justificativas_do_periodo(aluno: Aluno, sessoes: list[Sessao]) -> list[tuple[date, str]]:
+    """Não inclui matrícula tardia: ela já tem marcação visual própria (Ø) na
+    ata, então listá-la também como justificativa seria poluição visual."""
     return [
         (r.sessao.data, r.comentario)
         for r in registros_do_periodo(aluno, sessoes)
-        if r.status == "JU" and r.comentario.strip()
+        if r.status == "JU" and r.comentario.strip() and not eh_nao_matriculado(r)
     ]
 
 

@@ -152,7 +152,10 @@ def _texto_cabecalho_sessao(sessao: Sessao, sessoes_realocadas: set[date]) -> st
 def _cor_celula_sessao(
     sessao: Sessao, sessoes_realocadas: set[date], cor_linha: tuple[int, int, int]
 ) -> tuple[int, int, int]:
-    return CINZA_SESSAO_REALOCADA if sessao.data in sessoes_realocadas else cor_linha
+    """O alerta da linha (risco/atenção) tem precedência sobre o cinza de sessão
+    realocada — o cinza só aparece em linhas sem nenhum alerta ativo."""
+    sem_alerta = cor_linha == CORES_ALERTA[""]
+    return CINZA_SESSAO_REALOCADA if sessao.data in sessoes_realocadas and sem_alerta else cor_linha
 
 
 def montar_paginas_mensais(turma: Turma) -> list[PaginaMensal]:
@@ -407,8 +410,7 @@ class AtaPDF(FPDF):
                     self.ellipse(cx - raio, cy - raio, raio * 2, raio * 2, style="F")
 
         self._legenda()
-        self._nota_sessao_realocada(bool(pagina.sessoes_realocadas))
-        self._nota_justificativas(pagina.justificativas)
+        self._notas_rodape(bool(pagina.sessoes_realocadas), pagina.justificativas)
 
     def _bolinha_nao_matriculado(self, cx: float, cy: float, raio: float):
         self.set_fill_color(255, 255, 255)
@@ -434,27 +436,20 @@ class AtaPDF(FPDF):
         self.set_x(self.get_x() + 5)
         self.cell(30, 5, _para_latin1("Não matriculado"))
 
-    def _nota_sessao_realocada(self, houve_realocada: bool):
-        if not houve_realocada:
+    def _notas_rodape(self, houve_realocada: bool, justificativas: list[tuple[str, date, str]]):
+        """As notas de rodapé (`*`/`**`) ficam juntas, uma logo abaixo da outra, na
+        ordem em que os símbolos aparecem na tabela (`*` antes de `**`)."""
+        notas = []
+        if justificativas:
+            notas.append("* Justificativas ao final do documento.")
+        if houve_realocada:
+            notas.append("** Aula realocada — presença marcada como AR contabilizada como presente.")
+        if not notas:
             return
         self.ln(4)
         self.set_font("Helvetica", "I", 8)
-        self.cell(
-            0,
-            5,
-            _para_latin1("** Aula realocada — presença marcada como AR contabilizada como presente."),
-            new_x=XPos.LMARGIN,
-            new_y=YPos.NEXT,
-        )
-
-    def _nota_justificativas(self, justificativas: list[tuple[str, date, str]]):
-        if not justificativas:
-            return
-        self.ln(4)
-        self.set_font("Helvetica", "I", 8)
-        self.cell(
-            0, 5, _para_latin1("* Justificativas ao final do documento."), ln=True
-        )  # TODO: substituir por new_x e new_y
+        for nota in notas:
+            self.cell(0, 5, _para_latin1(nota), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     def pagina_justificativas(self, turma_nome: str, justificativas: list[tuple[str, date, str]]):
         if not justificativas:

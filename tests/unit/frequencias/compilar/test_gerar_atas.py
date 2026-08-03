@@ -4,6 +4,7 @@ import pytest
 
 from scripthub.scripts.frequencias.compilar.gerar_atas import (
     CINZA_SESSAO_REALOCADA,
+    CORES_ALERTA,
     AtaPDF,
     PaginaMensal,
     _cor_celula_sessao,
@@ -222,6 +223,24 @@ def test_cor_celula_sessao_normal_usa_cor_da_linha():
     assert _cor_celula_sessao(sessao, set(), (245, 200, 200)) == (245, 200, 200)
 
 
+def test_cor_celula_sessao_realocada_em_linha_de_risco_mantem_vermelho():
+    sessao = _sessao(19, 7)
+
+    cor = _cor_celula_sessao(sessao, {sessao.data}, CORES_ALERTA["risco"])
+
+    assert cor == CORES_ALERTA["risco"]
+    assert cor != CINZA_SESSAO_REALOCADA
+
+
+def test_cor_celula_sessao_realocada_em_linha_de_atencao_mantem_amarelo():
+    sessao = _sessao(19, 7)
+
+    cor = _cor_celula_sessao(sessao, {sessao.data}, CORES_ALERTA["atencao"])
+
+    assert cor == CORES_ALERTA["atencao"]
+    assert cor != CINZA_SESSAO_REALOCADA
+
+
 def test_montar_resumo_geral_agrega_periodo_inteiro():
     s1, s2, s3 = _sessao(1, 6), _sessao(2, 6), _sessao(3, 7)
     aluno = Aluno(
@@ -323,7 +342,9 @@ def test_montar_resumo_mensal_turma_vazio_sem_sessoes():
     assert montar_resumo_mensal_turma(turma) == []
 
 
-def test_montar_paginas_mensais_coleta_justificativas_de_matricula_tardia():
+def test_montar_paginas_mensais_nao_matriculado_nao_aparece_em_justificativas():
+    """Matrícula tardia já tem marcação visual própria (Ø) — listá-la também como
+    justificativa seria poluição visual (achado de revisão da issue #133)."""
     sessao = _sessao(10, 6)
     aluno = Aluno(
         nome="Fulano",
@@ -336,7 +357,23 @@ def test_montar_paginas_mensais_coleta_justificativas_de_matricula_tardia():
 
     paginas = montar_paginas_mensais(turma)
 
-    assert paginas[0].justificativas == [("Fulano", sessao.data, "Não matriculado no momento.")]
+    assert paginas[0].justificativas == []
+
+
+def test_montar_paginas_mensais_coleta_justificativas_comuns():
+    sessao = _sessao(10, 6)
+    aluno = Aluno(
+        nome="Fulano",
+        id_estudante="1",
+        identificacao_usuario="fulano",
+        email="f@example.com",
+        registros=[RegistroSessao(sessao, "JU", "Atestado médico")],
+    )
+    turma = Turma(nome="Turma X", alunos=[aluno], sessoes=[sessao])
+
+    paginas = montar_paginas_mensais(turma)
+
+    assert paginas[0].justificativas == [("Fulano", sessao.data, "Atestado médico")]
 
 
 @pytest.mark.parametrize(
@@ -494,25 +531,51 @@ def test_legenda_inclui_nao_matriculado(mocker):
     assert "Não matriculado" in _textos_de_cell(spy)
 
 
-def test_nota_sessao_realocada_aparece_quando_houve_realocacao(mocker):
+def test_notas_rodape_aparece_quando_houve_realocacao(mocker):
     pdf = AtaPDF()
     pdf.pagina_resumo("Turma X", [])
     spy = mocker.spy(AtaPDF, "cell")
 
-    pdf._nota_sessao_realocada(True)
+    pdf._notas_rodape(True, [])
 
     textos = _textos_de_cell(spy)
     assert any("Aula realocada" in (t or "") for t in textos)
 
 
-def test_nota_sessao_realocada_nao_aparece_sem_realocacao(mocker):
+def test_notas_rodape_nao_aparece_sem_realocacao_e_sem_justificativas(mocker):
     pdf = AtaPDF()
     pdf.pagina_resumo("Turma X", [])
     spy = mocker.spy(AtaPDF, "cell")
 
-    pdf._nota_sessao_realocada(False)
+    pdf._notas_rodape(False, [])
 
     spy.assert_not_called()
+
+
+def test_notas_rodape_justificativa_vem_antes_da_sessao_realocada(mocker):
+    pdf = AtaPDF()
+    pdf.pagina_resumo("Turma X", [])
+    spy = mocker.spy(AtaPDF, "cell")
+
+    pdf._notas_rodape(True, [("Fulano", date(2026, 6, 1), "Atestado médico")])
+
+    textos = _textos_de_cell(spy)
+    assert textos[0].startswith("* ")
+    assert textos[1].startswith("** ")
+
+
+def test_notas_rodape_ficam_proximas_quando_ambas_presentes(mocker):
+    """As duas notas devem ficar coladas (uma linha de altura de diferença),
+    sem o espaçamento extra que separa o bloco de notas da legenda acima."""
+    pdf = AtaPDF()
+    pdf.pagina_resumo("Turma X", [])
+    y_antes = pdf.get_y()
+
+    pdf._notas_rodape(True, [("Fulano", date(2026, 6, 1), "Atestado médico")])
+
+    y_primeira_nota = y_antes + 4 + 5  # ln(4) + altura da 1ª cell
+    y_segunda_nota = y_primeira_nota + 5  # sem gap extra entre as duas
+    assert pdf.get_y() == pytest.approx(y_segunda_nota)
 
 
 def test_pagina_mensal_marca_cabecalho_de_sessao_realocada(mocker):
