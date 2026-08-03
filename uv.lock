@@ -1322,7 +1322,7 @@ wheels = [
 
 [[package]]
 name = "scripthub-pe-aponti26dev"
-version = "0.21.3.dev1"
+version = "0.21.3.dev2"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
